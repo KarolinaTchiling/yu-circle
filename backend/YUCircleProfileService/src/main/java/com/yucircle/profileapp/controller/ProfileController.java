@@ -2,6 +2,8 @@ package com.yucircle.profileapp.controller;
 
 import com.yucircle.profileapp.model.Profile;
 import com.yucircle.profileapp.service.ProfileService;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,5 +61,17 @@ public class ProfileController {
     public ResponseEntity<Void> deleteProfile(@PathVariable String username) {
         profileService.deleteProfile(username);
         return ResponseEntity.noContent().build();
+    }
+    
+    // Handles authentication.
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Profile loginRequest) {
+        boolean authenticated = profileService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
+
+        if (authenticated) {
+            return ResponseEntity.ok("Authentication successful");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
     }
 }
