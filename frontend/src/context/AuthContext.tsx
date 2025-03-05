@@ -32,14 +32,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ username, password }),
       });
 
-      const rawText = await response.text();
+      const loginResponse = await response.text();
       
-      if (!response.ok || rawText.trim() !== "Authentication successful") {
-        throw new Error(rawText || "Invalid credentials");
+      if (!response.ok || loginResponse.trim() !== "Authentication successful") {
+        throw new Error(loginResponse || "Invalid credentials");
       }
 
-      const userData = { username }; // Mock user data since API returns only a success message
-      localStorage.setItem("user", JSON.stringify(userData)); // Store user as cookie
+      const response2URL = `/profiles/${username}`;
+      const response2 = await fetch(response2URL, {
+        method: "GET",
+      });
+
+      // parse all JSON fields
+      const allUserInfo = await response2.json();
+      const firstName = allUserInfo.firstname
+      const lastName = allUserInfo.lastname
+      const yorkID = allUserInfo.yorkID
+      const email = allUserInfo.email
+      const phoneNumber = allUserInfo.phoneNumber
+      const createdAt = allUserInfo.createdAt
+      const isAdmin = allUserInfo.isAdmin
+      
+      if (!response.ok || loginResponse.trim() !== "Authentication successful") {
+        throw new Error(loginResponse || "Invalid credentials");
+      }
+
+      // store all user data in cookies (for later, i.e. dashboard)
+      const userData = { username, firstName, lastName, yorkID, email, phoneNumber, createdAt, isAdmin };
+      localStorage.setItem("user", JSON.stringify(userData)); 
       setUser(userData);
       setIsAuthenticated(true);
     } catch (error) {
@@ -48,7 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // logout from webpage
+  // logout from webpage (set user to null, delete cookies)
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
