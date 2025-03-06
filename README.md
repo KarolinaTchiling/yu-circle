@@ -30,7 +30,7 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 
 # Backend: Spring Boot + Postgres
 
-
+<details>
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
@@ -161,4 +161,5 @@ curl -X PUT http://localhost:8080/comments/update/1 \
            "content": "updated text.",
          }'
 ```
+</details>
 </details>
