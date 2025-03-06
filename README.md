@@ -6,7 +6,6 @@
 ```
 git clone https://github.com/KarolinaTchiling/yu-circle.git
 ```
-
 ## Frontend: React + TypeScript + Vite + TailwindCSS v.4
 
 
@@ -28,15 +27,10 @@ bun run dev
 
 Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-classes
 
-# -----------------------------
-# -----------------------------
-# -----------------------------
-
 ## Backend: Spring Boot + Postgres
 
-# -----------------------------
+<details>
 ### ProfileService:
-# -----------------------------
 Assuming you are using eclipse, follow these steps:
 
 1. Open eclipse, and go to the top menu to select Help > Eclipse Marketplace.
@@ -66,9 +60,9 @@ curl -X POST http://localhost:8080/profiles/login \
      -d '{"username": "bob", "password": "password"}'
 ```
 
-# -----------------------------
+</details>
+<details>
 ### DiscourseService:
-# -----------------------------
 To run, follow the same steps as outlined in the ProfileService.
 
 #### Posts:
@@ -157,3 +151,4 @@ curl -X PUT http://localhost:8080/comments/update/1 \
            "content": "updated text.",
          }'
 ```
+</details>
