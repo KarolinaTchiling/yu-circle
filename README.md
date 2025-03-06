@@ -148,7 +148,7 @@ curl -X POST http://localhost:8080/comments\
 ##### Add a comment reply (when comment is not a top level comment):
 
 ```
-// Make sure to include the parentId, so that this reply's to 
+// Make sure to include the parentId, so that this replies to 
 // a comment, and not a post.
 curl -X POST http://localhost:8080/comments\
      -H "Content-Type: application/json" \
