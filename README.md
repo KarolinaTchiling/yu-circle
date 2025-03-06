@@ -28,10 +28,15 @@ bun run dev
 
 Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-classes
 
+# -----------------------------
+# -----------------------------
+# -----------------------------
 
 ## Backend: Spring Boot + Postgres
 
+# -----------------------------
 ### ProfileService:
+# -----------------------------
 Assuming you are using eclipse, follow these steps:
 
 1. Open eclipse, and go to the top menu to select Help > Eclipse Marketplace.
@@ -61,8 +66,9 @@ curl -X POST http://localhost:8080/profiles/login \
      -d '{"username": "bob", "password": "password"}'
 ```
 
-
+# -----------------------------
 ### DiscourseService:
+# -----------------------------
 To run, follow the same steps as outlined in the ProfileService.
 
 #### Posts:
