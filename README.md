@@ -31,7 +31,7 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 # Backend: Spring Boot + Postgres
 
 <details>
-     
+
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
@@ -132,16 +132,34 @@ curl -X GET http://localhost:8080/comments/1
 curl -X GET http://localhost:8080/comments/posts/1
 ```
 
-##### Add a comment:
+##### Add a comment (top level comment):
 
 ```
-// The postId is in the URL, that is the post that the comment is attached to (In this example it is '/1').
+// The postId is in the URL, that is the post that the comment is 
+// attached to (In this example it is '/1').
 curl -X POST http://localhost:8080/comments\
      -H "Content-Type: application/json" \
      -d '{
            "content": "CS is so fun",
            "username": "bob",
-           "title": "wow"
+           "title": "wow",
+           "postId": 1
+         }'
+```
+
+##### Add a comment reply (when comment is not a top level comment):
+
+```
+// The postId is in the URL, that is the post that the comment is 
+// attached to (In this example it is '/1').
+curl -X POST http://localhost:8080/comments\
+     -H "Content-Type: application/json" \
+     -d '{
+           "content": "CS is so fun",
+           "username": "bob",
+           "title": "wow",
+           "postId": 1,
+           "parentId": 3
          }'
 ```
 
