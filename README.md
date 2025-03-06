@@ -1,13 +1,13 @@
 
 
 
-## To Run on Local Machine:
+# To Run on Local Machine:
 
 ```
 git clone https://github.com/KarolinaTchiling/yu-circle.git
 ```
 
-#### Frontend: React + TypeScript + Vite + TailwindCSS v.4
+## Frontend: React + TypeScript + Vite + TailwindCSS v.4
 
 
 1. Install [bun](https://bun.sh/)
@@ -67,18 +67,18 @@ To run, follow the same steps as outlined in the ProfileService.
 
 #### Posts:
 ##### Get all posts:
-...
+```
 curl -X GET http://localhost:8080/posts
-...
+```
 
 ##### Get one post:
 The postId is in the URL (in this example it is '/1').
-...
+```
 curl -X GET http://localhost:8080/posts/1
-...
+```
 
 ##### Add a post:
-...
+```
 curl -X POST http://localhost:8080/posts \
      -H "Content-Type: application/json" \
      -d '{
@@ -86,46 +86,47 @@ curl -X POST http://localhost:8080/posts \
            "username": "bob",
            "title": "wow"
          }'
-...
+```
 
 ##### Delete a post:
-...
+```
 curl -X DELETE http://localhost:8080/posts \
-...
+```
 
 ##### Update a post:
 The postId is in the URL (in this example it is the '/1')
-...
+```
 curl -X PUT http://localhost:8080/posts/1 \
      -H "Content-Type: application/json" \
      -d '{
            "content": "updated text.",
            "title": "New Title"
          }'
-...
+```
 
 
-#### Comments:
+
+### Comments:
 ##### Get all comments:
-...
+```
 curl -X GET http://localhost:8080/comments
-...
+```
 
 ##### Get one comment:
 The commentId is in the URL (in this example it is '/1').
-...
+```
 curl -X GET http://localhost:8080/comments/1
-...
+```
 
 ##### Get comments by post:
 The postId is in the URL (in this example it is '/1').
-...
+```
 curl -X GET http://localhost:8080/comments/posts/1
-...
+```
 
 ##### Add a comment:
 The postId is in the URL, that is the post that the comment is attached to (In this example it is '/1').
-...
+```
 curl -X POST http://localhost:8080/comments\
      -H "Content-Type: application/json" \
      -d '{
@@ -133,20 +134,20 @@ curl -X POST http://localhost:8080/comments\
            "username": "bob",
            "title": "wow"
          }'
-...
+```
 
 ##### Delete a comment:
 The commentId is in the URL (in this example it is the '/1')
-...
+```
 curl -X DELETE http://localhost:8080/comments/delete/1 \
-...
+```
 
 ##### Update a comment:
 The commentId is in the URL (in this example it is the '/1')
-...
+```
 curl -X PUT http://localhost:8080/comments/update/1 \
      -H "Content-Type: application/json" \
      -d '{
            "content": "updated text.",
          }'
-...
+```
