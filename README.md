@@ -135,8 +135,6 @@ curl -X GET http://localhost:8080/comments/posts/1
 ##### Add a comment (top level comment):
 
 ```
-// The postId is in the URL, that is the post that the comment is 
-// attached to (In this example it is '/1').
 curl -X POST http://localhost:8080/comments\
      -H "Content-Type: application/json" \
      -d '{
@@ -150,8 +148,8 @@ curl -X POST http://localhost:8080/comments\
 ##### Add a comment reply (when comment is not a top level comment):
 
 ```
-// The postId is in the URL, that is the post that the comment is 
-// attached to (In this example it is '/1').
+// Make sure to include the parentId, so that this reply's to 
+// a comment, and not a post.
 curl -X POST http://localhost:8080/comments\
      -H "Content-Type: application/json" \
      -d '{
