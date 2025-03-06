@@ -31,6 +31,7 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 # Backend: Spring Boot + Postgres
 
 <details>
+     
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
