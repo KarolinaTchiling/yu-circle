@@ -6,8 +6,8 @@
 ```
 git clone https://github.com/KarolinaTchiling/yu-circle.git
 ```
-## Frontend: React + TypeScript + Vite + TailwindCSS v.4
-
+# Frontend: React + TypeScript + Vite + TailwindCSS v.4
+<details>
 
 1. Install [bun](https://bun.sh/)
 
@@ -26,11 +26,12 @@ bun run dev
 ```
 
 Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-classes
+</details>
 
-## Backend: Spring Boot + Postgres
+# Backend: Spring Boot + Postgres
 
 
-### ProfileService:
+## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
 
@@ -63,11 +64,11 @@ curl -X POST http://localhost:8080/profiles/login \
 
 </details>
 
-### DiscourseService:
+## DiscourseService:
 <details>
 To run, follow the same steps as outlined in the ProfileService.
 
-#### Posts:
+### Posts:
 ##### Get all posts:
 ```
 curl -X GET http://localhost:8080/posts
