@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+  
 @theme {
     --color-offwhite: #F3F3F3;
     --color-grey: rgba(210, 213, 221, 1);

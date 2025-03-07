@@ -10,18 +10,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/profiles")
 public class ProfileController {
 
     private final ProfileService profileService;
-    private final EmailService emailService;
 
     public ProfileController(ProfileService profileService, EmailService emailService) {
         this.profileService = profileService;
-        this.emailService = emailService;
     }
 
     // @GetMapping for GET requests.
@@ -59,34 +56,15 @@ public class ProfileController {
         }
     }
 
-    // @PostMapping handles password reset requests.
-    // Generates a reset token and sends a reset link via email.
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody String email) {
-        Profile profile = profileService.findByEmail(email);
-        if (profile == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
-
-        // Generate a unique reset token
-        String resetToken = UUID.randomUUID().toString();
-        profile.setResetToken(resetToken);
-        profileService.saveProfile(profile);
-
-        // Send reset link via email
-        emailService.sendResetEmail(email, resetToken);
-        return ResponseEntity.ok("Reset link sent to email");
-    }
-
     // @PostMapping handles setting a new password.
-    // Validates the reset token and updates the password.
-    @PostMapping("/set-new-password")
-    public ResponseEntity<String> setNewPassword(@RequestParam String token, @RequestBody String newPassword) {
-        boolean success = profileService.resetPassword(token, newPassword);
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String username, @RequestParam String newPassword) {
+        boolean success = profileService.resetPasswordByUsername(username, newPassword);
         if (success) {
             return ResponseEntity.ok("Password reset successful");
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
+
 }
