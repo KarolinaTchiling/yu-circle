@@ -1,9 +1,21 @@
 import { createContext, useState, useEffect, ReactNode } from "react";
 
+interface User {
+  username: string;
+  firstName: string;
+  lastName: string;
+  yorkID: string;
+  email: string;
+  phoneNumber: string;
+  createdAt: string | null;
+  isAdmin: boolean;
+}
+
 interface AuthContextType {
   user: any;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedFields: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -45,13 +57,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // parse all JSON fields
       const allUserInfo = await response2.json();
-      const firstName = allUserInfo.firstname
-      const lastName = allUserInfo.lastname
-      const yorkID = allUserInfo.yorkID
-      const email = allUserInfo.email
-      const phoneNumber = allUserInfo.phoneNumber
-      const createdAt = allUserInfo.createdAt
-      const isAdmin = allUserInfo.isAdmin
+
+      const firstName = allUserInfo.firstname;
+      const lastName = allUserInfo.lastname;
+      const yorkID = allUserInfo.yorkId;
+      const email = allUserInfo.email;
+      const phoneNumber = allUserInfo.phoneNumber;
+      const createdAt = allUserInfo.createdAt;
+      const isAdmin = allUserInfo.isAdmin;
       
       if (!response.ok || loginResponse.trim() !== "Authentication successful") {
         throw new Error(loginResponse || "Invalid credentials");
@@ -75,8 +88,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(false);
   };
 
+  const updateUser = async (updatedFields: Partial<User>) => {
+    if (!user) {
+      console.error("No user found in context");
+      return;
+    }
+  
+    try {
+        // Convert frontend fields to backend-compatible fields
+        const updatedUser = {
+          firstname: updatedFields.firstName ?? user.firstName,
+          lastname: updatedFields.lastName ?? user.lastName,
+          yorkId: updatedFields.yorkID ?? user.yorkID,
+          email: updatedFields.email ?? user.email,
+          phoneNumber: updatedFields.phoneNumber ?? user.phoneNumber,
+        };
+  
+      console.log("Sending update request:", updatedUser);
+  
+      const response = await fetch(`/profiles/${user.username}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update user: ${errorText}`);
+      }
+  
+      // Ensure response contains updated user
+      const responseData = await response.json();
+      console.log("Response from server:", responseData);
+  
+      // Update user state (triggers a re-render)
+      setUser(responseData);
+      localStorage.setItem("user", JSON.stringify(responseData));
+  
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Failed to update profile.");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
