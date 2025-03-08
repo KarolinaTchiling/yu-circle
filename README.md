@@ -140,12 +140,11 @@ curl -X POST http://localhost:8080/comments\
      -d '{
            "content": "CS is so fun",
            "username": "bob",
-           "title": "wow",
            "postId": 1
          }'
 ```
 
-##### Add a comment reply (when comment is not a top level comment):
+##### Add a comment reply (when comment is not a top level comment, in this case the parent commentId is 3):
 
 ```
 // Make sure to include the parentId, so that this replies to 
@@ -155,7 +154,6 @@ curl -X POST http://localhost:8080/comments\
      -d '{
            "content": "CS is so fun",
            "username": "bob",
-           "title": "wow",
            "postId": 1,
            "parentId": 3
          }'
