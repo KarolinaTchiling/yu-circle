@@ -1,7 +1,16 @@
-import React from "react";
+import React, { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import Profile from "/profile.svg";
 
 const ProfileComp: React.FC = () => {
+
+  const authContext = useContext(AuthContext);
+
+  if (!authContext) {
+    return <p>Loading profile...</p>;
+  }
+  const { user } = authContext;
+
   return (
 
     <main className="flex flex-col items-center bg-grey-50 border b-black rounded-lg w-full">
@@ -17,7 +26,7 @@ const ProfileComp: React.FC = () => {
         <div className="border b-black rounded-lg bg-offwhite p-3 w-[40%] text-center flex flex-col items-center">
           
           <div className="text-2xl">
-            Samantha Doe
+            { user?.username}
           </div>
 
           <div>
