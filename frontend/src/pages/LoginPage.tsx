@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Header from "../components/Header/Header";
+import { AuthContext } from "../context/AuthContext";
 
 const LoginPage: React.FC = () => {
+  // allowed to be null (if we're not logged in)
+  const { login } = useContext(AuthContext)!;
+
+  // login form's valid fields
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
+  // empty login fields, no special states
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -20,41 +26,19 @@ const LoginPage: React.FC = () => {
     setErrorMessage("");
   
     try {
-      const response = await fetch("/profiles/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      });
-  
-      console.log("Full Response:", response);
-      console.log("Status:", response.status);
-      console.log("Headers:", JSON.stringify([...response.headers]));
-  
-      // Get the raw response text
-      const rawText = await response.text();
-  
-      // Check if the request was successful
-      if (response.ok) {
-        console.log("Login successful:", rawText);
-  
-        // Redirect to the home page after successful login
-        window.location.href = "/";
-      } else {
-        throw new Error(rawText || "Login failed");
-      }
+      // success scenario (just redirect and save to cookies)
+      await login(formData.username, formData.password);
+      window.location.href = "/"; 
     } catch (error: any) {
-      console.error("Fetch Error:", error);
-      setErrorMessage(error.message || "An error occurred during login.");
+      // error scenario, display error message
+      console.error("Login Error:", error);
+      setErrorMessage(error.message || "Invalid credentials.");
     } finally {
       setLoading(false);
     }
   };
 
+  // actual web ui
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />

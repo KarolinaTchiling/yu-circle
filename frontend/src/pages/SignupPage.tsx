@@ -3,12 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header/Header";
 
 const SignupPage: React.FC = () => {
+
+  // declare valid form fields
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
+    firstname: "",
+    lastname: "",
+    yorkId: "",
+    phoneNumber: "",
   });
 
+  // create empty states
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,43 +23,51 @@ const SignupPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "yorkId" && !/^\d{0,9}$/.test(value)) return; // enforce 9 digit length
+    if (name === "phoneNumber" && !/^\d{0,10}$/.test(value.replace(/\D/g, ""))) return; // restrict input to numbers only
+
+    setFormData({ ...formData, [name]: value });
   };
 
+  // auto-format to add dashes when you type phone number
+  const formatPhoneNumber = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    return digits.length > 6
+      ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+      : digits.length > 3
+      ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}`
+      : digits;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, phoneNumber: formatPhoneNumber(e.target.value) });
+  };
+
+  // submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
 
+    // send data to database
     try {
       const response = await fetch("/profiles", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          email: formData.email,
-          firstname: "Placeholder", // Placeholder for firstname [no field for that]
-          lastname: "Placeholder",  // Placeholder for lastname [no field for that] 
-          yorkId: "Placeholder",    // Placeholder for yorkId [no field for that] 
-          phoneNumber: "000-000-0000" // Placeholder for phoneNumber [no field for that]
-        }),
+        body: JSON.stringify(formData),
       });
 
+      // store response for error handling
       const rawText = await response.text();
-      console.log("Raw Response Text:", rawText);
 
       if (response.ok) {
-        console.log("Registration successful:", rawText);
         setSuccessMessage("Registration successful! Redirecting to login...");
-        // Redirect to the home page after successful login so people can login
-        window.location.href = "/login";
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setTimeout(() => navigate("/login"), 2000);
       } else {
         throw new Error(rawText || "Registration failed");
       }
@@ -63,6 +78,7 @@ const SignupPage: React.FC = () => {
     }
   };
 
+  // actual web UI
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
@@ -71,63 +87,44 @@ const SignupPage: React.FC = () => {
           <h1 className="text-xl font-fancy font-bold">Sign Up</h1>
           <br />
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium font-fancy text-gray-700">Username</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className="w-full rounded-lg border p-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-red)]"
-                placeholder="Your username"
-                required
-              />
+            <div className="flex space-x-4">
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <input type="text" name="firstname" value={formData.firstname} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" required />
+              </div>
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" required />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium font-fancy text-gray-700">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full rounded-lg border p-3 text-sm outline-none font-fancy focus:ring-2 focus:ring-[var(--color-red)]"
-                placeholder="you@example.com"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700">York ID</label>
+              <input type="text" name="yorkId" value={formData.yorkId} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="9-digit York ID" required />
             </div>
             <div>
-              <label className="block text-sm font-medium font-fancy text-gray-700">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full rounded-lg border p-3 text-sm font-fancy outline-none focus:ring-2 focus:ring-[var(--color-red)]"
-                placeholder="Enter your password"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handlePhoneChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="XXX-XXX-XXXX" required />
             </div>
-
-            {errorMessage && (
-              <p className="text-red-600 text-sm">{errorMessage}</p>
-            )}
-            {successMessage && (
-              <p className="text-green-600 text-sm">{successMessage}</p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
-              disabled={loading}
-            >
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <input type="text" name="username" value={formData.username} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" required />
+            </div>
+            {errorMessage && <p className="text-red-600 text-sm">{errorMessage}</p>}
+            {successMessage && <p className="text-green-600 text-sm">{successMessage}</p>}
+            <button type="submit" className="w-full rounded-lg bg-red-600 p-3 text-white transition hover:bg-red-700" disabled={loading}>
               {loading ? "Signing up..." : "Sign Up"}
             </button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link to="/login" className="text-[var(--color-red)] hover:underline">
-              Log in
-            </Link>
+            Already have an account? <Link to="/login" className="text-red-600 hover:underline">Log in</Link>
           </p>
         </div>
       </div>

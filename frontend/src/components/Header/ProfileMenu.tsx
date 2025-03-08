@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from "react-router-dom";
 import Profile from "/profile.svg";
-
+import { AuthContext } from "../../context/AuthContext";
 
 const ProfileMenu: React.FC = () => {
     const navigate = useNavigate();
     const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const checkLoggedIn = Boolean(false);
+    const { isAuthenticated, user, logout } = useContext(AuthContext)!;
 
     const toggleDropdown = () => setDropdownOpen(!isDropdownOpen);
     const closeDropdown = () => setDropdownOpen(false); // Function to close dropdown
@@ -16,34 +16,7 @@ const ProfileMenu: React.FC = () => {
         navigate(path);
         closeDropdown();
     };
-
-    function logOut() {
-        
-    }
-
-        // Add event listener to detect outside clicks
-        useEffect(() => {
-            const handleClickOutside = (event: MouseEvent) => {
-                if (
-                    dropdownRef.current && 
-                    !dropdownRef.current.contains(event.target as Node) // Click is outside the dropdown
-                ) {
-                    closeDropdown();
-                }
-            };
     
-            if (isDropdownOpen) {
-                document.addEventListener('mousedown', handleClickOutside);
-            } else {
-                document.removeEventListener('mousedown', handleClickOutside);
-            }
-    
-            // Cleanup on unmount
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
-        }, [isDropdownOpen]);
-
     return (
         <div className="relative" ref={dropdownRef}>
             {/* Profile Icon */}
@@ -60,7 +33,7 @@ const ProfileMenu: React.FC = () => {
             {isDropdownOpen && (
                 <div className="absolute top-full -right-5 mt-5 bg-white rounded-lg text-black border border-camel shadow-md w-50 z-50">
                     <ul className="flex flex-col text-center">
-                        {checkLoggedIn ? (
+                        {isAuthenticated ? (
                             // Logged-in dropdown
                             <>
                                 <li
@@ -72,8 +45,9 @@ const ProfileMenu: React.FC = () => {
                                 <button
                                     className="block w-full h-full px-3 py-1 rounded-b-lg hover:font-medium hover:bg-purple transition-colors duration-300"
                                     onClick={() => {
-                                        logOut();
+                                        logout();
                                         closeDropdown();
+                                        window.location.href = '/';
                                     }}
                                 >
                                     Log Out

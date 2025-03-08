@@ -6,14 +6,15 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "profiles")
 public class Profile {
-    
-	// Id indicates this as the primary key.
+
+    // Id indicates this as the primary key.
     @Id
     private String username;
 
     // Column indicates that this is a field mapped to a column
-    // Names are the same as the ones in the column, you can have different names 
-    // by adding another parameter in the brackets for name="otherName" to refer to the column
+    // Names are the same as the ones in the column, you can have different names
+    // by adding another parameter in the brackets for name="otherName" to refer to
+    // the column
     @Column(nullable = false)
     private String password;
 
@@ -37,7 +38,6 @@ public class Profile {
     @Column(updatable = false)
     private java.sql.Timestamp createdAt;
 
-    
     // Getter methods
     //
 
@@ -77,7 +77,6 @@ public class Profile {
         return createdAt;
     }
 
-    
     // Setter methods
     //
 
@@ -111,20 +110,6 @@ public class Profile {
 
     public void setIsAdmin(Boolean isAdmin) {
         this.isAdmin = isAdmin;
-    }
-
-    public void setCreatedAt(java.sql.Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-    @Column(name = "reset_token")
-    private String resetToken;
-
-    public String getResetToken() {
-        return resetToken;
-    }
-
-    public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
     }
 
 }
