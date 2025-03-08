@@ -67,4 +67,16 @@ public class ProfileController {
         }
     }
 
+    // Handles authentication.
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Profile loginRequest) {
+        boolean authenticated = profileService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
+
+        if (authenticated) {
+            return ResponseEntity.ok("Authentication successful");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+    }
+
 }
