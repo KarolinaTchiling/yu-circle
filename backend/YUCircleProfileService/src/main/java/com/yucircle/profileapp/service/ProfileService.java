@@ -38,12 +38,12 @@ public class ProfileService {
 
             Profile profile = optionalProfile.get();
 
-            profile.setPassword(updatedProfile.getPassword());
-            profile.setFirstname(updatedProfile.getFirstname());
-            profile.setLastname(updatedProfile.getLastname());
-            profile.setEmail(updatedProfile.getEmail());
-            profile.setPhoneNumber(updatedProfile.getPhoneNumber());
-            profile.setIsAdmin(updatedProfile.getIsAdmin());
+            if (updatedProfile.getPassword() != null) profile.setPassword(updatedProfile.getPassword());
+            if (updatedProfile.getFirstname() != null) profile.setFirstname(updatedProfile.getFirstname());
+            if (updatedProfile.getLastname() != null) profile.setLastname(updatedProfile.getLastname());
+            if (updatedProfile.getEmail() != null) profile.setEmail(updatedProfile.getEmail());
+            if (updatedProfile.getPhoneNumber() != null) profile.setPhoneNumber(updatedProfile.getPhoneNumber());
+            if (updatedProfile.getIsAdmin() != null) profile.setIsAdmin(updatedProfile.getIsAdmin());
 
             return profileRepository.save(profile);
 
