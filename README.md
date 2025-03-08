@@ -49,12 +49,73 @@ Assuming you are using eclipse, follow these steps:
 6. Back in eclipse, right click on the project folder and select Run As > Spring Boot App.
 
 
-Example commands:
+Get all users:
 ```
-curl -X GET "http://localhost:8080/profiles/jdoe"
-
 curl -X GET "http://localhost:8080/profiles"
 ```
+
+Get a user (the username is in the url, in this example it is "test"):
+```
+curl -X GET "http://localhost:8080/profiles/bio/jdoe"
+```
+
+Get a user bio (the username is in the url, in this example it is "test"):
+```
+curl -X GET "http://localhost:8080/profiles/bio/jdoe"
+```
+
+Adding a user:
+```
+curl -X POST "http://localhost:8080/profiles" \
+     -H "Content-Type: application/json" \
+     -d '{
+            "username": "test",
+            "password": "dog",
+            "york_id": "123444231",
+            "firstname": "Test",
+            "lastname": "Test",
+            "email": "test@gmail.com",
+            "phone_number": 1234567890
+         }'
+```
+
+Update a user (the username is in the url, in this example it is "test"):
+```
+curl -X PUT "http://localhost:8080/profiles/test" \
+     -H "Content-Type: application/json" \
+     -d '{
+            "password": "dog",
+            "york_id": "123444231",
+            "firstname": "Test",
+            "lastname": "Test",
+            "email": "test@gmail.com",
+            "phone_number": 1234567890
+         }'
+```
+
+Change a password (the username is in the url, in this example it is "test"):
+```
+curl -X PUT "http://localhost:8080/profiles/changepass/test" \
+     -H "Content-Type: application/json" \
+     -d '{
+            "password": "dog"
+         }'
+```
+
+Update a bio (the username is in the url, in this example it is "test"):
+```
+curl -X PUT "http://localhost:8080/profiles/bio/test" \
+     -H "Content-Type: application/json" \
+     -d '{
+            "bio": "new bio."
+         }'
+```
+
+Delete a user (the username is in the url, in this example it is "test"):
+```
+curl -X DELETE "http://localhost:8080/profiles/test"
+```
+
 
 Authentication:
 ```
