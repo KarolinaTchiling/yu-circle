@@ -34,7 +34,7 @@ export default function Community() {
   // const [filter, setFilter] = useState("Mentor");
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-100">
       <Header />
       {/* <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Community</h1>
