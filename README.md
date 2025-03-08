@@ -75,7 +75,8 @@ curl -X POST "http://localhost:8080/profiles" \
             "firstname": "Test",
             "lastname": "Test",
             "email": "test@gmail.com",
-            "phone_number": 1234567890
+            "phone_number": 1234567890,
+            "bio": "Test"
          }'
 ```
 
@@ -87,9 +88,10 @@ curl -X PUT "http://localhost:8080/profiles/test" \
             "password": "dog",
             "york_id": "123444231",
             "firstname": "Test",
-            "lastname": "Test",
+            "lastname": "Test",         
             "email": "test@gmail.com",
             "phone_number": 1234567890
+            "bio": "Test"
          }'
 ```
 
