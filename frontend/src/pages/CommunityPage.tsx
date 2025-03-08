@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Header from "../components/Header/Header";
 // import { Button } from "@/components/ui/button";
 // import { Card, CardContent } from "@/components/ui/card";
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,6 +35,7 @@ export default function Community() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <Header />
       {/* <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Community</h1>
         <Select onValueChange={(value) => setFilter(value)}>
