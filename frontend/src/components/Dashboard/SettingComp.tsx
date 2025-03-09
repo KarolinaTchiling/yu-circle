@@ -59,7 +59,7 @@ const SettingComp: React.FC = () => {
       {/* Update All Button */}
       <button
         onClick={handleUpdate}
-        className="self-center mt-5 cursor-pointer w-[40%] px-3 py-2 bg-mint border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
+        className="self-center mt-1 cursor-pointer w-[40%] px-3 py-2 bg-mint border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
       >
         Update Profile
       </button>
