@@ -78,7 +78,7 @@ public class Profile {
     }
 
     
-    public String getUserBio() {
+    public String getBio() {
     	return this.bio;
     }
 
