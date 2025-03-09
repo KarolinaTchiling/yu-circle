@@ -31,12 +31,12 @@ const users = [
 ];
 
 export default function Community() {
-  // const [filter, setFilter] = useState("Mentor");
+  const [filter, setFilter] = useState("Mentor");
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      { <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 p-4">
         <h1 className="text-3xl font-bold">Community</h1>
         <Select onValueChange={(value) => setFilter(value)}>
           <SelectTrigger className="w-52 border rounded px-2 py-1">
@@ -50,9 +50,9 @@ export default function Community() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
         {users
-          .filter((user) => user.role === filter)
+          .filter((user) => user.role === filter) 
           .map((user, index) => (
             <Card key={index} className="p-6 shadow-md rounded-lg">
               <CardContent className="text-center">
@@ -78,7 +78,7 @@ export default function Community() {
               </CardContent>
             </Card>
           ))}
-      </div> }
+      </div>
     </div>
   );
 }
