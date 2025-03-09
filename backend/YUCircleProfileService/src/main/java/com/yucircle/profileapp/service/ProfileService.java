@@ -31,7 +31,7 @@ public class ProfileService {
     
     public String getUserBio(String username) {
         return profileRepository.findById(username)
-                .map(Profile::getUserBio)
+                .map(Profile::getBio)
                 .orElse(null);
     }
     
