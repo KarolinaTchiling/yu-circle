@@ -7,10 +7,13 @@ import { FaTrash } from "react-icons/fa";
 const API_URL = "http://localhost:8080";
 
 interface Comment {
-  id: number;
+  commentId: number;
   content: string | null;
   likes: number;
   liked: boolean;
+  username: string;
+  parentComment?: any;
+  replies?: Comment[];
 }
 
 interface Post {
@@ -19,6 +22,7 @@ interface Post {
   content: string | null;
   likes: number;
   liked: boolean;
+  username: string;
   comments: Comment[];
 }
 
@@ -54,11 +58,7 @@ const DiscoursePage: React.FC = () => {
     try {
       await axios.post(
         `${API_URL}/posts`,
-        {
-          title: newTitle,
-          content: newPost,
-          username: "User123",
-        },
+        { title: newTitle, content: newPost, username: "User123" },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -72,7 +72,7 @@ const DiscoursePage: React.FC = () => {
 
   const deletePost = async (id: number) => {
     try {
-      await axios.delete(`${API_URL}/posts/${id}`);
+      await axios.delete(`${API_URL}/posts/delete/${id}`);
       fetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
@@ -85,11 +85,7 @@ const DiscoursePage: React.FC = () => {
     try {
       await axios.post(
         `${API_URL}/comments`,
-        {
-          content,
-          username: "User123",
-          postId,
-        },
+        { content, username: "User123", postId },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -101,12 +97,14 @@ const DiscoursePage: React.FC = () => {
 
   const deleteComment = async (postId: number, commentId: number) => {
     try {
-      await axios.delete(`${API_URL}/comments/${commentId}`);
+      await axios.delete(`${API_URL}/comments/delete/${commentId}`);
       fetchPosts();
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
   };
+
+  const visiblePosts = posts.filter((post) => post.username !== "Deleted");
 
   return (
     <>
@@ -161,8 +159,12 @@ const DiscoursePage: React.FC = () => {
           />
           {loading ? (
             <p>Loading posts...</p>
-          ) : posts.length > 0 ? (
-            posts
+          ) : visiblePosts.filter((post) =>
+              (post.content ? post.content.toLowerCase() : "").includes(
+                filter.toLowerCase()
+              )
+            ).length > 0 ? (
+            visiblePosts
               .filter((post) =>
                 (post.content ? post.content.toLowerCase() : "").includes(
                   filter.toLowerCase()
@@ -182,20 +184,24 @@ const DiscoursePage: React.FC = () => {
                   </div>
                   <div className="mt-4 ml-4">
                     <h3 className="font-semibold mb-2">Comments:</h3>
-                    {post.comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="border border-gray-200 p-2 rounded mb-2"
-                      >
-                        <p>{comment.content || "No content available."}</p>
-                        <button
-                          onClick={() => deleteComment(post.id, comment.id)}
-                          className="text-red-500 flex items-center"
+                    {post.comments
+                      .filter((comment) => comment.username !== "Deleted")
+                      .map((comment) => (
+                        <div
+                          key={comment.commentId}
+                          className="border border-gray-200 p-2 rounded mb-2"
                         >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    ))}
+                          <p>{comment.content || "No content available."}</p>
+                          <button
+                            onClick={() =>
+                              deleteComment(post.id, comment.commentId)
+                            }
+                            className="text-red-500 flex items-center"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
                     <textarea
                       className="w-full p-2 border rounded"
                       placeholder="Add a comment..."
