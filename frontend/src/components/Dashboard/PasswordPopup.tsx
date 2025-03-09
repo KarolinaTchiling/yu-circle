@@ -12,10 +12,11 @@ const ResetPasswordPopup: React.FC<ResetPasswordModalProps> = ({ username, onClo
   const handleResetPassword = async () => {
     try {
       const response = await fetch(
-        `profiles/reset-password?username=${username}&newPassword=${newPassword}`,
+        `profiles/changepass/${username}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: newPassword }),
         }
       );
 
