@@ -79,7 +79,7 @@ const ProfileComp: React.FC = () => {
             </button>
 
             {/* Show Bio Update Modal when triggered */}
-            {isModalOpen && (
+            {isModalOpen && user && (
               <BioPopup username={user.username} onClose={handleBioUpdate} />
             )}
 
