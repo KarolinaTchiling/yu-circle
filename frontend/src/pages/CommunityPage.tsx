@@ -1,10 +1,10 @@
 import { useState } from "react";
 import Header from "../components/Header/Header";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { Input } from "@/components/ui/input";
-// import { CheckCircle, UserCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { CheckCircle, UserCircle } from "lucide-react";
 
 const users = [
   {
@@ -36,7 +36,7 @@ export default function Community() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      {/* <div className="flex justify-between items-center mb-6">
+      { <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Community</h1>
         <Select onValueChange={(value) => setFilter(value)}>
           <SelectTrigger className="w-52 border rounded px-2 py-1">
@@ -78,7 +78,7 @@ export default function Community() {
               </CardContent>
             </Card>
           ))}
-      </div> */}
+      </div> }
     </div>
   );
 }
