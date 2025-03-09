@@ -1,21 +1,23 @@
 package com.yucircle.profileapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 // Entity indicates this class will be mapped to a table in the database.
 @Entity
 @Table(name = "profiles")
 public class Profile {
-
-    // Id indicates this as the primary key.
+    
+	// Id indicates this as the primary key.
     @Id
     private String username;
 
     // Column indicates that this is a field mapped to a column
-    // Names are the same as the ones in the column, you can have different names
-    // by adding another parameter in the brackets for name="otherName" to refer to
-    // the column
+    // Names are the same as the ones in the column, you can have different names 
+    // by adding another parameter in the brackets for name="otherName" to refer to the column
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(unique = true)
@@ -30,14 +32,16 @@ public class Profile {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true)
+    @Column(unique = false)
     private String phoneNumber;
 
+    @JsonIgnore
     private Boolean isAdmin = false;
 
-    @Column(updatable = false)
-    private java.sql.Timestamp createdAt;
+    @Column(columnDefinition = "TEXT")
+    private String bio;
 
+    
     // Getter methods
     //
 
@@ -73,10 +77,12 @@ public class Profile {
         return isAdmin;
     }
 
-    public java.sql.Timestamp getCreatedAt() {
-        return createdAt;
+    
+    public String getBio() {
+    	return this.bio;
     }
 
+    
     // Setter methods
     //
 
@@ -112,4 +118,9 @@ public class Profile {
         this.isAdmin = isAdmin;
     }
 
+
+	public void setBio(String bio) {
+		// TODO Auto-generated method stub
+		this.bio = bio;
+	}
 }
