@@ -29,7 +29,7 @@ public class CommunityService {
 	 * @return list of all ProfileTagsDTO 
 	 */
     @Transactional
-	public List<ProfileTagsDTO> getDefaultProfiles() {
+	public List<ProfileTagsDTO> getDefaultProfiles(Optional<String> sort) {
     	
 		List<ProfileTagsDTO> list = new ArrayList<ProfileTagsDTO>();
 		
@@ -39,7 +39,7 @@ public class CommunityService {
 			list.add(pt);
 		}
 		
-		return list;
+		return CommunitySort.sortProfiles(list, sort.orElse(""));
 	}
 	
 	/**
@@ -51,7 +51,7 @@ public class CommunityService {
 	 * @throws Exception if username does not exist
 	 */
     @Transactional
-	public List<ProfileTagsDTO> getRecommendedProfiles(String username) throws Exception {
+	public List<ProfileTagsDTO> getRecommendedProfiles(String username, Optional<String> sort) throws Exception {
 		
 		//check if username exists
 		if (!profileRepository.existsById(username)) {
@@ -77,22 +77,11 @@ public class CommunityService {
         }
         
         //convert to list
-        List<ProfileTagsDTO> listOfRecommendedUsers = new ArrayList<>();
-        listOfRecommendedUsers.addAll(recommendations);
+        List<ProfileTagsDTO> listOfRecommendedProfiles = new ArrayList<>();
+        listOfRecommendedProfiles.addAll(recommendations);
 		
-		return listOfRecommendedUsers;
+        return CommunitySort.sortProfiles(listOfRecommendedProfiles, sort.orElse(""));
 	}
-    
-    /**
-     * Convert Profile entity into DTO
-     * Note: Entity to DTO conversion is required if returning a list of 'entities'
-     * @param profile entity to convert into DTO
-     * @return new ProfileTagsDTO
-     */
-    private ProfileTagsDTO createProfileTagsDTO(Profile profile) {
-    	ProfileTagsDTO pt = new ProfileTagsDTO(profile);
-		return pt;
-    }
     
     /**
      * Filter through Profiles to find users with given tag
@@ -100,7 +89,7 @@ public class CommunityService {
      * @return list of profiles with tag, or empty list if tag does not exist
      */
     @Transactional
-	public List<ProfileTagsDTO> filterTags(String tag) {
+	public List<ProfileTagsDTO> filterTags(String tag, Optional<String> sort) {
     	
     	List<ProfileTagsDTO> list = new ArrayList<>();
     	
@@ -114,7 +103,7 @@ public class CommunityService {
     		list.add(pt);
     	}
     	    	
-    	return list;
+    	return CommunitySort.sortProfiles(list, sort.orElse(""));
     }
 
     /**
@@ -123,7 +112,7 @@ public class CommunityService {
      * @return list of possible matching profiles
      */
     @Transactional
-	public List<ProfileTagsDTO> queryProfile(String query) {
+	public List<ProfileTagsDTO> queryProfile(String query, Optional<String> sort) {
 		
 		List<ProfileTagsDTO> list = new ArrayList<>();
 		
@@ -131,6 +120,18 @@ public class CommunityService {
 			list.add(createProfileTagsDTO(p));
 		}
 		
-		return list;
-	}	
+		return CommunitySort.sortProfiles(list, sort.orElse(""));
+	}
+    
+    /**
+     * Convert Profile entity into DTO
+     * Note: Entity to DTO conversion is required if returning a list of 'entities'
+     * @param profile entity to convert into DTO
+     * @return new ProfileTagsDTO
+     */
+    private ProfileTagsDTO createProfileTagsDTO(Profile profile) {
+    	ProfileTagsDTO pt = new ProfileTagsDTO(profile);
+		return pt;
+    }
+    
 }

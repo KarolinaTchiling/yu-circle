@@ -1,6 +1,7 @@
 package com.yucircle.community_service.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -65,31 +66,34 @@ public class CommunityProfileController {
 	}
 	
 	
+	
+	
 	//Return all profiles (excluding passwords) with their profile tags
+	//URL Example: localhost:8080/community/get-default-profiles?sort=asc
 	@GetMapping("/get-default-profiles")
-	public List<ProfileTagsDTO> getDefaultProfiles() {
-		return commService.getDefaultProfiles();
+	public List<ProfileTagsDTO> getDefaultProfiles(@RequestParam(required = false) Optional<String> sort) {
+		return commService.getDefaultProfiles(sort);
 	}
 	
 	//Return recommended profiles with their profile tags,
 	//returns empty list if no recommendations can be made
 	@GetMapping("/get-recommended-profiles")
-	public List<ProfileTagsDTO> getRecommendedProfiles(@RequestBody Profile profile) throws Exception {
-		return commService.getRecommendedProfiles(profile.getUsername());
+	public List<ProfileTagsDTO> getRecommendedProfiles(@RequestBody Profile profile, @RequestParam(required = false) Optional<String> sort) throws Exception {
+		return commService.getRecommendedProfiles(profile.getUsername(), sort);
 	}
 	
 	//Filter and return profiles with specified tag
 	//URL Example: localhost:8080/community/filter?tag=Chemistry
 	@GetMapping("/filter")
-	public List<ProfileTagsDTO> filterTags(@RequestParam String tag) {
-		return commService.filterTags(tag);
+	public List<ProfileTagsDTO> filterTags(@RequestParam String tag, @RequestParam(required = false) Optional<String> sort) {
+		return commService.filterTags(tag, sort);
 	}
 	
 	//Return potential matches to search query
 	//URL Example: localhost:8080/community/search?query=j
 	@GetMapping("/search")
-	public List<ProfileTagsDTO> searchUser(@RequestParam String query) {
-		return commService.queryProfile(query);
+	public List<ProfileTagsDTO> searchUser(@RequestParam String query, @RequestParam(required = false) Optional<String> sort) {
+		return commService.queryProfile(query, sort);
 	}
 
 }
