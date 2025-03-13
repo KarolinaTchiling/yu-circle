@@ -62,7 +62,7 @@ import { useState } from "react";
    },
  ];
  
- export default function Community() {
+// export default function Community() {
  export default function CommunityPage() {
    const [filter, setFilter] = useState("Mentor");
  
