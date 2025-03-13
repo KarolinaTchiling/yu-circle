@@ -61,4 +61,4 @@ const CommunityComp: React.FC<{ filter?: string }> = ({ filter }) => {
   );
 };*/
 
-export default CommunityComp;
+//export default CommunityComp;
