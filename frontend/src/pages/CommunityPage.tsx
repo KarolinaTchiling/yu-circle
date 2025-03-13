@@ -67,9 +67,22 @@ import { useState } from "react";
    const [filter, setFilter] = useState("Mentor");
  
    return (
- @@ -50,35 +23,8 @@ export default function Community() {
-         </Select>
-       </div>
+//  export default function CommunityPage() {
+     //    </Select>
+<div>
+  <Header />
+    <div className="p-4">
+    <Select onValueChange={setFilter}>
+       <SelectTrigger>
+          <SelectValue placeholder="Select a role" />
+        </SelectTrigger>
+    <SelectContent>
+        <SelectItem value="Mentor">Mentor</SelectItem>
+        <SelectItem value="Mentee">Mentee</SelectItem>
+        <SelectItem value="Study Partners">Study Partners</SelectItem>
+      </SelectContent>
+   </Select>
+</div>
  
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
          {users
