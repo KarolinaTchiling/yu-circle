@@ -1,75 +1,158 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Header from "../components/Header/Header";
-import { AiOutlineLike, AiFillLike } from "react-icons/ai";
 import { FaTrash } from "react-icons/fa";
 
+const API_URL = "http://localhost:8080";
+
 interface Comment {
-  id: number;
-  content: string;
+  commentId: number;
+  content: string | null;
   likes: number;
   liked: boolean;
+  username: string;
+  parentComment?: any;
+  replies?: Comment[];
 }
 
 interface Post {
   id: number;
-  content: string;
+  title?: string;
+  content: string | null;
   likes: number;
   liked: boolean;
+  username: string;
+  isDeleted?: boolean;
   comments: Comment[];
 }
 
 const DiscoursePage: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: 1,
-      content:
-        "Hi I am looking for a mentor to study for my EECS 2011 with! Is anyone interested?",
-      likes: 0,
-      liked: false,
-      comments: [
-        {
-          id: 101,
-          content:
-            "Hi! I am your classmate Megan. Send me a message here and we can connect",
-          likes: 0,
-          liked: false,
-        },
-      ],
-    },
-    {
-      id: 2,
-      content:
-        "I am looking for a master's student as a mentor to help with a passion project. Is anyone interested?",
-      likes: 0,
-      liked: false,
-      comments: [],
-    },
-  ]);
-
+  const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
+  const [newTitle, setNewTitle] = useState("");
   const [filter, setFilter] = useState("");
   const [commentInputs, setCommentInputs] = useState<{ [key: number]: string }>(
     {}
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [isModalOpen, setIsModalOpen] = useState(false); // Track modal visibility
+  // State for editing a post
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
 
-  const createPost = () => {
-    if (!newPost.trim()) return;
-    const newId = Math.max(...posts.map((p) => p.id)) + 1;
-    setPosts([
-      {
-        id: newId,
-        content: newPost,
-        likes: 0,
-        liked: false,
-        comments: [],
-      },
-      ...posts,
-    ]);
-    setNewPost("");
-    setIsModalOpen(false);
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/posts`);
+      const sortedPosts = response.data.sort((a: Post, b: Post) => b.id - a.id);
+      setPosts(sortedPosts);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const createPost = async () => {
+    if (!newTitle.trim() || !newPost.trim()) return;
+    try {
+      await axios.post(
+        `${API_URL}/posts`,
+        { title: newTitle, content: newPost, username: "User123" },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      fetchPosts();
+      setNewPost("");
+      setNewTitle("");
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating post:", error);
+    }
+  };
+
+  const deletePost = async (id: number) => {
+    try {
+      await axios.delete(`${API_URL}/posts/delete/${id}`);
+      fetchPosts();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  const createComment = async (postId: number) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+    try {
+      await axios.post(
+        `${API_URL}/comments`,
+        { content, username: "User123", postId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      fetchPosts();
+      setCommentInputs({ ...commentInputs, [postId]: "" });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const deleteComment = async (postId: number, commentId: number) => {
+    try {
+      await axios.delete(`${API_URL}/comments/delete/${commentId}`);
+      fetchPosts();
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
+  // Open edit modal for a post
+  const handleEditClick = (post: Post) => {
+    setEditingPost(post);
+    setEditTitle(post.title ?? "");
+    setEditContent(post.content ?? "");
+  };
+
+  // Final update function: sends minimal payload as a plain object
+  const updatePost = async () => {
+    if (!editingPost) return;
+    try {
+      // Send only title and content; your backend update uses these fields.
+      const payload = {
+        title: editTitle,
+        content: editContent,
+      };
+
+      await axios.put(`${API_URL}/posts/update/${editingPost.id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Update local state (optional)
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === editingPost.id
+            ? { ...p, title: editTitle, content: editContent }
+            : p
+        )
+      );
+
+      // Reset editing state and close modal
+      setEditingPost(null);
+      setEditTitle("");
+      setEditContent("");
+      fetchPosts();
+    } catch (error) {
+      console.error("Error updating post:", error);
+      setEditingPost(null);
+      setEditTitle("");
+      setEditContent("");
+    }
+  };
+
+  const visiblePosts = posts.filter((post) => post.username !== "Deleted");
 
   return (
     <>
@@ -78,7 +161,6 @@ const DiscoursePage: React.FC = () => {
         <div className="max-w-2xl mx-auto p-4">
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
 
-          {/* super cool floating button for creating posts*/}
           <button
             onClick={() => setIsModalOpen(true)}
             className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
@@ -86,11 +168,17 @@ const DiscoursePage: React.FC = () => {
             +
           </button>
 
-          {/* popup dialog box*/}
+          {/* Create Post Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 backdrop-blur-[0.5px] flex items-start justify-center pt-30">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
                 <h2 className="text-lg font-semibold mb-4">Create a Post</h2>
+                <input
+                  className="w-full p-2 border rounded-lg mb-2"
+                  placeholder="Post Title..."
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                />
                 <textarea
                   className="w-full h-30 p-2 border rounded-lg"
                   placeholder="Write a post..."
@@ -115,7 +203,45 @@ const DiscoursePage: React.FC = () => {
             </div>
           )}
 
-          {/* Search filter */}
+          {/* Edit Post Modal */}
+          {editingPost && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
+                <h2 className="text-lg font-semibold mb-4">Edit Post</h2>
+                <input
+                  className="w-full p-2 border rounded-lg mb-2"
+                  placeholder="Edit Title..."
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+                <textarea
+                  className="w-full h-30 p-2 border rounded-lg"
+                  placeholder="Edit Content..."
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button
+                    className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
+                    onClick={() => {
+                      setEditingPost(null);
+                      setEditTitle("");
+                      setEditContent("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
+                    onClick={updatePost}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search posts..."
@@ -123,160 +249,79 @@ const DiscoursePage: React.FC = () => {
             onChange={(e) => setFilter(e.target.value)}
           />
 
-          {posts.length > 0 ? (
-            posts
+          {loading ? (
+            <p>Loading posts...</p>
+          ) : visiblePosts.filter((post) =>
+              (post.content ? post.content.toLowerCase() : "").includes(
+                filter.toLowerCase()
+              )
+            ).length > 0 ? (
+            visiblePosts
               .filter((post) =>
-                post.content.toLowerCase().includes(filter.toLowerCase())
+                (post.content ? post.content.toLowerCase() : "").includes(
+                  filter.toLowerCase()
+                )
               )
               .map((post) => (
                 <div key={post.id} className="bg-white p-4 rounded shadow mb-4">
-                  <p>{post.content}</p>
+                  {post.title && <h2 className="font-bold">{post.title}</h2>}
+                  <p>{post.content || "No content available."}</p>
                   <div className="flex items-center mt-2">
                     <button
-                      onClick={() =>
-                        setPosts((prev) =>
-                          prev.map((p) =>
-                            p.id === post.id
-                              ? {
-                                ...p,
-                                liked: !p.liked,
-                                likes: p.liked ? p.likes - 1 : p.likes + 1,
-                              }
-                              : p
-                          )
-                        )
-                      }
-                      className="mr-4 flex items-center"
+                      onClick={() => handleEditClick(post)}
+                      className="text-blue-500 mr-4"
                     >
-                      {post.liked ? (
-                        <AiFillLike className="text-blue-500" />
-                      ) : (
-                        <AiOutlineLike />
-                      )}
-                      &nbsp;{post.likes}
+                      Edit
                     </button>
                     <button
-                      onClick={() =>
-                        setPosts((prev) => prev.filter((p) => p.id !== post.id))
-                      }
+                      onClick={() => deletePost(post.id)}
                       className="text-red-500 flex items-center"
                     >
                       <FaTrash />
                     </button>
                   </div>
-
-                  {/* Comments Section */}
                   <div className="mt-4 ml-4">
                     <h3 className="font-semibold mb-2">Comments:</h3>
-                    {post.comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="border border-gray-200 p-2 rounded mb-2"
-                      >
-                        <p>{comment.content}</p>
-                        <div className="flex items-center mt-2">
+                    {post.comments
+                      .filter((comment) => comment.username !== "Deleted")
+                      .map((comment) => (
+                        <div
+                          key={comment.commentId}
+                          className="border border-gray-200 p-2 rounded mb-2"
+                        >
+                          <p>{comment.content || "No content available."}</p>
                           <button
                             onClick={() =>
-                              setPosts((prev) =>
-                                prev.map((p) =>
-                                  p.id === post.id
-                                    ? {
-                                      ...p,
-                                      comments: p.comments.map((c) =>
-                                        c.id === comment.id
-                                          ? {
-                                            ...c,
-                                            liked: !c.liked,
-                                            likes: c.liked
-                                              ? c.likes - 1
-                                              : c.likes + 1,
-                                          }
-                                          : c
-                                      ),
-                                    }
-                                    : p
-                                )
-                              )
-                            }
-                            className="mr-4 flex items-center"
-                          >
-                            {comment.liked ? (
-                              <AiFillLike className="text-blue-500" />
-                            ) : (
-                              <AiOutlineLike />
-                            )}
-                            &nbsp;{comment.likes}
-                          </button>
-                          <button
-                            onClick={() =>
-                              setPosts((prev) =>
-                                prev.map((p) =>
-                                  p.id === post.id
-                                    ? {
-                                      ...p,
-                                      comments: p.comments.filter(
-                                        (c) => c.id !== comment.id
-                                      ),
-                                    }
-                                    : p
-                                )
-                              )
+                              deleteComment(post.id, comment.commentId)
                             }
                             className="text-red-500 flex items-center"
                           >
                             <FaTrash />
                           </button>
                         </div>
-                      </div>
-                    ))}
-
-                    {/* New Comment Input */}
-                    <div className="mt-2">
-                      <textarea
-                        className="w-full p-2 border rounded"
-                        placeholder="Add a comment..."
-                        value={commentInputs[post.id] || ""}
-                        onChange={(e) =>
-                          setCommentInputs({
-                            ...commentInputs,
-                            [post.id]: e.target.value,
-                          })
-                        }
-                      />
-                      <button
-                        className="mt-1 bg-green-500 text-white px-3 py-1 rounded"
-                        onClick={() => {
-                          if (commentInputs[post.id]?.trim()) {
-                            setPosts((prev) =>
-                              prev.map((p) =>
-                                p.id === post.id
-                                  ? {
-                                    ...p,
-                                    comments: [
-                                      ...p.comments,
-                                      {
-                                        id: Date.now(),
-                                        content: commentInputs[post.id],
-                                        likes: 0,
-                                        liked: false,
-                                      },
-                                    ],
-                                  }
-                                  : p
-                              )
-                            );
-                            setCommentInputs({ ...commentInputs, [post.id]: "" });
-                          }
-                        }}
-                      >
-                        Comment
-                      </button>
-                    </div>
+                      ))}
+                    <textarea
+                      className="w-full p-2 border rounded"
+                      placeholder="Add a comment..."
+                      value={commentInputs[post.id] || ""}
+                      onChange={(e) =>
+                        setCommentInputs({
+                          ...commentInputs,
+                          [post.id]: e.target.value,
+                        })
+                      }
+                    />
+                    <button
+                      className="mt-1 bg-green-500 text-white px-3 py-1 rounded"
+                      onClick={() => createComment(post.id)}
+                    >
+                      Comment
+                    </button>
                   </div>
                 </div>
               ))
           ) : (
-            <p>Loading posts...</p>
+            <p>No posts found.</p>
           )}
         </div>
       </main>
