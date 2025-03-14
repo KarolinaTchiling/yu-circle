@@ -3,7 +3,7 @@ import axios from "axios";
 import Header from "../components/Header/Header";
 import { FaTrash } from "react-icons/fa";
 
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8081";
 
 interface Comment {
   commentId: number;
