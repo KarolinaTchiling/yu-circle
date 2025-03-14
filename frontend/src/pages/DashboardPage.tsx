@@ -4,7 +4,6 @@ import ProfileComp from "../components/Dashboard/ProfileComp";
 import SettingComp from "../components/Dashboard/SettingComp";
 import DiscourseComp from "../components/Dashboard/DiscourseComp";
 import MarketplaceComp from "../components/Dashboard/MarketplaceComp";
-import CommunityComp from "../components/Dashboard/CommunityComp";
 
 const DashboardPage: React.FC = () => {
   return (
@@ -15,7 +14,6 @@ const DashboardPage: React.FC = () => {
       <SettingComp />
       <DiscourseComp />
       <MarketplaceComp />
-      <CommunityComp />
     </main>
     </>
   );
