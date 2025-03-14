@@ -1,6 +1,6 @@
-/*import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { CheckCircle, UserCircle } from "lucide-react";
 
 const users = [
@@ -38,15 +38,22 @@ const CommunityComp: React.FC<{ filter?: string }> = ({ filter }) => {
               <UserCircle size={64} className="text-gray-400 mx-auto mb-3" />
               <h2 className="text-xl font-semibold">{user.name}</h2>
               <div className="flex justify-center gap-2 my-2">
-                <span className="bg-gray-200 px-2 py-1 rounded text-sm">{user.role}</span>
-                <span className="bg-gray-200 px-2 py-1 rounded text-sm">{user.year}</span>
+                <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                  {user.role}
+                </span>
+                <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                  {user.year}
+                </span>
                 <span className="bg-yellow-400 px-2 py-1 rounded text-sm flex items-center gap-1">
                   {user.rating}
                 </span>
               </div>
               <div className="flex flex-wrap justify-center gap-2 mb-4">
                 {user.tags.map((tag, i) => (
-                  <span key={i} className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">
+                  <span
+                    key={i}
+                    className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -59,6 +66,6 @@ const CommunityComp: React.FC<{ filter?: string }> = ({ filter }) => {
         ))}
     </div>
   );
-};*/
+};
 
-//export default CommunityComp;
+export default CommunityComp;
