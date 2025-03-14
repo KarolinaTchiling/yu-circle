@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import ResetPasswordPopup from "./PasswordPopup";
 
@@ -11,13 +11,27 @@ const SettingComp: React.FC = () => {
 
   const { user, updateUser } = authContext;
 
+  // Initialize formData state
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    yorkID: user?.yorkID || "",
-    phoneNumber: user?.phoneNumber || "",
-    email: user?.email || "",
+    firstname: "",
+    lastname: "",
+    yorkId: "",
+    phoneNumber: "",
+    email: "",
   });
+
+  // Sync user data when it loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstname: user.firstname || "",
+        lastname: user.lastname || "",
+        yorkId: user.yorkId || "",
+        phoneNumber: user.phoneNumber || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]); // Runs when `user` changes
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +73,7 @@ const SettingComp: React.FC = () => {
       {/* Update All Button */}
       <button
         onClick={handleUpdate}
-        className="self-center mt-5 cursor-pointer w-[40%] px-3 py-2 bg-mint border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
+        className="self-center mt-1 cursor-pointer w-[40%] px-3 py-2 bg-mint border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
       >
         Update Profile
       </button>
@@ -72,10 +86,9 @@ const SettingComp: React.FC = () => {
       </button>
 
       {/* Show Reset Password Modal when triggered */}
-      {isModalOpen && (
+      {isModalOpen && user && (
         <ResetPasswordPopup username={user.username} onClose={() => setIsModalOpen(false)} />
       )}
-
     </main>
   );
 };

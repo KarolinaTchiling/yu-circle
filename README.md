@@ -85,13 +85,11 @@ Update a user (the username is in the url, in this example it is "test"):
 curl -X PUT "http://localhost:8080/profiles/test" \
      -H "Content-Type: application/json" \
      -d '{
-            "password": "dog",
-            "york_id": "123444231",
+            "yorkId": "123444231",
             "firstname": "Test",
             "lastname": "Test",         
             "email": "test@gmail.com",
-            "phone_number": 1234567890
-            "bio": "Test"
+            "phoneNumber": "1234567890"
          }'
 ```
 

@@ -41,18 +41,18 @@ public class ProfileService {
     }
     
     // Update Profile
+    @Transactional
     public Profile updateProfile(String username, Profile updatedProfile) {
     	Optional<Profile> optionalProfile = profileRepository.findById(username);
     	if (optionalProfile.isPresent()) {
     		
     	    Profile profile = optionalProfile.get();
     	    
-    	    profile.setPassword(updatedProfile.getPassword());
     	    profile.setFirstname(updatedProfile.getFirstname());
     	    profile.setLastname(updatedProfile.getLastname());
     	    profile.setEmail(updatedProfile.getEmail());
     	    profile.setPhoneNumber(updatedProfile.getPhoneNumber());
-    	    profile.setIsAdmin(updatedProfile.getIsAdmin());
+            profile.setYorkId(updatedProfile.getYorkId());
     	    
     	    return profileRepository.save(profile);
     	    
