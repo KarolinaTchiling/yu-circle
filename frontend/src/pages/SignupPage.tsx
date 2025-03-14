@@ -11,8 +11,8 @@ const SignupPage: React.FC = () => {
     password: "",
     firstname: "",
     lastname: "",
-    yorkId: "",
-    phoneNumber: "",
+    york_id: "",
+    phone_number: "",
   });
 
   // create empty states
@@ -25,8 +25,8 @@ const SignupPage: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (name === "yorkId" && !/^\d{0,9}$/.test(value)) return; // enforce 9 digit length
-    if (name === "phoneNumber" && !/^\d{0,10}$/.test(value.replace(/\D/g, ""))) return; // restrict input to numbers only
+    if (name === "york_id" && !/^\d{0,9}$/.test(value)) return; // enforce 9 digit length
+    if (name === "phone_number" && !/^\d{0,10}$/.test(value.replace(/\D/g, ""))) return; // restrict input to numbers only
 
     setFormData({ ...formData, [name]: value });
   };
@@ -42,7 +42,7 @@ const SignupPage: React.FC = () => {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, phoneNumber: formatPhoneNumber(e.target.value) });
+    setFormData({ ...formData, phone_number: formatPhoneNumber(e.target.value) });
   };
 
   // submit form
@@ -99,11 +99,11 @@ const SignupPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">York ID</label>
-              <input type="text" name="yorkId" value={formData.yorkId} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="9-digit York ID" required />
+              <input type="text" name="york_id" value={formData.york_id} onChange={handleChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="9-digit York ID" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handlePhoneChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="XXX-XXX-XXXX" required />
+              <input type="text" name="phone_number" value={formData.phone_number} onChange={handlePhoneChange} className="w-full rounded-lg border p-3 text-sm outline-none" placeholder="XXX-XXX-XXXX" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Username</label>
