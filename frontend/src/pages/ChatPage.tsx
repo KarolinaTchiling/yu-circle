@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Header from "../components/Header/Header";
 
-const ChatUI: React.FC = () => {
+const ChatPage: React.FC = () => {
+    {/* Messages (to be tweaked when api comes along)*/}
   const [messages, setMessages] = useState([
     { id: 1, sender: "Jason", text: "Do you want to stay back on campus Friday after class?", type: "received" },
     { id: 2, sender: "You", text: "Sure! That sounds good.", type: "sent" }
@@ -44,6 +45,7 @@ const ChatUI: React.FC = () => {
                 <p className="text-sm">Community Match Request</p>
               </div>
               <div>
+                {/* accept or reject - will either move item to chat or not (pending api)*/}
                 <button className="text-lg mr-2">✖</button>
                 <button className="text-lg">✔</button>
               </div>
@@ -66,6 +68,7 @@ const ChatUI: React.FC = () => {
           <h2 className="text-lg font-bold p-2 rounded">Jason</h2>
           <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg my-2" />
           <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg">
+            {/* maps message from earlier into dialog boxes */}
             {messages.map((msg) => (
               <div key={msg.id} className={`mb-4 flex ${msg.type === "sent" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-xs p-3 rounded-lg ${msg.type === "sent" ? "bg-gray-300" : "text-white bg-[var(--color-red)]"}`}>
@@ -74,6 +77,8 @@ const ChatUI: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* dynamically create messages from user side (to be modified when api comes) */}
           <div className="mt-4 flex items-center">
             <input
               type="text"
@@ -92,4 +97,4 @@ const ChatUI: React.FC = () => {
   );
 };
 
-export default ChatUI;
+export default ChatPage;
