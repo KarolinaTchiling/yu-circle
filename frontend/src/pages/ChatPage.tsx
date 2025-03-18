@@ -17,7 +17,7 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full h-screen border rounded-lg overflow-hidden">
+    <div className="flex flex-col w-full h-screen rounded-lg overflow-hidden">
       <Header />
       <div className="flex flex-grow mt-2 rounded-lg space-x-4 p-4">
         {/* Chats List */}
