@@ -119,7 +119,7 @@ const SignupPage: React.FC = () => {
             </div>
             {errorMessage && <p className="text-red-600 text-sm">{errorMessage}</p>}
             {successMessage && <p className="text-green-600 text-sm">{successMessage}</p>}
-            <button type="submit" className="w-full rounded-lg bg-red-600 p-3 text-white transition hover:bg-red-700" disabled={loading}>
+            <button type="submit" className="w-full rounded-lg bg-[var(--color-red)] p-3 text-white transition hover:bg-red-700" disabled={loading}>
               {loading ? "Signing up..." : "Sign Up"}
             </button>
           </form>
