@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import CommunityPage from './pages/CommunityPage'; 
 import MarketplacePage from './pages/MarketplacePage'; 
 import DiscoursePage from './pages/DiscoursePage'; 
+import ChatPage from './pages/ChatPage';
 
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-
+          <Route path="/chat" element={<ChatPage />} />
         </Routes>
 
 
