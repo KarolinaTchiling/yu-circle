@@ -28,9 +28,6 @@ public class Profile {
     private String phoneNumber;
 
     private Boolean isAdmin = false;
-
-    @Column(updatable = false)
-    private java.sql.Timestamp createdAt;
 	
 	@ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -96,14 +93,6 @@ public class Profile {
 
 	public void setIsAdmin(Boolean isAdmin) {
 		this.isAdmin = isAdmin;
-	}
-
-	public java.sql.Timestamp getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(java.sql.Timestamp createdAt) {
-		this.createdAt = createdAt;
 	}
 
 	public Set<Tag> getTags() {
