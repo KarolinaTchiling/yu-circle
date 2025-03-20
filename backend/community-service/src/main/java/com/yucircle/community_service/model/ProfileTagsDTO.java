@@ -14,8 +14,6 @@ public class ProfileTagsDTO {
     private String phoneNumber;
     private Boolean isAdmin = false;
     
-    private java.sql.Timestamp createdAt;
-    
     private Set<String> tags = new HashSet<String>();
     
     
@@ -29,7 +27,6 @@ public class ProfileTagsDTO {
 		this.email = profile.getEmail();
 		this.phoneNumber = profile.getPhoneNumber();
 		this.isAdmin = profile.getIsAdmin();
-		this.createdAt = profile.getCreatedAt();
 		setTags(profile.getTags());
 	}
     
@@ -87,14 +84,6 @@ public class ProfileTagsDTO {
 
 	public void setIsAdmin(Boolean isAdmin) {
 		this.isAdmin = isAdmin;
-	}
-
-	public java.sql.Timestamp getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(java.sql.Timestamp createdAt) {
-		this.createdAt = createdAt;
 	}
 
 	public Set<String> getTags() {
