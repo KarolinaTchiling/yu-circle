@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import com.yucircle.community_service.model.ProfileTagsDTO;
 import com.yucircle.community_service.service.CommunityService;
 import com.yucircle.community_service.service.ProfileTaggingService;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("community")
 public class CommunityProfileController {
@@ -33,7 +35,7 @@ public class CommunityProfileController {
 	
 	
 	//return list of tags belonging to given profile
-	@GetMapping("/get-profile-tags")
+	@PostMapping("/get-profile-tags")
 	public List<String> getProfileTags(@RequestBody Profile profile) {
 		return ptService.getProfileTags(profile.getUsername());
 	}
