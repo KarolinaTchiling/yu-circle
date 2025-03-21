@@ -115,10 +115,6 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
             </div>
 
             
-            
-
-
-
         </div>
     );
 };

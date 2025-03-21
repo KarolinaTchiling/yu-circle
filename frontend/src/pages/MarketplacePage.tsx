@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebars/MarketplaceSidebar";
+import MarketplaceComp from "../components/MarketplaceComp";
 
 
 const MarketplacePage: React.FC = () => {
@@ -25,7 +26,7 @@ const MarketplacePage: React.FC = () => {
   return (
     <>
     <Header />
-    <main className="flex flex-row items-center min-h-[calc(100vh-150px)] mx-14 py-8 gap-10 ">
+    <main className="flex flex-row min-h-[calc(100vh-150px)] mx-14 py-8 gap-10 ">
 
       <div className="h-full w-full flex-[20%]">
         <Sidebar 
@@ -37,8 +38,11 @@ const MarketplacePage: React.FC = () => {
       </div>
 
 
-      <div className="text-red text-3xl p-8 border b-red h-full w-full flex-[80%]">
-        Hello, from marketplace page
+      <div className="h-full w-full flex-[80%] flex flex-col gap-4">
+        <MarketplaceComp/>
+        <MarketplaceComp/>
+        <MarketplaceComp/>
+        <MarketplaceComp/>
       </div>
 
 
