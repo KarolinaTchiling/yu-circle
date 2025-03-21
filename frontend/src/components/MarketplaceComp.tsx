@@ -3,7 +3,23 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
 
-const MarketplaceComp: React.FC = () => {
+interface MarketplaceProps {
+    title: string;
+    user: string;
+    description: string;
+    rating: number;
+    contentType: string;
+    program: string;
+  }
+
+  const MarketplaceComp: React.FC<MarketplaceProps> = ({
+    title,
+    user,
+    description,
+    rating,
+    contentType,
+    program
+  }) => {
     const [value, setValue] = React.useState(2);
 
 
@@ -13,18 +29,18 @@ const MarketplaceComp: React.FC = () => {
         {/* Header */}
         <div className="flex flex-row items-start justify-between">
             <div className="text-3xl">
-                Math 1090 Lecture Notes 
+                {title}
             </div>
 
             <div className="text-dark-teal">
-                <p>Sabrina_the_runner</p>
+                <p>{user}</p>
             </div>
 
         </div>
 
         {/* Description */}
         <div>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            {description}
         </div>
 
         {/* Tags*/}
@@ -37,13 +53,13 @@ const MarketplaceComp: React.FC = () => {
 
             <div className="flex flex-row gap-3">
                 <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
-                    5.0 ★
+                    {rating.toFixed(1)} ★
                 </div>
                 <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
-                    Lecture Notes
+                    {contentType}
                 </div>
                 <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
-                    Math
+                    {program}
                 </div>
             </div>
         </div>

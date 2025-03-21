@@ -39,10 +39,15 @@ const MarketplacePage: React.FC = () => {
 
 
       <div className="h-full w-full flex-[80%] flex flex-col gap-4">
-        <MarketplaceComp/>
-        <MarketplaceComp/>
-        <MarketplaceComp/>
-        <MarketplaceComp/>
+        <MarketplaceComp
+          title="Math 1090 Lecture Notes"
+          user="Sabrina_the_runner"
+          description="Lorem ipsum dolor sit amet..."
+          rating={5.0}
+          contentType="Lecture Notes"
+          program="Math"
+        />
+
       </div>
 
 
