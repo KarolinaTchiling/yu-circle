@@ -32,6 +32,48 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 
 <details>
 
+
+## MarketplaceService
+<details>
+Runs the same way as the other services.
+     
+Get all products:
+```
+curl -X GET http://localhost:8080/marketplace/products
+```
+     
+Get product by id:
+```
+curl -X GET http://localhost:8080/marketplace/products/{id}
+```
+     
+Add a product:
+```
+curl -X POST http://localhost:8080/marketplace/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": " Test",
+    "username": "bob",
+    "description": "test",
+    "price": 19.99,
+    "downloadUrl": "http://google.com/"
+  }'
+```
+
+Update a product:
+```
+curl -X PUT http://localhost:8080/marketplace/products/{id} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": " Test",
+    "username": "bob",
+    "description": "test",
+    "price": 19.99,
+    "downloadUrl": "http://google.com/"
+  }'
+```
+
+</details>
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
