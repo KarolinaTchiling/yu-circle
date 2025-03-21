@@ -1,5 +1,7 @@
 @import "tailwindcss";
-  
+@import "tw-animate-css";
+
+
 @theme {
     --color-offwhite: #F3F3F3;
     --color-grey: rgba(210, 213, 221, 1);
@@ -24,6 +26,5 @@
 
     /* We will be using lg and full */
     --radius-lg: 13px;
-    
 
 }
