@@ -170,7 +170,7 @@ const DiscoursePage: React.FC = () => {
 
           {/* Create Post Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="fixed inset-0 z-50 flex items-center backdrop-blur-[1px] justify-center bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
                 <h2 className="text-lg font-semibold mb-4">Create a Post</h2>
                 <input
