@@ -7,6 +7,7 @@ import BioPopup from "./BioPopup";
 const ProfileComp: React.FC = () => {
   const authContext = useContext(AuthContext);
   const [bio, setBio] = useState<string>("Loading bio...");
+  const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,6 +27,21 @@ const ProfileComp: React.FC = () => {
 
       const data = await response.json();
       setBio(data.userBio || "No bio available.");
+
+      // get profile tags
+      const tagsResponse = await fetch("http://localhost:8082/community/get-profile-tags", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: user.username }),
+      });
+
+      if (!tagsResponse.ok) throw new Error("Failed to fetch profile tags.");
+      const tagsData = await tagsResponse.json();
+      setTags(tagsData);
+      console.log("Tags fetched from server:", tagsData)
+      
     } catch (err) {
       setError("Error loading bio.");
       console.error("Error fetching profile:", err);
@@ -37,6 +53,7 @@ const ProfileComp: React.FC = () => {
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
 
   // Function to refresh bio when modal closes
   const handleBioUpdate = () => {
@@ -89,6 +106,25 @@ const ProfileComp: React.FC = () => {
           <div className="bg-offwhite border b-black rounded-lg p-2 h-1/2 flex flex-col justify-between">
             <h1>Tags</h1>
             <div className="grid grid-cols-2 gap-1 py-2 pb-auto">
+              {tags.length === 0 ? (
+                <p className="text-sm text-gray-500 col-span-2">No tags available.</p>
+              ) : (
+                tags.map((tag, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-row gap-2 items-center"
+                  >
+                    <p className="rounded-full border b-black text-sm bg-white px-2 py-0.5">
+                      {tag}
+                    </p>
+                    <button className="font-bold text-sm cursor-pointer h-6 w-6 bg-light-red border border-black text-black rounded-full hover:bg-red/50 transition-colors duration-300">
+                      ✖
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* <div className="grid grid-cols-2 gap-1 py-2 pb-auto">
               <div className="flex flex-row gap-2 items-center">
                 <p className="rounded-full border b-black text-sm bg-white px-2 py-0.5">Mentor</p>
                 <button className="font-bold text-sm cursor-pointer h-6 w-6 bg-light-red border border-black text-black rounded-full hover:bg-red/50 transition-colors duration-300">
@@ -116,7 +152,7 @@ const ProfileComp: React.FC = () => {
                   ✖
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Add Section */}
             <div className="flex flex-row items-center justify-between gap-2 px-1">
