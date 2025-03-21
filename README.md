@@ -74,6 +74,7 @@ curl -X PUT http://localhost:8080/marketplace/products/{id} \
 ```
 
 </details>
+
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
