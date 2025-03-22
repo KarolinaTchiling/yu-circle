@@ -3,36 +3,37 @@
 
 
 @theme {
-    --color-offwhite: #F3F3F3;
-    --color-grey: rgba(210, 213, 221, 1);
-    --color-grey-50: rgba(210, 213, 221, 0.5);
-    --color-slate: #292F36; 
+  --color-offwhite: #F3F3F3;
+  --color-grey: rgba(210, 213, 221, 1);
+  --color-grey-50: rgba(210, 213, 221, 0.5);
+  --color-slate: #292F36;
 
-    --color-purple: #D8D9FA; 
-    --color-bright-purple: #c8baf7;
-    --color-dark-purple: #B8BACF;
+  --color-purple: #D8D9FA;
+  --color-bright-purple: #c8baf7;
+  --color-dark-purple: #B8BACF;
 
-    --color-light-green: #E8EBE4;
-    --color-dark-teal: #006D66;
-    --color-light-teal: #C3DADA;
-    --color-mint: rgba(3, 201, 188, 0.13);
-    --color-minter: rgba(3, 201, 188, 0.4);
+  --color-light-green: #E8EBE4;
+  --color-dark-teal: #006D66;
+  --color-light-teal: #C3DADA;
+  --color-mint: rgba(3, 201, 188, 0.13);
+  --color-minter: rgba(3, 201, 188, 0.4);
 
-    --color-red: #AF0D1A;
-    --color-light-red: rgba(175, 13, 26, 0.16);
+  --color-red: #AF0D1A;
+  --color-light-red: rgba(175, 13, 26, 0.16);
 
-    --font-sans: DM Sans , sans-serif;
-    --font-fancy: Space Grotesk , sans-serif; 
+  --font-sans: DM Sans, sans-serif;
+  --font-fancy: Space Grotesk, sans-serif;
 
-    /* We will be using lg and full */
-    --radius-lg: 13px;
+  /* We will be using lg and full */
+  --radius-lg: 13px;
 
 }
 
 .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-none {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
