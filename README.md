@@ -32,6 +32,40 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 
 <details>
 
+## MessageService
+<details>
+Runs the same way as the other services.
+
+Each message contains:
+```
+sender: String
+receiver: String
+content: String
+timestamp: LocalDateTime
+```
+     
+Send a Message (You don't need to include a timestamp for sending a message, it's automatically added):
+
+```
+  curl -X POST http://localhost:8080/messages/send \
+  -H "Content-Type: application/json" \
+  -d '{
+        "sender": "bob",
+        "receiver": "jdoe",
+        "content": "Sup"
+      }'
+```
+     
+Get a conversation by two usernames:
+```
+curl -X GET "http://localhost:8080/messages/get?user1=jdoe&user2=bob"; 
+```
+Here you can see that in the parameters for the two usernames are located in the link itself as "user1=" and "user2=".
+The messages are returned in order from most recent to oldest.
+
+</details>
+
+
 
 ## MarketplaceService
 <details>
