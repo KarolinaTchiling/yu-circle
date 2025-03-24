@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "../components/Header/Header";
-import { FaTrash } from "react-icons/fa";
+import {
+  FaTrash,
+  FaClock,
+  FaThumbsUp,
+  FaUser,
+  FaPen, // for edit icon
+} from "react-icons/fa";
 
 const API_URL = "http://localhost:8081";
 
@@ -24,6 +30,29 @@ interface Post {
   username: string;
   isDeleted?: boolean;
   comments: Comment[];
+  createdAt?: string; // If your backend provides it
+}
+
+/** Helper to format "time since posted" */
+function formatTimeAgo(dateString?: string) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  const years = Math.floor(days / 365);
+  return `${years}y ago`;
 }
 
 const DiscoursePage: React.FC = () => {
@@ -42,10 +71,64 @@ const DiscoursePage: React.FC = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
+  // ---------------------------
+  // 1) NEW STATES FOR FILTERING
+  // ---------------------------
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+
+  // Radio filters:
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+
+  // Expand/collapse comments for each post
+  const [expandedPosts, setExpandedPosts] = useState<number[]>([]);
+  const toggleExpand = (postId: number) => {
+    if (expandedPosts.includes(postId)) {
+      setExpandedPosts(expandedPosts.filter((id) => id !== postId));
+    } else {
+      setExpandedPosts([...expandedPosts, postId]);
+    }
+  };
+
+  // ---------------------------
+  // 2) NEW STATES FOR COMMENT EDITING
+  // ---------------------------
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+
+  // Filter logic
+  useEffect(() => {
+    let filtered = [...allPosts];
+
+    if (selectedType) {
+      filtered = filtered.filter(
+        (p) =>
+          (p.title ?? "").toLowerCase().includes(selectedType.toLowerCase()) ||
+          (p.content ?? "").toLowerCase().includes(selectedType.toLowerCase())
+      );
+    }
+
+    if (selectedProgram) {
+      filtered = filtered.filter(
+        (p) =>
+          (p.title ?? "")
+            .toLowerCase()
+            .includes(selectedProgram.toLowerCase()) ||
+          (p.content ?? "")
+            .toLowerCase()
+            .includes(selectedProgram.toLowerCase())
+      );
+    }
+
+    setPosts(filtered);
+  }, [selectedType, selectedProgram, allPosts]);
+
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_URL}/posts`);
       const sortedPosts = response.data.sort((a: Post, b: Post) => b.id - a.id);
+
+      setAllPosts(sortedPosts);
       setPosts(sortedPosts);
       setLoading(false);
     } catch (error) {
@@ -109,18 +192,36 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // Open edit modal for a post
+  // ---------------------------
+  // UPDATE COMMENT function
+  // ---------------------------
+  const updateComment = async (commentId: number) => {
+    if (!editCommentText.trim()) return;
+    try {
+      // Adjust the endpoint if needed to match your backend route
+      await axios.put(
+        `${API_URL}/comments/update/${commentId}`,
+        { content: editCommentText },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      setEditingCommentId(null);
+      setEditCommentText("");
+      fetchPosts();
+    } catch (error) {
+      console.error("Error updating comment:", error);
+    }
+  };
+
+  // "Edit Post" for the entire post
   const handleEditClick = (post: Post) => {
     setEditingPost(post);
     setEditTitle(post.title ?? "");
     setEditContent(post.content ?? "");
   };
 
-  // Final update function: sends minimal payload as a plain object
   const updatePost = async () => {
     if (!editingPost) return;
     try {
-      // Send only title and content; your backend update uses these fields.
       const payload = {
         title: editTitle,
         content: editContent,
@@ -130,7 +231,6 @@ const DiscoursePage: React.FC = () => {
         headers: { "Content-Type": "application/json" },
       });
 
-      // Update local state (optional)
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === editingPost.id
@@ -139,7 +239,6 @@ const DiscoursePage: React.FC = () => {
         )
       );
 
-      // Reset editing state and close modal
       setEditingPost(null);
       setEditTitle("");
       setEditContent("");
@@ -157,8 +256,213 @@ const DiscoursePage: React.FC = () => {
   return (
     <>
       <Header />
-      <main className="flex flex-col items-center">
-        <div className="max-w-2xl mx-auto p-4">
+      <main className="flex">
+        {/* LEFT COLUMN */}
+        <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
+          >
+            Create a Post
+          </button>
+          <input
+            className="w-full p-2 border rounded mb-4 bg-white"
+            placeholder="Search..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+
+          <div className="border rounded p-4">
+            <h2 className="font-bold mb-2">Filter Feed</h2>
+
+            {/* By Type */}
+            <div className="mb-4">
+              <h3 className="font-semibold">By Type</h3>
+              <div className="flex flex-col ml-2">
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value=""
+                    checked={selectedType === ""}
+                    onChange={() => setSelectedType("")}
+                    className="mr-2"
+                  />
+                  <span>All</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value="Study Partners"
+                    checked={selectedType === "Study Partners"}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Study Partners</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value="Mentor - Mentee"
+                    checked={selectedType === "Mentor - Mentee"}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Mentor - Mentee</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value="Advice"
+                    checked={selectedType === "Advice"}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Advice</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value="Course Questions"
+                    checked={selectedType === "Course Questions"}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Course Questions</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="typeFilter"
+                    value="Meet-ups"
+                    checked={selectedType === "Meet-ups"}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Meet-ups</span>
+                </label>
+              </div>
+            </div>
+
+            {/* By Program */}
+            <div>
+              <h3 className="font-semibold">By Program</h3>
+              <div className="flex flex-col ml-2">
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value=""
+                    checked={selectedProgram === ""}
+                    onChange={() => setSelectedProgram("")}
+                    className="mr-2"
+                  />
+                  <span>All</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Engineering"
+                    checked={selectedProgram === "Engineering"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Engineering</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Science"
+                    checked={selectedProgram === "Science"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Science</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Business"
+                    checked={selectedProgram === "Business"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Business</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Liberal Arts"
+                    checked={selectedProgram === "Liberal Arts"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Liberal Arts</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Education"
+                    checked={selectedProgram === "Education"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Education</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Economics"
+                    checked={selectedProgram === "Economics"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Economics</span>
+                </label>
+                <label className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name="programFilter"
+                    value="Health"
+                    checked={selectedProgram === "Health"}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span>Health</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* RIGHT COLUMN */}
+        <section className="flex-1 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <label>Sort by</label>
+              <select className="border rounded p-1">
+                <option>Newest</option>
+                <option>Oldest</option>
+              </select>
+            </div>
+            <input
+              className="p-2 border rounded bg-white w-60"
+              placeholder="Search posts..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
+
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
 
           <button
@@ -242,6 +546,7 @@ const DiscoursePage: React.FC = () => {
             </div>
           )}
 
+          {/* (Preserved) second search input */}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search posts..."
@@ -262,68 +567,192 @@ const DiscoursePage: React.FC = () => {
                   filter.toLowerCase()
                 )
               )
-              .map((post) => (
-                <div key={post.id} className="bg-white p-4 rounded shadow mb-4">
-                  {post.title && <h2 className="font-bold">{post.title}</h2>}
-                  <p>{post.content || "No content available."}</p>
-                  <div className="flex items-center mt-2">
-                    <button
-                      onClick={() => handleEditClick(post)}
-                      className="text-blue-500 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="text-red-500 flex items-center"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                  <div className="mt-4 ml-4">
-                    <h3 className="font-semibold mb-2">Comments:</h3>
-                    {post.comments
-                      .filter((comment) => comment.username !== "Deleted")
-                      .map((comment) => (
-                        <div
-                          key={comment.commentId}
-                          className="border border-gray-200 p-2 rounded mb-2"
-                        >
-                          <p>{comment.content || "No content available."}</p>
-                          <button
-                            onClick={() =>
-                              deleteComment(post.id, comment.commentId)
-                            }
-                            className="text-red-500 flex items-center"
-                          >
-                            <FaTrash />
-                          </button>
+              .map((post) => {
+                const timeAgo = formatTimeAgo(post.createdAt);
+                return (
+                  <div
+                    key={post.id}
+                    className="p-4 rounded mb-4 border relative"
+                    style={{ backgroundColor: "#E8EBE4" }}
+                  >
+                    {/* Title & Username */}
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="font-bold text-base">
+                        {post.title || "No title"}
+                      </h2>
+                      <div className="flex items-center space-x-1 text-[#006D66]">
+                        <span className="text-sm">{post.username}</span>
+                        <div className="w-6 h-6 border border-[#006D66] rounded-full flex items-center justify-center">
+                          <FaUser size={10} />
                         </div>
-                      ))}
-                    <textarea
-                      className="w-full p-2 border rounded"
-                      placeholder="Add a comment..."
-                      value={commentInputs[post.id] || ""}
-                      onChange={(e) =>
-                        setCommentInputs({
-                          ...commentInputs,
-                          [post.id]: e.target.value,
-                        })
-                      }
-                    />
+                      </div>
+                    </div>
+
+                    {/* Post content */}
+                    <p className="text-sm mb-3">{post.content}</p>
+
+                    {/* Row with Time, Comments, Likes, Edit, Delete */}
+                    <div className="flex items-center space-x-2 text-sm mb-2">
+                      {/* Clock + time ago */}
+                      <div className="flex items-center text-[#006D66]">
+                        <FaClock className="mr-1" size={14} />
+                        <span>{timeAgo}</span>
+                      </div>
+
+                      {/* Comments pill */}
+                      <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
+                        {post.comments.length}{" "}
+                        {post.comments.length === 1 ? "comment" : "comments"}
+                      </div>
+
+                      {/* Likes pill */}
+                      <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
+                        {post.likes}
+                        <FaThumbsUp className="ml-1" size={14} />
+                      </div>
+
+                      {/* Edit pill */}
+                      <div
+                        onClick={() => handleEditClick(post)}
+                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                      >
+                        <FaPen className="mr-1" size={14} />
+                        Edit
+                      </div>
+
+                      {/* Delete pill */}
+                      <div
+                        onClick={() => deletePost(post.id)}
+                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                      >
+                        <FaTrash className="mr-1" size={14} />
+                        Delete
+                      </div>
+                    </div>
+
+                    {/* View/Hide Comments */}
                     <button
-                      className="mt-1 bg-green-500 text-white px-3 py-1 rounded"
-                      onClick={() => createComment(post.id)}
+                      className="text-sm text-blue-600 mb-2"
+                      onClick={() => toggleExpand(post.id)}
                     >
-                      Comment
+                      {expandedPosts.includes(post.id)
+                        ? "Hide Comments"
+                        : "View Comments"}
                     </button>
+
+                    {/* Comments (expanded) */}
+                    {expandedPosts.includes(post.id) && (
+                      <div className="mt-2 ml-4">
+                        {post.comments
+                          .filter((comment) => comment.username !== "Deleted")
+                          .map((comment) => {
+                            const isEditing =
+                              editingCommentId === comment.commentId;
+                            return (
+                              <div
+                                key={comment.commentId}
+                                className="border border-gray-200 p-2 rounded mb-2 bg-white"
+                              >
+                                {/* If editing, show textarea; else show content */}
+                                {isEditing ? (
+                                  <div>
+                                    <textarea
+                                      className="w-full p-2 border rounded mb-2"
+                                      value={editCommentText}
+                                      onChange={(e) =>
+                                        setEditCommentText(e.target.value)
+                                      }
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      {/* Save pill (text-xs) */}
+                                      <div
+                                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                        onClick={() =>
+                                          updateComment(comment.commentId)
+                                        }
+                                      >
+                                        Save
+                                      </div>
+                                      {/* Cancel pill (text-xs) */}
+                                      <div
+                                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                        onClick={() => {
+                                          setEditingCommentId(null);
+                                          setEditCommentText("");
+                                        }}
+                                      >
+                                        Cancel
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p>
+                                    {comment.content || "No content available."}
+                                  </p>
+                                )}
+
+                                {/* If not editing, show Edit/Delete pills (text-xs) */}
+                                {!isEditing && (
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    {/* Edit pill */}
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() => {
+                                        setEditingCommentId(comment.commentId);
+                                        setEditCommentText(
+                                          comment.content || ""
+                                        );
+                                      }}
+                                    >
+                                      <FaPen className="mr-1" size={12} />
+                                      Edit
+                                    </div>
+
+                                    {/* Delete pill */}
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() =>
+                                        deleteComment(
+                                          post.id,
+                                          comment.commentId
+                                        )
+                                      }
+                                    >
+                                      <FaTrash className="mr-1" size={12} />
+                                      Delete
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        {/* Add a new comment */}
+                        <textarea
+                          className="w-full p-2 border rounded"
+                          placeholder="Add a comment..."
+                          value={commentInputs[post.id] || ""}
+                          onChange={(e) =>
+                            setCommentInputs({
+                              ...commentInputs,
+                              [post.id]: e.target.value,
+                            })
+                          }
+                        />
+                        <button
+                          className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
+                          onClick={() => createComment(post.id)}
+                        >
+                          Comment
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
           ) : (
             <p>No posts found.</p>
           )}
-        </div>
+        </section>
       </main>
     </>
   );
