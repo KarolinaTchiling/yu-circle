@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "../components/Header/Header";
-import {
-  FaTrash,
-  FaClock,
-  FaThumbsUp,
-  FaUser,
-  FaPen, // for edit icon
-} from "react-icons/fa";
+import { FaTrash, FaClock, FaThumbsUp, FaUser, FaPen } from "react-icons/fa";
 
 const API_URL = "http://localhost:8081";
 
@@ -30,7 +24,18 @@ interface Post {
   username: string;
   isDeleted?: boolean;
   comments: Comment[];
-  createdAt?: string; // If your backend provides it
+  createdAt?: string;
+}
+
+/** Recursively counts comments + nested replies, skipping any with username === "Deleted" */
+function getTotalCommentCount(comments: Comment[]): number {
+  let count = 0;
+  for (const comment of comments) {
+    if (comment.username !== "Deleted") {
+      count += 1 + getTotalCommentCount(comment.replies || []);
+    }
+  }
+  return count;
 }
 
 /** Helper to format "time since posted" */
@@ -56,7 +61,12 @@ function formatTimeAgo(dateString?: string) {
 }
 
 const DiscoursePage: React.FC = () => {
+  // For demonstration, let the user set their own username in the UI
+  // so that it isn't hard-coded when creating posts/comments.
+  const [currentUser, setCurrentUser] = useState("JaneDoe");
+
   const [posts, setPosts] = useState<Post[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [filter, setFilter] = useState("");
@@ -71,16 +81,15 @@ const DiscoursePage: React.FC = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
-  // ---------------------------
-  // 1) NEW STATES FOR FILTERING
-  // ---------------------------
-  const [allPosts, setAllPosts] = useState<Post[]>([]);
-
-  // Radio filters:
+  // FILTER STATES
   const [selectedType, setSelectedType] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("");
 
-  // Expand/collapse comments for each post
+  // COMMENT EDITING STATES
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+
+  // Expand/collapse comments
   const [expandedPosts, setExpandedPosts] = useState<number[]>([]);
   const toggleExpand = (postId: number) => {
     if (expandedPosts.includes(postId)) {
@@ -90,42 +99,11 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // ---------------------------
-  // 2) NEW STATES FOR COMMENT EDITING
-  // ---------------------------
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editCommentText, setEditCommentText] = useState("");
-
-  // Filter logic
-  useEffect(() => {
-    let filtered = [...allPosts];
-
-    if (selectedType) {
-      filtered = filtered.filter(
-        (p) =>
-          (p.title ?? "").toLowerCase().includes(selectedType.toLowerCase()) ||
-          (p.content ?? "").toLowerCase().includes(selectedType.toLowerCase())
-      );
-    }
-
-    if (selectedProgram) {
-      filtered = filtered.filter(
-        (p) =>
-          (p.title ?? "")
-            .toLowerCase()
-            .includes(selectedProgram.toLowerCase()) ||
-          (p.content ?? "")
-            .toLowerCase()
-            .includes(selectedProgram.toLowerCase())
-      );
-    }
-
-    setPosts(filtered);
-  }, [selectedType, selectedProgram, allPosts]);
-
+  // 1) Fetch posts
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_URL}/posts`);
+      // Sort them descending by ID
       const sortedPosts = response.data.sort((a: Post, b: Post) => b.id - a.id);
 
       setAllPosts(sortedPosts);
@@ -141,12 +119,13 @@ const DiscoursePage: React.FC = () => {
     fetchPosts();
   }, []);
 
+  // 2) Create a post (pass the user-chosen username)
   const createPost = async () => {
     if (!newTitle.trim() || !newPost.trim()) return;
     try {
       await axios.post(
         `${API_URL}/posts`,
-        { title: newTitle, content: newPost, username: "User123" },
+        { title: newTitle, content: newPost, username: currentUser },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -158,6 +137,7 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
+  // 3) Delete a post
   const deletePost = async (id: number) => {
     try {
       await axios.delete(`${API_URL}/posts/delete/${id}`);
@@ -167,13 +147,14 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
+  // 4) Create a comment (also pass the user-chosen username)
   const createComment = async (postId: number) => {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
     try {
       await axios.post(
         `${API_URL}/comments`,
-        { content, username: "User123", postId },
+        { content, username: currentUser, postId },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -183,7 +164,8 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  const deleteComment = async (postId: number, commentId: number) => {
+  // 5) Delete a comment
+  const deleteComment = async (_postId: number, commentId: number) => {
     try {
       await axios.delete(`${API_URL}/comments/delete/${commentId}`);
       fetchPosts();
@@ -192,13 +174,10 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // ---------------------------
-  // UPDATE COMMENT function
-  // ---------------------------
+  // 6) Update a comment
   const updateComment = async (commentId: number) => {
     if (!editCommentText.trim()) return;
     try {
-      // Adjust the endpoint if needed to match your backend route
       await axios.put(
         `${API_URL}/comments/update/${commentId}`,
         { content: editCommentText },
@@ -212,13 +191,14 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // "Edit Post" for the entire post
+  // 7) Edit a post
   const handleEditClick = (post: Post) => {
     setEditingPost(post);
     setEditTitle(post.title ?? "");
     setEditContent(post.content ?? "");
   };
 
+  // 8) Update a post
   const updatePost = async () => {
     if (!editingPost) return;
     try {
@@ -251,7 +231,49 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  const visiblePosts = posts.filter((post) => post.username !== "Deleted");
+  // ----------------------
+  // FINAL FILTERING LOGIC
+  // ----------------------
+
+  // 1) Exclude "soft-deleted" posts (username === "Deleted")
+  const visiblePosts = allPosts.filter((post) => post.username !== "Deleted");
+
+  // 2) Filter by "selectedType" if it's not empty or "All"
+  //    We check if post's title or content includes that type string
+  const typeFiltered = visiblePosts.filter((post) => {
+    if (!selectedType || selectedType === "All") {
+      return true; // no filter
+    }
+    const combined = `${(post.title ?? "").toLowerCase()} ${(
+      post.content ?? ""
+    ).toLowerCase()}`;
+    return combined.includes(selectedType.toLowerCase());
+  });
+
+  // 3) Filter by "selectedProgram" if it's not empty or "All"
+  //    Same approach, check if the program word is included in title or content
+  const programFiltered = typeFiltered.filter((post) => {
+    if (!selectedProgram || selectedProgram === "All") {
+      return true; // no filter
+    }
+    const combined = `${(post.title ?? "").toLowerCase()} ${(
+      post.content ?? ""
+    ).toLowerCase()}`;
+    return combined.includes(selectedProgram.toLowerCase());
+  });
+
+  // 4) Now apply the text search from "filter":
+  //    Split user input into words, require each word in the post's text
+  const finalFilteredPosts = programFiltered.filter((post) => {
+    const combined = `${(post.title ?? "").toLowerCase()} ${(
+      post.content ?? ""
+    ).toLowerCase()}`;
+    const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return true; // no search text => no filter
+    return words.every((word) => combined.includes(word));
+  });
+
+  const isNoneMatching = finalFilteredPosts.length === 0;
 
   return (
     <>
@@ -259,6 +281,17 @@ const DiscoursePage: React.FC = () => {
       <main className="flex">
         {/* LEFT COLUMN */}
         <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
+          {/* (Optional) Let the user set their 'username': */}
+          <div className="mb-4">
+            <label className="block font-bold mb-2">Current Username:</label>
+            <input
+              className="w-full p-2 border rounded"
+              placeholder="Type your name..."
+              value={currentUser}
+              onChange={(e) => setCurrentUser(e.target.value)}
+            />
+          </div>
+
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
@@ -283,9 +316,9 @@ const DiscoursePage: React.FC = () => {
                   <input
                     type="radio"
                     name="typeFilter"
-                    value=""
-                    checked={selectedType === ""}
-                    onChange={() => setSelectedType("")}
+                    value="All"
+                    checked={selectedType === "" || selectedType === "All"}
+                    onChange={() => setSelectedType("All")}
                     className="mr-2"
                   />
                   <span>All</span>
@@ -356,9 +389,11 @@ const DiscoursePage: React.FC = () => {
                   <input
                     type="radio"
                     name="programFilter"
-                    value=""
-                    checked={selectedProgram === ""}
-                    onChange={() => setSelectedProgram("")}
+                    value="All"
+                    checked={
+                      selectedProgram === "" || selectedProgram === "All"
+                    }
+                    onChange={() => setSelectedProgram("All")}
                     className="mr-2"
                   />
                   <span>All</span>
@@ -546,7 +581,7 @@ const DiscoursePage: React.FC = () => {
             </div>
           )}
 
-          {/* (Preserved) second search input */}
+          {/* Extra "search posts..." input (can remove if desired) */}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search posts..."
@@ -556,201 +591,192 @@ const DiscoursePage: React.FC = () => {
 
           {loading ? (
             <p>Loading posts...</p>
-          ) : visiblePosts.filter((post) =>
-              (post.content ? post.content.toLowerCase() : "").includes(
-                filter.toLowerCase()
-              )
-            ).length > 0 ? (
-            visiblePosts
-              .filter((post) =>
-                (post.content ? post.content.toLowerCase() : "").includes(
-                  filter.toLowerCase()
-                )
-              )
-              .map((post) => {
-                const timeAgo = formatTimeAgo(post.createdAt);
-                return (
-                  <div
-                    key={post.id}
-                    className="p-4 rounded mb-4 border relative"
-                    style={{ backgroundColor: "#E8EBE4" }}
-                  >
-                    {/* Title & Username */}
-                    <div className="flex items-center justify-between mb-2">
-                      <h2 className="font-bold text-base">
-                        {post.title || "No title"}
-                      </h2>
-                      <div className="flex items-center space-x-1 text-[#006D66]">
-                        <span className="text-sm">{post.username}</span>
-                        <div className="w-6 h-6 border border-[#006D66] rounded-full flex items-center justify-center">
-                          <FaUser size={10} />
-                        </div>
+          ) : isNoneMatching ? (
+            <p>No posts found.</p>
+          ) : (
+            finalFilteredPosts.map((post) => {
+              const timeAgo = formatTimeAgo(post.createdAt);
+              // We'll skip counting any comment whose username === "Deleted"
+              const totalVisibleComments = post.comments.filter(
+                (comment) => comment.username !== "Deleted"
+              ).length;
+
+              return (
+                <div
+                  key={post.id}
+                  className="p-4 rounded mb-4 border relative"
+                  style={{ backgroundColor: "#E8EBE4" }}
+                >
+                  {/* Title & Username */}
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="font-bold text-base">
+                      {post.title || "No title"}
+                    </h2>
+                    <div className="flex items-center space-x-1 text-[#006D66]">
+                      <span className="text-sm">{post.username}</span>
+                      <div className="w-6 h-6 border border-[#006D66] rounded-full flex items-center justify-center">
+                        <FaUser size={10} />
                       </div>
                     </div>
+                  </div>
 
-                    {/* Post content */}
-                    <p className="text-sm mb-3">{post.content}</p>
+                  {/* Post content */}
+                  <p className="text-sm mb-3">{post.content}</p>
 
-                    {/* Row with Time, Comments, Likes, Edit, Delete */}
-                    <div className="flex items-center space-x-2 text-sm mb-2">
-                      {/* Clock + time ago */}
-                      <div className="flex items-center text-[#006D66]">
-                        <FaClock className="mr-1" size={14} />
-                        <span>{timeAgo}</span>
-                      </div>
-
-                      {/* Comments pill */}
-                      <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
-                        {post.comments.length}{" "}
-                        {post.comments.length === 1 ? "comment" : "comments"}
-                      </div>
-
-                      {/* Likes pill */}
-                      <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
-                        {post.likes}
-                        <FaThumbsUp className="ml-1" size={14} />
-                      </div>
-
-                      {/* Edit pill */}
-                      <div
-                        onClick={() => handleEditClick(post)}
-                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                      >
-                        <FaPen className="mr-1" size={14} />
-                        Edit
-                      </div>
-
-                      {/* Delete pill */}
-                      <div
-                        onClick={() => deletePost(post.id)}
-                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                      >
-                        <FaTrash className="mr-1" size={14} />
-                        Delete
-                      </div>
+                  {/* Row with Time, Comments, Likes, Edit, Delete */}
+                  <div className="flex items-center space-x-2 text-sm mb-2">
+                    {/* Clock + time ago */}
+                    <div className="flex items-center text-[#006D66]">
+                      <FaClock className="mr-1" size={14} />
+                      <span>{timeAgo}</span>
                     </div>
 
-                    {/* View/Hide Comments */}
-                    <button
-                      className="text-sm text-blue-600 mb-2"
-                      onClick={() => toggleExpand(post.id)}
+                    {/* Comments pill */}
+                    <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
+                      {totalVisibleComments}{" "}
+                      {totalVisibleComments === 1 ? "comment" : "comments"}
+                    </div>
+
+                    {/* Likes pill */}
+                    <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
+                      {post.likes}
+                      <FaThumbsUp className="ml-1" size={14} />
+                    </div>
+
+                    {/* Edit pill */}
+                    <div
+                      onClick={() => handleEditClick(post)}
+                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
                     >
-                      {expandedPosts.includes(post.id)
-                        ? "Hide Comments"
-                        : "View Comments"}
-                    </button>
+                      <FaPen className="mr-1" size={14} />
+                      Edit
+                    </div>
 
-                    {/* Comments (expanded) */}
-                    {expandedPosts.includes(post.id) && (
-                      <div className="mt-2 ml-4">
-                        {post.comments
-                          .filter((comment) => comment.username !== "Deleted")
-                          .map((comment) => {
-                            const isEditing =
-                              editingCommentId === comment.commentId;
-                            return (
-                              <div
-                                key={comment.commentId}
-                                className="border border-gray-200 p-2 rounded mb-2 bg-white"
-                              >
-                                {/* If editing, show textarea; else show content */}
-                                {isEditing ? (
-                                  <div>
-                                    <textarea
-                                      className="w-full p-2 border rounded mb-2"
-                                      value={editCommentText}
-                                      onChange={(e) =>
-                                        setEditCommentText(e.target.value)
-                                      }
-                                    />
-                                    <div className="flex items-center space-x-2">
-                                      {/* Save pill (text-xs) */}
-                                      <div
-                                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                        onClick={() =>
-                                          updateComment(comment.commentId)
-                                        }
-                                      >
-                                        Save
-                                      </div>
-                                      {/* Cancel pill (text-xs) */}
-                                      <div
-                                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                        onClick={() => {
-                                          setEditingCommentId(null);
-                                          setEditCommentText("");
-                                        }}
-                                      >
-                                        Cancel
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <p>
-                                    {comment.content || "No content available."}
-                                  </p>
-                                )}
+                    {/* Delete pill */}
+                    <div
+                      onClick={() => deletePost(post.id)}
+                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                    >
+                      <FaTrash className="mr-1" size={14} />
+                      Delete
+                    </div>
+                  </div>
 
-                                {/* If not editing, show Edit/Delete pills (text-xs) */}
-                                {!isEditing && (
-                                  <div className="flex items-center space-x-2 mt-2">
-                                    {/* Edit pill */}
-                                    <div
-                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                      onClick={() => {
-                                        setEditingCommentId(comment.commentId);
-                                        setEditCommentText(
-                                          comment.content || ""
-                                        );
-                                      }}
-                                    >
-                                      <FaPen className="mr-1" size={12} />
-                                      Edit
-                                    </div>
+                  {/* View/Hide Comments */}
+                  <button
+                    className="text-sm text-blue-600 mb-2"
+                    onClick={() => toggleExpand(post.id)}
+                  >
+                    {expandedPosts.includes(post.id)
+                      ? "Hide Comments"
+                      : "View Comments"}
+                  </button>
 
-                                    {/* Delete pill */}
+                  {/* Comments (expanded) */}
+                  {expandedPosts.includes(post.id) && (
+                    <div className="mt-2 ml-4">
+                      {post.comments
+                        .filter((comment) => comment.username !== "Deleted")
+                        .map((comment) => {
+                          const isEditing =
+                            editingCommentId === comment.commentId;
+                          return (
+                            <div
+                              key={comment.commentId}
+                              className="border border-gray-200 p-2 rounded mb-2 bg-white"
+                            >
+                              {/* Show the comment’s username */}
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-500">
+                                  {comment.username}
+                                </span>
+                              </div>
+
+                              {isEditing ? (
+                                <div>
+                                  <textarea
+                                    className="w-full p-2 border rounded mb-2"
+                                    value={editCommentText}
+                                    onChange={(e) =>
+                                      setEditCommentText(e.target.value)
+                                    }
+                                  />
+                                  <div className="flex items-center space-x-2">
                                     <div
                                       className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
                                       onClick={() =>
-                                        deleteComment(
-                                          post.id,
-                                          comment.commentId
-                                        )
+                                        updateComment(comment.commentId)
                                       }
                                     >
-                                      <FaTrash className="mr-1" size={12} />
-                                      Delete
+                                      Save
+                                    </div>
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() => {
+                                        setEditingCommentId(null);
+                                        setEditCommentText("");
+                                      }}
+                                    >
+                                      Cancel
                                     </div>
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        {/* Add a new comment */}
-                        <textarea
-                          className="w-full p-2 border rounded"
-                          placeholder="Add a comment..."
-                          value={commentInputs[post.id] || ""}
-                          onChange={(e) =>
-                            setCommentInputs({
-                              ...commentInputs,
-                              [post.id]: e.target.value,
-                            })
-                          }
-                        />
-                        <button
-                          className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
-                          onClick={() => createComment(post.id)}
-                        >
-                          Comment
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-          ) : (
-            <p>No posts found.</p>
+                                </div>
+                              ) : (
+                                <p>
+                                  {comment.content || "No content available."}
+                                </p>
+                              )}
+
+                              {/* If not editing, show Edit/Delete pills */}
+                              {!isEditing && (
+                                <div className="flex items-center space-x-2 mt-2">
+                                  <div
+                                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                    onClick={() => {
+                                      setEditingCommentId(comment.commentId);
+                                      setEditCommentText(comment.content || "");
+                                    }}
+                                  >
+                                    <FaPen className="mr-1" size={12} />
+                                    Edit
+                                  </div>
+                                  <div
+                                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                    onClick={() =>
+                                      deleteComment(post.id, comment.commentId)
+                                    }
+                                  >
+                                    <FaTrash className="mr-1" size={12} />
+                                    Delete
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {/* Add a new comment */}
+                      <textarea
+                        className="w-full p-2 border rounded"
+                        placeholder="Add a comment..."
+                        value={commentInputs[post.id] || ""}
+                        onChange={(e) =>
+                          setCommentInputs({
+                            ...commentInputs,
+                            [post.id]: e.target.value,
+                          })
+                        }
+                      />
+                      <button
+                        className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
+                        onClick={() => createComment(post.id)}
+                      >
+                        Comment
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </section>
       </main>
