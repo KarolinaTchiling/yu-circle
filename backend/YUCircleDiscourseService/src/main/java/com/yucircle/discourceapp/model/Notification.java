@@ -1,4 +1,4 @@
-package com.yucircle.notification_service.model;
+package com.yucircle.discourceapp.model;
 
 import java.time.LocalDateTime;
 

@@ -1,7 +1,5 @@
 package com.yucircle.notification_service.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,9 +18,6 @@ public class NotificationService {
 
 	public Deque<String> getAllUserNotifications(String username) {
 		
-		/*
-		createNotification(username);
-		
 		List<Notification> listN= nRepo.findByUsername(username);
 		Deque<String> notifications = new LinkedList<>();
 		
@@ -31,20 +26,5 @@ public class NotificationService {
 		}
 		
 		return notifications;
-		*/
-		
-		return null;
 	}
-	
-	/*
-	private void createNotification(String username) {
-		Notification n = new Notification();
-		n.setMessage("I'm a Test Message");
-		n.setTimestamp(LocalDateTime.now());
-		n.setUsername(username);
-		
-		nRepo.save(n);
-	}
-	*/
-
 }
