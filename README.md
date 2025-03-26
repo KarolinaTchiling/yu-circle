@@ -152,7 +152,22 @@ curl -X POST http://localhost:8080/marketplace/products \
 curl -X DELETE http://localhost:8080/marketplace/products/{id}
 ```
 
-### Rating:
+### Update a product:
+```
+curl -X PUT http://localhost:8080/marketplace/products/{id} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": " Test",
+    "username": "bob",
+    "description": "test",
+    "price": 19.99,
+    "downloadUrl": "http://google.com/",
+    "program": "Science",
+    "contentType": "Tutoring"
+  }'
+```
+
+## Ratings:
 
 ### Add a rating:
 Rating is an int.
@@ -179,20 +194,6 @@ http://localhost:8080/marketplace/rating/user/{username}
 ```
 
 
-### Update a product:
-```
-curl -X PUT http://localhost:8080/marketplace/products/{id} \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productName": " Test",
-    "username": "bob",
-    "description": "test",
-    "price": 19.99,
-    "downloadUrl": "http://google.com/",
-    "program": "Science",
-    "contentType": "Tutoring"
-  }'
-```
 
 </details>
 
