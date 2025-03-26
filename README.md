@@ -151,10 +151,23 @@ curl -X POST http://localhost:8080/marketplace/products \
 ```
 curl -X DELETE http://localhost:8080/marketplace/products/{id}
 ```
+### Update Tags:
+Here the parameters are in the url, in the examples "program=Health", and "contentType=Videos" is where you fill in the tags to update.
+Note that you can do any combination of the two, so you don't have to update both everytime.
+We don't need to update the priceType because we check "free" or "paid" by what the price of the produce is ($0.00=free).
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?program=Health"
+```
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?contentType=Videos"
+```
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?program=Health&contentType=Videos"
+```
 
 ### Update a product:
 ```
-curl -X PUT http://localhost:8080/marketplace/products/{id} \
+curl -X PUT http://localhost:8080/marketplace/update/{id} \
   -H "Content-Type: application/json" \
   -d '{
     "productName": " Test",
