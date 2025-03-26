@@ -32,6 +32,106 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 
 <details>
 
+## MessageService
+<details>
+Runs the same way as the other services.
+
+
+Each message contains:
+```
+sender: String
+receiver: String
+content: String
+timestamp: LocalDateTime
+```
+
+     
+### Send a Message (You don't need to include a timestamp for sending a message, it's automatically added):
+
+```
+  curl -X POST http://localhost:8080/messages/send \
+  -H "Content-Type: application/json" \
+  -d '{
+        "sender": "bob",
+        "receiver": "jdoe",
+        "content": "Sup"
+      }'
+```
+
+     
+### Get a conversation by two usernames:
+```
+curl -X GET "http://localhost:8080/messages/get?user1=jdoe&user2=bob"; 
+```
+Here you can see that in the parameters for the two usernames are located in the link itself as "user1=" and "user2=".
+The messages are returned in order from most recent to oldest.
+
+
+### Delete a message:
+```
+curl -X DELETE "http://localhost:8080/messages/delete/1"; 
+```
+Here the "id" of the message is in the url as "1": ".../delete/1".
+
+
+### Get all messages sent by a user:
+```
+curl -X GET "http://localhost:8080/messages/sent?sender=jdoe"
+```
+Here the "sender" parameter is in the url as "?sender=", in this example the sender is jdoe.
+
+
+### Get all messages received by a user:
+```
+curl -X GET "http://localhost:8080/messages/received?receiver=jdoe"
+```
+Here the "receiver" parameter is in the url as "?receiver=", in this example the receiver is jdoe.
+</details>
+
+
+
+## MarketplaceService
+<details>
+Runs the same way as the other services.
+     
+Get all products:
+```
+curl -X GET http://localhost:8080/marketplace/products
+```
+     
+Get product by id:
+```
+curl -X GET http://localhost:8080/marketplace/products/{id}
+```
+     
+Add a product:
+```
+curl -X POST http://localhost:8080/marketplace/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": " Test",
+    "username": "bob",
+    "description": "test",
+    "price": 19.99,
+    "downloadUrl": "http://google.com/"
+  }'
+```
+
+Update a product:
+```
+curl -X PUT http://localhost:8080/marketplace/products/{id} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": " Test",
+    "username": "bob",
+    "description": "test",
+    "price": 19.99,
+    "downloadUrl": "http://google.com/"
+  }'
+```
+
+</details>
+
 ## ProfileService:
 <details>
 Assuming you are using eclipse, follow these steps:
