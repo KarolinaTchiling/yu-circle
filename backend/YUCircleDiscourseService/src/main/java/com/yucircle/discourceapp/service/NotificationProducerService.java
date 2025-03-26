@@ -17,11 +17,23 @@ public class NotificationProducerService {
 				
 		Notification n;
 		
-		// comment or reply?
+		// check if its a comment or reply
 		if (comment.getParentComment() != null) {
+			
+			// if user is replying to their own comment, exit
+			if (comment.getParentComment().getUsername().equals(comment.getUsername())) {
+				return;
+			}
+			
 			n = buildReplyNotification(comment);
 		}
 		else {
+			
+			// if user is commenting on their own post, exit
+			if (comment.getPost().getUsername().equals(comment.getUsername())) {
+				return;
+			}
+			
 			n = buildCommentNotification(comment);
 		}
 		
