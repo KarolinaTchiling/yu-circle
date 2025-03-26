@@ -42,7 +42,7 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
                 <div
                     role="dialog"
                     aria-modal="true"
-                    className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px] bg-opacity-50"
+                    className="fixed inset-0 z-50 flex items-center justify-center  bg-black/50"
                 >
                     <div className="bg-[#e9ece3] p-6 rounded-lg shadow-lg w-[600px] border space-y-4">
                         <h2 className="text-2xl font-semibold text-center">Create your Marketplace Post</h2>
@@ -199,7 +199,13 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
                         </div>
 
                         {/* Submit Button (does nothing) */}
-                        <div className="flex justify-center pt-2">
+                        <div className="flex gap-3 justify-center pt-2">
+                            <button
+                                className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Cancel
+                            </button>
                             <button
                                 className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
                                 onClick={null}
