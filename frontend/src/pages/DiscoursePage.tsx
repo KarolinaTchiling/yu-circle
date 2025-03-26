@@ -130,6 +130,10 @@ const DiscoursePage: React.FC = () => {
   }, []);
 
   const createPost = async () => {
+    if (!currentUser) {
+      alert("Please log in to create a post.");
+      return;
+    }
     if (!newTitle.trim() || !newPost.trim()) return;
     try {
       await axios.post(
@@ -223,6 +227,7 @@ const DiscoursePage: React.FC = () => {
   };
 
   const handleEditClick = (post: Post) => {
+    if (currentUser !== post.username) return;
     setEditingPost(post);
     setEditTitle(post.title ?? "");
     setEditContent(post.content ?? "");
@@ -297,25 +302,32 @@ const DiscoursePage: React.FC = () => {
               <p>{reply.content || "No content available."}</p>
             )}
             <div className="flex items-center space-x-2 mt-2">
-              <div
-                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                onClick={() => {
-                  setEditingCommentId(reply.commentId);
-                  setEditCommentText(reply.content || "");
-                }}
-              >
-                <FaPen className="mr-1" size={12} />
-                Edit
-              </div>
-              <div
-                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                onClick={() =>
-                  deleteComment(comment.commentId as number, reply.commentId)
-                }
-              >
-                <FaTrash className="mr-1" size={12} />
-                Delete
-              </div>
+              {currentUser === reply.username && (
+                <>
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() => {
+                      setEditingCommentId(reply.commentId);
+                      setEditCommentText(reply.content || "");
+                    }}
+                  >
+                    <FaPen className="mr-1" size={12} />
+                    Edit
+                  </div>
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() =>
+                      deleteComment(
+                        comment.commentId as number,
+                        reply.commentId
+                      )
+                    }
+                  >
+                    <FaTrash className="mr-1" size={12} />
+                    Delete
+                  </div>
+                </>
+              )}
             </div>
             {renderReplies(reply)}
           </div>
@@ -362,12 +374,14 @@ const DiscoursePage: React.FC = () => {
               readOnly
             />
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
-          >
-            Create a Post
-          </button>
+          {currentUser && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
+            >
+              Create a Post
+            </button>
+          )}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search..."
@@ -561,12 +575,6 @@ const DiscoursePage: React.FC = () => {
             />
           </div>
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
-          >
-            +
-          </button>
           {isModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
@@ -684,20 +692,24 @@ const DiscoursePage: React.FC = () => {
                       {post.likes}
                       <FaThumbsUp className="ml-1" size={14} />
                     </div>
-                    <div
-                      onClick={() => handleEditClick(post)}
-                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                    >
-                      <FaPen className="mr-1" size={14} />
-                      Edit
-                    </div>
-                    <div
-                      onClick={() => deletePost(post.id)}
-                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                    >
-                      <FaTrash className="mr-1" size={14} />
-                      Delete
-                    </div>
+                    {currentUser === post.username && (
+                      <>
+                        <div
+                          onClick={() => handleEditClick(post)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaPen className="mr-1" size={14} />
+                          Edit
+                        </div>
+                        <div
+                          onClick={() => deletePost(post.id)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaTrash className="mr-1" size={14} />
+                          Delete
+                        </div>
+                      </>
+                    )}
                   </div>
                   <button
                     className="text-sm text-blue-600 mb-2"
@@ -759,25 +771,34 @@ const DiscoursePage: React.FC = () => {
                                 </p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
-                                <div
-                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                  onClick={() => {
-                                    setEditingCommentId(comment.commentId);
-                                    setEditCommentText(comment.content || "");
-                                  }}
-                                >
-                                  <FaPen className="mr-1" size={12} />
-                                  Edit
-                                </div>
-                                <div
-                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                  onClick={() =>
-                                    deleteComment(post.id, comment.commentId)
-                                  }
-                                >
-                                  <FaTrash className="mr-1" size={12} />
-                                  Delete
-                                </div>
+                                {currentUser === comment.username && (
+                                  <>
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() => {
+                                        setEditingCommentId(comment.commentId);
+                                        setEditCommentText(
+                                          comment.content || ""
+                                        );
+                                      }}
+                                    >
+                                      <FaPen className="mr-1" size={12} />
+                                      Edit
+                                    </div>
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() =>
+                                        deleteComment(
+                                          post.id,
+                                          comment.commentId
+                                        )
+                                      }
+                                    >
+                                      <FaTrash className="mr-1" size={12} />
+                                      Delete
+                                    </div>
+                                  </>
+                                )}
                                 <div
                                   className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
                                   onClick={() => {
