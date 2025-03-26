@@ -35,8 +35,6 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 ## MessageService
 <details>
 Runs the same way as the other services.
-
-
 Each message contains:
 ```
 sender: String
@@ -92,19 +90,54 @@ Here the "receiver" parameter is in the url as "?receiver=", in this example the
 
 ## MarketplaceService
 <details>
-Runs the same way as the other services.
-\     
-Get all products:
+Runs the same way as the other services.  
+
+Each product contains:
+```
+productId: Long
+productName: Long
+username: String
+description: String
+price: double
+downloadUrl: String
+program: String
+contentType: String
+```
+
+### Get all products:
 ```
 curl -X GET http://localhost:8080/marketplace/products
 ```
      
-Get product by id:
+### Get product by id:
+(id is in the url as {id})
 ```
 curl -X GET http://localhost:8080/marketplace/products/{id}
 ```
+
+### Search by tags:
+There are three fields, program, contentType, and priceType. They are passed in the url as parameters, 
+any combination of the three works (you do not need to include all if you dont need it). priceType can be either "free" or "paid".
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&priceType=paid
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?priceType=paid
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType=Videos
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType=Videos&priceType=free
+```
+
+### Delete a product by id:
+(id is in the url as {id})
+```
+curl -X DELETE http://localhost:8080/marketplace/products/{id}
+```
      
-Add a product:
+### Add a product:
 ```
 curl -X POST http://localhost:8080/marketplace/products \
   -H "Content-Type: application/json" \
@@ -113,11 +146,13 @@ curl -X POST http://localhost:8080/marketplace/products \
     "username": "bob",
     "description": "test",
     "price": 19.99,
-    "downloadUrl": "http://google.com/"
+    "downloadUrl": "http://google.com/",
+    "program": "Science",
+    "contentType": "Tutoring"
   }'
 ```
 
-Update a product:
+### Update a product:
 ```
 curl -X PUT http://localhost:8080/marketplace/products/{id} \
   -H "Content-Type: application/json" \
@@ -126,7 +161,9 @@ curl -X PUT http://localhost:8080/marketplace/products/{id} \
     "username": "bob",
     "description": "test",
     "price": 19.99,
-    "downloadUrl": "http://google.com/"
+    "downloadUrl": "http://google.com/",
+    "program": "Science",
+    "contentType": "Tutoring"
   }'
 ```
 
