@@ -4,21 +4,23 @@ import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
 
 interface MarketplaceProps {
-    title: string;
-    user: string;
+    productName: string;
+    username: string;
     description: string;
-    rating: number;
-    contentType: string;
+    price: number;
+    downloadUrl: string;
     program: string;
+    contentType: string;
   }
 
   const MarketplaceComp: React.FC<MarketplaceProps> = ({
-    title,
-    user,
+    productName,
+    username,
     description,
-    rating,
+    price,
+    downloadUrl,
+    program,
     contentType,
-    program
   }) => {
     const [value, setValue] = React.useState(2);
 
@@ -29,11 +31,11 @@ interface MarketplaceProps {
         {/* Header */}
         <div className="flex flex-row items-start justify-between">
             <div className="text-3xl">
-                {title}
+                {productName}
             </div>
 
             <div className="text-dark-teal">
-                <p>{user}</p>
+                <p>{username}</p>
             </div>
 
         </div>
@@ -47,14 +49,14 @@ interface MarketplaceProps {
         <div className="flex flex-row justify-between pt-2">
             <div>
                 <div className="text-lg font-semibold py-1 px-10 bg-purple border border-black text-black rounded-2xl">
-                    Free
+                    {price}
                 </div>
             </div>
 
             <div className="flex flex-row gap-3">
-                <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
+                {/* <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
                     {rating.toFixed(1)} ★
-                </div>
+                </div> */}
                 <div className="text-lg py-1 px-5 bg-offwhite border border-black text-black rounded-lg">
                     {contentType}
                 </div>
