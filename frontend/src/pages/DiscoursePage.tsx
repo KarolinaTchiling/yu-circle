@@ -4,6 +4,7 @@ import Header from "../components/Header/Header";
 import { FaTrash, FaClock, FaThumbsUp, FaUser, FaPen } from "react-icons/fa";
 
 const API_URL = "http://localhost:8081";
+const PROFILE_API_URL = "http://localhost:8082";
 
 interface Comment {
   commentId: number;
@@ -27,7 +28,6 @@ interface Post {
   createdAt?: string;
 }
 
-/** Recursively counts comments + nested replies, skipping any with username === "Deleted" */
 function getTotalCommentCount(comments: Comment[]): number {
   let count = 0;
   for (const comment of comments) {
@@ -38,13 +38,11 @@ function getTotalCommentCount(comments: Comment[]): number {
   return count;
 }
 
-/** Helper to format "time since posted" */
 function formatTimeAgo(dateString?: string) {
   if (!dateString) return "";
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
   if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -61,10 +59,7 @@ function formatTimeAgo(dateString?: string) {
 }
 
 const DiscoursePage: React.FC = () => {
-  // For demonstration, let the user set their own username in the UI
-  // so that it isn't hard-coded when creating posts/comments.
-  const [currentUser, setCurrentUser] = useState("JaneDoe");
-
+  const [currentUser, setCurrentUser] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
@@ -75,22 +70,15 @@ const DiscoursePage: React.FC = () => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // State for editing a post
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-
-  // FILTER STATES
   const [selectedType, setSelectedType] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("");
-
-  // COMMENT EDITING STATES
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentText, setEditCommentText] = useState("");
-
-  // Expand/collapse comments
   const [expandedPosts, setExpandedPosts] = useState<number[]>([]);
+
   const toggleExpand = (postId: number) => {
     if (expandedPosts.includes(postId)) {
       setExpandedPosts(expandedPosts.filter((id) => id !== postId));
@@ -99,13 +87,10 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 1) Fetch posts
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_URL}/posts`);
-      // Sort them descending by ID
       const sortedPosts = response.data.sort((a: Post, b: Post) => b.id - a.id);
-
       setAllPosts(sortedPosts);
       setPosts(sortedPosts);
       setLoading(false);
@@ -119,7 +104,25 @@ const DiscoursePage: React.FC = () => {
     fetchPosts();
   }, []);
 
-  // 2) Create a post (pass the user-chosen username)
+  useEffect(() => {
+    // Retrieve the logged-in username from localStorage
+    const storedUser = localStorage.getItem("username");
+    if (storedUser) {
+      // Fetch all profiles and then find the matching profile
+      axios
+        .get(`${PROFILE_API_URL}/community/get-default-profiles`)
+        .then((res) => {
+          const profiles = res.data;
+          const found = profiles.find((p: any) => p.username === storedUser);
+          setCurrentUser(found ? found.username : storedUser);
+        })
+        .catch((error) => {
+          console.error("Error fetching profiles:", error);
+          setCurrentUser(storedUser);
+        });
+    }
+  }, []);
+
   const createPost = async () => {
     if (!newTitle.trim() || !newPost.trim()) return;
     try {
@@ -137,7 +140,6 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 3) Delete a post
   const deletePost = async (id: number) => {
     try {
       await axios.delete(`${API_URL}/posts/delete/${id}`);
@@ -147,7 +149,6 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 4) Create a comment (also pass the user-chosen username)
   const createComment = async (postId: number) => {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
@@ -164,7 +165,6 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 5) Delete a comment
   const deleteComment = async (_postId: number, commentId: number) => {
     try {
       await axios.delete(`${API_URL}/comments/delete/${commentId}`);
@@ -174,7 +174,6 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 6) Update a comment
   const updateComment = async (commentId: number) => {
     if (!editCommentText.trim()) return;
     try {
@@ -191,26 +190,19 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // 7) Edit a post
   const handleEditClick = (post: Post) => {
     setEditingPost(post);
     setEditTitle(post.title ?? "");
     setEditContent(post.content ?? "");
   };
 
-  // 8) Update a post
   const updatePost = async () => {
     if (!editingPost) return;
     try {
-      const payload = {
-        title: editTitle,
-        content: editContent,
-      };
-
+      const payload = { title: editTitle, content: editContent };
       await axios.put(`${API_URL}/posts/update/${editingPost.id}`, payload, {
         headers: { "Content-Type": "application/json" },
       });
-
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === editingPost.id
@@ -218,7 +210,6 @@ const DiscoursePage: React.FC = () => {
             : p
         )
       );
-
       setEditingPost(null);
       setEditTitle("");
       setEditContent("");
@@ -231,67 +222,45 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
-  // ----------------------
-  // FINAL FILTERING LOGIC
-  // ----------------------
-
-  // 1) Exclude "soft-deleted" posts (username === "Deleted")
   const visiblePosts = allPosts.filter((post) => post.username !== "Deleted");
-
-  // 2) Filter by "selectedType" if it's not empty or "All"
-  //    We check if post's title or content includes that type string
   const typeFiltered = visiblePosts.filter((post) => {
-    if (!selectedType || selectedType === "All") {
-      return true; // no filter
-    }
+    if (!selectedType || selectedType === "All") return true;
     const combined = `${(post.title ?? "").toLowerCase()} ${(
       post.content ?? ""
     ).toLowerCase()}`;
     return combined.includes(selectedType.toLowerCase());
   });
-
-  // 3) Filter by "selectedProgram" if it's not empty or "All"
-  //    Same approach, check if the program word is included in title or content
   const programFiltered = typeFiltered.filter((post) => {
-    if (!selectedProgram || selectedProgram === "All") {
-      return true; // no filter
-    }
+    if (!selectedProgram || selectedProgram === "All") return true;
     const combined = `${(post.title ?? "").toLowerCase()} ${(
       post.content ?? ""
     ).toLowerCase()}`;
     return combined.includes(selectedProgram.toLowerCase());
   });
-
-  // 4) Now apply the text search from "filter":
-  //    Split user input into words, require each word in the post's text
   const finalFilteredPosts = programFiltered.filter((post) => {
     const combined = `${(post.title ?? "").toLowerCase()} ${(
       post.content ?? ""
     ).toLowerCase()}`;
     const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
-    if (words.length === 0) return true; // no search text => no filter
+    if (words.length === 0) return true;
     return words.every((word) => combined.includes(word));
   });
-
   const isNoneMatching = finalFilteredPosts.length === 0;
 
   return (
     <>
       <Header />
       <main className="flex">
-        {/* LEFT COLUMN */}
         <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
-          {/* (Optional) Let the user set their 'username': */}
           <div className="mb-4">
             <label className="block font-bold mb-2">Current Username:</label>
             <input
               className="w-full p-2 border rounded"
-              placeholder="Type your name..."
+              placeholder="Current Username"
               value={currentUser}
-              onChange={(e) => setCurrentUser(e.target.value)}
+              readOnly
             />
           </div>
-
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
@@ -304,11 +273,8 @@ const DiscoursePage: React.FC = () => {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
-
           <div className="border rounded p-4">
             <h2 className="font-bold mb-2">Filter Feed</h2>
-
-            {/* By Type */}
             <div className="mb-4">
               <h3 className="font-semibold">By Type</h3>
               <div className="flex flex-col ml-2">
@@ -380,8 +346,6 @@ const DiscoursePage: React.FC = () => {
                 </label>
               </div>
             </div>
-
-            {/* By Program */}
             <div>
               <h3 className="font-semibold">By Program</h3>
               <div className="flex flex-col ml-2">
@@ -479,8 +443,6 @@ const DiscoursePage: React.FC = () => {
             </div>
           </div>
         </aside>
-
-        {/* RIGHT COLUMN */}
         <section className="flex-1 p-4">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -497,12 +459,15 @@ const DiscoursePage: React.FC = () => {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
-
-          {/* Create Post Modal */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
+          >
+            +
+          </button>
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px] bg-opacity-50">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
                 <h2 className="text-lg font-semibold mb-4">Create a Post</h2>
                 <input
@@ -534,8 +499,6 @@ const DiscoursePage: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Edit Post Modal */}
           {editingPost && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
@@ -573,15 +536,12 @@ const DiscoursePage: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Extra "search posts..." input (can remove if desired) */}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search posts..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
-
           {loading ? (
             <p>Loading posts...</p>
           ) : isNoneMatching ? (
@@ -589,18 +549,15 @@ const DiscoursePage: React.FC = () => {
           ) : (
             finalFilteredPosts.map((post) => {
               const timeAgo = formatTimeAgo(post.createdAt);
-              // We'll skip counting any comment whose username === "Deleted"
               const totalVisibleComments = post.comments.filter(
                 (comment) => comment.username !== "Deleted"
               ).length;
-
               return (
                 <div
                   key={post.id}
                   className="p-4 rounded mb-4 border relative"
                   style={{ backgroundColor: "#E8EBE4" }}
                 >
-                  {/* Title & Username */}
                   <div className="flex items-center justify-between mb-2">
                     <h2 className="font-bold text-base">
                       {post.title || "No title"}
@@ -612,31 +569,20 @@ const DiscoursePage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Post content */}
                   <p className="text-sm mb-3">{post.content}</p>
-
-                  {/* Row with Time, Comments, Likes, Edit, Delete */}
                   <div className="flex items-center space-x-2 text-sm mb-2">
-                    {/* Clock + time ago */}
                     <div className="flex items-center text-[#006D66]">
                       <FaClock className="mr-1" size={14} />
                       <span>{timeAgo}</span>
                     </div>
-
-                    {/* Comments pill */}
                     <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
                       {totalVisibleComments}{" "}
                       {totalVisibleComments === 1 ? "comment" : "comments"}
                     </div>
-
-                    {/* Likes pill */}
                     <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
                       {post.likes}
                       <FaThumbsUp className="ml-1" size={14} />
                     </div>
-
-                    {/* Edit pill */}
                     <div
                       onClick={() => handleEditClick(post)}
                       className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
@@ -644,8 +590,6 @@ const DiscoursePage: React.FC = () => {
                       <FaPen className="mr-1" size={14} />
                       Edit
                     </div>
-
-                    {/* Delete pill */}
                     <div
                       onClick={() => deletePost(post.id)}
                       className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
@@ -654,8 +598,6 @@ const DiscoursePage: React.FC = () => {
                       Delete
                     </div>
                   </div>
-
-                  {/* View/Hide Comments */}
                   <button
                     className="text-sm text-blue-600 mb-2"
                     onClick={() => toggleExpand(post.id)}
@@ -664,8 +606,6 @@ const DiscoursePage: React.FC = () => {
                       ? "Hide Comments"
                       : "View Comments"}
                   </button>
-
-                  {/* Comments (expanded) */}
                   {expandedPosts.includes(post.id) && (
                     <div className="mt-2 ml-4">
                       {post.comments
@@ -678,13 +618,11 @@ const DiscoursePage: React.FC = () => {
                               key={comment.commentId}
                               className="border border-gray-200 p-2 rounded mb-2 bg-white"
                             >
-                              {/* Show the comment’s username */}
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs text-gray-500">
                                   {comment.username}
                                 </span>
                               </div>
-
                               {isEditing ? (
                                 <div>
                                   <textarea
@@ -719,8 +657,6 @@ const DiscoursePage: React.FC = () => {
                                   {comment.content || "No content available."}
                                 </p>
                               )}
-
-                              {/* If not editing, show Edit/Delete pills */}
                               {!isEditing && (
                                 <div className="flex items-center space-x-2 mt-2">
                                   <div
@@ -747,7 +683,6 @@ const DiscoursePage: React.FC = () => {
                             </div>
                           );
                         })}
-                      {/* Add a new comment */}
                       <textarea
                         className="w-full p-2 border rounded"
                         placeholder="Add a comment..."
