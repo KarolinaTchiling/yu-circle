@@ -500,16 +500,9 @@ const DiscoursePage: React.FC = () => {
 
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
-          >
-            +
-          </button>
-
           {/* Create Post Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px] bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
                 <h2 className="text-lg font-semibold mb-4">Create a Post</h2>
                 <input
