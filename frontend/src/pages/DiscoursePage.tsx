@@ -68,6 +68,7 @@ const DiscoursePage: React.FC = () => {
   const [commentInputs, setCommentInputs] = useState<{ [key: number]: string }>(
     {}
   );
+  const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -175,6 +176,27 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
+  const createReply = async (parentId: number, postId: number) => {
+    const storedUser = localStorage.getItem("username") || currentUser;
+    if (!storedUser) {
+      alert("Please log in to leave a reply.");
+      return;
+    }
+    const content = replyInputs[parentId]?.trim();
+    if (!content) return;
+    try {
+      await axios.post(
+        `${API_URL}/comments`,
+        { content, username: storedUser, postId, parentId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      fetchPosts();
+      setReplyInputs({ ...replyInputs, [parentId]: "" });
+    } catch (error) {
+      console.error("Error adding reply:", error);
+    }
+  };
+
   const deleteComment = async (_postId: number, commentId: number) => {
     try {
       await axios.delete(`${API_URL}/comments/delete/${commentId}`);
@@ -230,6 +252,75 @@ const DiscoursePage: React.FC = () => {
       setEditTitle("");
       setEditContent("");
     }
+  };
+
+  const renderReplies = (comment: Comment) => {
+    if (!comment.replies || comment.replies.length === 0) return null;
+    return comment.replies
+      .filter((r) => r.username !== "Deleted")
+      .map((reply) => {
+        const isEditingReply = editingCommentId === reply.commentId;
+        return (
+          <div
+            key={reply.commentId}
+            className="ml-4 border border-white p-2 rounded mb-2"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500">{reply.username}</span>
+            </div>
+            {isEditingReply ? (
+              <div>
+                <textarea
+                  className="w-full p-2 border rounded mb-2"
+                  value={editCommentText}
+                  onChange={(e) => setEditCommentText(e.target.value)}
+                />
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() => updateComment(reply.commentId)}
+                  >
+                    Save
+                  </div>
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() => {
+                      setEditingCommentId(null);
+                      setEditCommentText("");
+                    }}
+                  >
+                    Cancel
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p>{reply.content || "No content available."}</p>
+            )}
+            <div className="flex items-center space-x-2 mt-2">
+              <div
+                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                onClick={() => {
+                  setEditingCommentId(reply.commentId);
+                  setEditCommentText(reply.content || "");
+                }}
+              >
+                <FaPen className="mr-1" size={12} />
+                Edit
+              </div>
+              <div
+                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                onClick={() =>
+                  deleteComment(comment.commentId as number, reply.commentId)
+                }
+              >
+                <FaTrash className="mr-1" size={12} />
+                Delete
+              </div>
+            </div>
+            {renderReplies(reply)}
+          </div>
+        );
+      });
   };
 
   const visiblePosts = allPosts.filter((post) => post.username !== "Deleted");
@@ -667,27 +758,65 @@ const DiscoursePage: React.FC = () => {
                                   {comment.content || "No content available."}
                                 </p>
                               )}
-                              {!isEditing && (
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <div
-                                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                    onClick={() => {
-                                      setEditingCommentId(comment.commentId);
-                                      setEditCommentText(comment.content || "");
-                                    }}
-                                  >
-                                    <FaPen className="mr-1" size={12} />
-                                    Edit
-                                  </div>
-                                  <div
-                                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                    onClick={() =>
-                                      deleteComment(post.id, comment.commentId)
+                              <div className="flex items-center space-x-2 mt-2">
+                                <div
+                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                  onClick={() => {
+                                    setEditingCommentId(comment.commentId);
+                                    setEditCommentText(comment.content || "");
+                                  }}
+                                >
+                                  <FaPen className="mr-1" size={12} />
+                                  Edit
+                                </div>
+                                <div
+                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                  onClick={() =>
+                                    deleteComment(post.id, comment.commentId)
+                                  }
+                                >
+                                  <FaTrash className="mr-1" size={12} />
+                                  Delete
+                                </div>
+                                <div
+                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                  onClick={() => {
+                                    const currentReply =
+                                      replyInputs[comment.commentId] || "";
+                                    setReplyInputs({
+                                      ...replyInputs,
+                                      [comment.commentId]: currentReply,
+                                    });
+                                  }}
+                                >
+                                  Reply
+                                </div>
+                              </div>
+                              {renderReplies(comment)}
+                              {replyInputs.hasOwnProperty(
+                                comment.commentId
+                              ) && (
+                                <div className="mt-2">
+                                  <textarea
+                                    className="w-full p-2 border rounded"
+                                    placeholder="Write a reply..."
+                                    value={replyInputs[comment.commentId]}
+                                    onChange={(e) =>
+                                      setReplyInputs({
+                                        ...replyInputs,
+                                        [comment.commentId]: e.target.value,
+                                      })
                                     }
+                                  />
+                                  <button
+                                    className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                    onClick={() =>
+                                      createReply(comment.commentId, post.id)
+                                    }
+                                    disabled={!currentUser}
                                   >
-                                    <FaTrash className="mr-1" size={12} />
-                                    Delete
-                                  </div>
+                                    Reply
+                                  </button>
                                 </div>
                               )}
                             </div>
