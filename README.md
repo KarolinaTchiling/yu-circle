@@ -32,22 +32,106 @@ Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-
 
 <details>
 
+## MessageService
+<details>
+Runs the same way as the other services.
+Each message contains:
+```
+sender: String
+receiver: String
+content: String
+timestamp: LocalDateTime
+```
+
+     
+### Send a Message (You don't need to include a timestamp for sending a message, it's automatically added):
+
+```
+  curl -X POST http://localhost:8080/messages/send \
+  -H "Content-Type: application/json" \
+  -d '{
+        "sender": "bob",
+        "receiver": "jdoe",
+        "content": "Sup"
+      }'
+```
+
+     
+### Get a conversation by two usernames:
+```
+curl -X GET "http://localhost:8080/messages/get?user1=jdoe&user2=bob"; 
+```
+Here you can see that in the parameters for the two usernames are located in the link itself as "user1=" and "user2=".
+The messages are returned in order from most recent to oldest.
+
+
+### Delete a message:
+```
+curl -X DELETE "http://localhost:8080/messages/delete/1"; 
+```
+Here the "id" of the message is in the url as "1": ".../delete/1".
+
+
+### Get all messages sent by a user:
+```
+curl -X GET "http://localhost:8080/messages/sent?sender=jdoe"
+```
+Here the "sender" parameter is in the url as "?sender=", in this example the sender is jdoe.
+
+
+### Get all messages received by a user:
+```
+curl -X GET "http://localhost:8080/messages/received?receiver=jdoe"
+```
+Here the "receiver" parameter is in the url as "?receiver=", in this example the receiver is jdoe.
+</details>
+
+
 
 ## MarketplaceService
 <details>
-Runs the same way as the other services.
-     
-Get all products:
+Runs the same way as the other services.  
+
+Each product contains:
+```
+productId: Long
+productName: Long
+username: String
+description: String
+price: double
+downloadUrl: String
+program: String
+contentType: String
+```
+
+### Get all products:
 ```
 curl -X GET http://localhost:8080/marketplace/products
 ```
      
-Get product by id:
+### Get product by id:
+(id is in the url as {id})
 ```
 curl -X GET http://localhost:8080/marketplace/products/{id}
 ```
-     
-Add a product:
+
+### Search by tags:
+There are three fields, program, contentType, and priceType. They are passed in the url as parameters, 
+any combination of the three works (you do not need to include all if you dont need it). priceType can be either "free" or "paid".
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&priceType=paid
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?priceType=paid
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType=Videos
+```
+```
+curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType=Videos&priceType=free
+```
+
+### Add a product:
 ```
 curl -X POST http://localhost:8080/marketplace/products \
   -H "Content-Type: application/json" \
@@ -56,22 +140,73 @@ curl -X POST http://localhost:8080/marketplace/products \
     "username": "bob",
     "description": "test",
     "price": 19.99,
-    "downloadUrl": "http://google.com/"
+    "downloadUrl": "http://google.com/",
+    "program": "Science",
+    "contentType": "Tutoring"
   }'
 ```
 
-Update a product:
+### Delete a product by id:
+(id is in the url as {id})
 ```
-curl -X PUT http://localhost:8080/marketplace/products/{id} \
+curl -X DELETE http://localhost:8080/marketplace/products/{id}
+```
+### Update Tags:
+Here the parameters are in the url, in the examples "program=Health", and "contentType=Videos" is where you fill in the tags to update.
+Note that you can do any combination of the two, so you don't have to update both everytime.
+We don't need to update the priceType because we check "free" or "paid" by what the price of the produce is ($0.00=free).
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?program=Health"
+```
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?contentType=Videos"
+```
+```
+curl -X PUT "http://localhost:8080/marketplace/updatetags/1?program=Health&contentType=Videos"
+```
+
+### Update a product:
+```
+curl -X PUT http://localhost:8080/marketplace/update/{id} \
   -H "Content-Type: application/json" \
   -d '{
     "productName": " Test",
     "username": "bob",
     "description": "test",
     "price": 19.99,
-    "downloadUrl": "http://google.com/"
+    "downloadUrl": "http://google.com/",
+    "program": "Science",
+    "contentType": "Tutoring"
   }'
 ```
+
+## Ratings:
+
+### Add a rating:
+Rating is an int.
+```
+curl -X POST http://localhost:8080/marketplace/rating/add \
+     -H "Content-Type: application/json" \
+     -d '{
+          "productId": 3,
+          "rating": 1,
+          "username": "jdoe"
+     }'
+```
+
+### Get the average rating of a product:
+Here you put the productId in the url, in this example it goes inside {id}.
+```
+http://localhost:8080/marketplace/rating/{id}
+```
+
+### Get all ratings made by a user:
+Here you put the username in the url, in this example it goes inside {username}.
+```
+http://localhost:8080/marketplace/rating/user/{username}
+```
+
+
 
 </details>
 

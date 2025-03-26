@@ -13,16 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @Entity
 @Table(name = "marketplace")
-//@JsonPropertyOrder({"id", "title", "content", "username", "comments"})
 public class Product {
-//	@Id
-//	@GeneratedValue(strategy = GenerationType.IDENTITY)
-//	private Long productId;
-//	
-//	private String name;
-//	private String description;
-//	private String url;
-	
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
@@ -30,8 +21,14 @@ public class Product {
     private String productName;
     private String username;
     private String description;
-    private Double price;
+    private double price;
     private String downloadUrl;
+    
+    // Fields for searching
+    private String program;
+    private String contentType;
+    
+
 	
 	// Getters
 	//
@@ -39,13 +36,32 @@ public class Product {
 		return this.productName;
 	}
 	
+	public String getUsername() {
+		// TODO Auto-generated method stub
+		return this.username;
+	}
+	
 	public String getDescription() {
 		return this.description;
+	}
+
+	public Double getPrice() {
+		// TODO Auto-generated method stub
+		return this.price;
 	}
 	
 	public String getDownloadUrl() {
 		return this.downloadUrl;
 	}
+	
+	public String getProgram() {
+		return this.program;
+	}
+	
+	public String getContentType() {
+		return this.contentType;
+	}
+	
 	
 	// Setters
 	//
@@ -53,31 +69,29 @@ public class Product {
 		this.productName = name;
 	}
 	
+	public void setUsername(String username) {
+		// TODO Auto-generated method stub
+		this.username = username;
+	}
+	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	public void setPrice(Double price) {
+		// TODO Auto-generated method stub
+		this.price = price;
 	}
 	
 	public void setDownloadUrl(String downloadUrl) {
 		this.downloadUrl = downloadUrl;
 	}
-
-	public String getUsername() {
-		// TODO Auto-generated method stub
-		return this.username;
+	
+	public void setProgram(String program) {
+		this.program = program;
 	}
-
-	public Double getPrice() {
-		// TODO Auto-generated method stub
-		return this.price;
-	}
-
-	public void setPrice(Double price) {
-		// TODO Auto-generated method stub
-		this.price = price;
-	}
-
-	public void setUsername(String username) {
-		// TODO Auto-generated method stub
-		this.username = username;
+	
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 }
