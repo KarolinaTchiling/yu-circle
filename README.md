@@ -93,7 +93,7 @@ Here the "receiver" parameter is in the url as "?receiver=", in this example the
 ## MarketplaceService
 <details>
 Runs the same way as the other services.
-     
+\     
 Get all products:
 ```
 curl -X GET http://localhost:8080/marketplace/products
