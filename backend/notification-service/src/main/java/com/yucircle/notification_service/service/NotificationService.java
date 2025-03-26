@@ -16,13 +16,13 @@ public class NotificationService {
 	@Autowired
 	private NotificationRepository nRepo;
 
-	public Deque<String> getAllUserNotifications(String username) {
+	public Deque<Notification> getAllUserNotifications(String username) {
 		
 		List<Notification> listN = nRepo.findByUsername(username);
-		Deque<String> notifications = new LinkedList<>();
+		Deque<Notification> notifications = new LinkedList<>();
 		
 		for (Notification n : listN) {
-			notifications.addFirst(n.getMessage());
+			notifications.addFirst(n);
 		}
 		
 		return notifications;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yucircle.notification_service.model.Notification;
 import com.yucircle.notification_service.service.NotificationService;
 
 @RestController
@@ -19,7 +20,7 @@ public class NotificationController {
 	private NotificationService nService;
 	
 	@GetMapping("/get-notifications/{username}")
-	public Deque<String> getAllUserNotifications(@PathVariable String username) {
+	public Deque<Notification> getAllUserNotifications(@PathVariable String username) {
 		
 		return nService.getAllUserNotifications(username);
 	}
