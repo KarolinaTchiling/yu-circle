@@ -39,7 +39,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<Comment> addComment(@RequestBody Map<String, Object> request) {
         Comment savedComment = commentService.addComment(request);
-        nService.createNotification("bob");
+        nService.createCommentNotification(savedComment);
         return ResponseEntity.ok(savedComment);
     }
 

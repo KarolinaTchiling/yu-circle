@@ -18,11 +18,11 @@ public class NotificationService {
 
 	public Deque<String> getAllUserNotifications(String username) {
 		
-		List<Notification> listN= nRepo.findByUsername(username);
+		List<Notification> listN = nRepo.findByUsername(username);
 		Deque<String> notifications = new LinkedList<>();
 		
 		for (Notification n : listN) {
-			notifications.addFirst(n.getUsername() + " " + n.getMessage() + " " + n.getTimestamp());
+			notifications.addFirst(n.getMessage());
 		}
 		
 		return notifications;
