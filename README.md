@@ -131,12 +131,6 @@ curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType
 curl -X GET http://localhost:8080/marketplace/search?program=Science&contentType=Videos&priceType=free
 ```
 
-### Delete a product by id:
-(id is in the url as {id})
-```
-curl -X DELETE http://localhost:8080/marketplace/products/{id}
-```
-     
 ### Add a product:
 ```
 curl -X POST http://localhost:8080/marketplace/products \
@@ -151,6 +145,39 @@ curl -X POST http://localhost:8080/marketplace/products \
     "contentType": "Tutoring"
   }'
 ```
+
+### Delete a product by id:
+(id is in the url as {id})
+```
+curl -X DELETE http://localhost:8080/marketplace/products/{id}
+```
+
+### Rating:
+
+### Add a rating:
+Rating is an int.
+```
+curl -X POST http://localhost:8080/marketplace/rating/add \
+     -H "Content-Type: application/json" \
+     -d '{
+          "productId": 3,
+          "rating": 1,
+          "username": "jdoe"
+     }'
+```
+
+### Get the average rating of a product:
+Here you put the productId in the url, in this example it goes inside {id}.
+```
+http://localhost:8080/marketplace/rating/{id}
+```
+
+### Get all ratings made by a user:
+Here you put the username in the url, in this example it goes inside {username}.
+```
+http://localhost:8080/marketplace/rating/user/{username}
+```
+
 
 ### Update a product:
 ```
