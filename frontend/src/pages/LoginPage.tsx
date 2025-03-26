@@ -24,11 +24,12 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
-  
+
     try {
       // success scenario (just redirect and save to cookies)
       await login(formData.username, formData.password);
-      window.location.href = "/"; 
+      localStorage.setItem("username", formData.username);
+      window.location.href = "/";
     } catch (error: any) {
       // error scenario, display error message
       console.error("Login Error:", error);

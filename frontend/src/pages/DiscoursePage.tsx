@@ -105,10 +105,8 @@ const DiscoursePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Retrieve the logged-in username from localStorage
     const storedUser = localStorage.getItem("username");
     if (storedUser) {
-      // Fetch all profiles and then find the matching profile
       axios
         .get(`${PROFILE_API_URL}/community/get-default-profiles`)
         .then((res) => {
@@ -120,6 +118,13 @@ const DiscoursePage: React.FC = () => {
           console.error("Error fetching profiles:", error);
           setCurrentUser(storedUser);
         });
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("username");
+    if (storedUser) {
+      setCurrentUser(storedUser);
     }
   }, []);
 
@@ -150,12 +155,17 @@ const DiscoursePage: React.FC = () => {
   };
 
   const createComment = async (postId: number) => {
+    const storedUser = localStorage.getItem("username") || currentUser;
+    if (!storedUser) {
+      alert("Please log in to leave a comment.");
+      return;
+    }
     const content = commentInputs[postId]?.trim();
     if (!content) return;
     try {
       await axios.post(
         `${API_URL}/comments`,
-        { content, username: currentUser, postId },
+        { content, username: storedUser, postId },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -685,7 +695,9 @@ const DiscoursePage: React.FC = () => {
                         })}
                       <textarea
                         className="w-full p-2 border rounded"
-                        placeholder="Add a comment..."
+                        placeholder={
+                          currentUser ? "Add a comment..." : "Log in to comment"
+                        }
                         value={commentInputs[post.id] || ""}
                         onChange={(e) =>
                           setCommentInputs({
@@ -693,10 +705,12 @@ const DiscoursePage: React.FC = () => {
                             [post.id]: e.target.value,
                           })
                         }
+                        disabled={!currentUser}
                       />
                       <button
                         className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
                         onClick={() => createComment(post.id)}
+                        disabled={!currentUser}
                       >
                         Comment
                       </button>
