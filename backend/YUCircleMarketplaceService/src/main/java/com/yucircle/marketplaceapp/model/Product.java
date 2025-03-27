@@ -32,6 +32,10 @@ public class Product {
 	
 	// Getters
 	//
+	public Long getProductId() {
+		return this.productId;
+	}
+	
 	public String getProductName() {
 		return this.productName;
 	}

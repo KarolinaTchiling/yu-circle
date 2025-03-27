@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import Header from "../components/Header/Header";
 import { FaTrash, FaClock, FaThumbsUp, FaUser, FaPen } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
 
 const API_URL = "http://localhost:8081";
 const PROFILE_API_URL = "http://localhost:8082";
@@ -59,7 +60,8 @@ function formatTimeAgo(dateString?: string) {
 }
 
 const DiscoursePage: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState("");
+  const { user, isAuthenticated } = useContext(AuthContext)!;
+  const [currentUser, setCurrentUser] = useState(user ? user.username : "");
   const [posts, setPosts] = useState<Post[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
@@ -105,30 +107,6 @@ const DiscoursePage: React.FC = () => {
     fetchPosts();
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("username");
-    if (storedUser) {
-      axios
-        .get(`${PROFILE_API_URL}/community/get-default-profiles`)
-        .then((res) => {
-          const profiles = res.data;
-          const found = profiles.find((p: any) => p.username === storedUser);
-          setCurrentUser(found ? found.username : storedUser);
-        })
-        .catch((error) => {
-          console.error("Error fetching profiles:", error);
-          setCurrentUser(storedUser);
-        });
-    }
-  }, []);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("username");
-    if (storedUser) {
-      setCurrentUser(storedUser);
-    }
-  }, []);
-
   const createPost = async () => {
     if (!newTitle.trim() || !newPost.trim()) return;
     try {
@@ -156,8 +134,7 @@ const DiscoursePage: React.FC = () => {
   };
 
   const createComment = async (postId: number) => {
-    const storedUser = localStorage.getItem("username") || currentUser;
-    if (!storedUser) {
+    if (!isAuthenticated) {
       alert("Please log in to leave a comment.");
       return;
     }
@@ -166,7 +143,7 @@ const DiscoursePage: React.FC = () => {
     try {
       await axios.post(
         `${API_URL}/comments`,
-        { content, username: storedUser, postId },
+        { content, username: currentUser, postId },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -177,8 +154,7 @@ const DiscoursePage: React.FC = () => {
   };
 
   const createReply = async (parentId: number, postId: number) => {
-    const storedUser = localStorage.getItem("username") || currentUser;
-    if (!storedUser) {
+    if (!isAuthenticated) {
       alert("Please log in to leave a reply.");
       return;
     }
@@ -187,7 +163,7 @@ const DiscoursePage: React.FC = () => {
     try {
       await axios.post(
         `${API_URL}/comments`,
-        { content, username: storedUser, postId, parentId },
+        { content, username: currentUser, postId, parentId },
         { headers: { "Content-Type": "application/json" } }
       );
       fetchPosts();
@@ -223,9 +199,11 @@ const DiscoursePage: React.FC = () => {
   };
 
   const handleEditClick = (post: Post) => {
-    setEditingPost(post);
-    setEditTitle(post.title ?? "");
-    setEditContent(post.content ?? "");
+    if (post.username === currentUser) {
+      setEditingPost(post);
+      setEditTitle(post.title ?? "");
+      setEditContent(post.content ?? "");
+    }
   };
 
   const updatePost = async () => {
@@ -297,25 +275,32 @@ const DiscoursePage: React.FC = () => {
               <p>{reply.content || "No content available."}</p>
             )}
             <div className="flex items-center space-x-2 mt-2">
-              <div
-                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                onClick={() => {
-                  setEditingCommentId(reply.commentId);
-                  setEditCommentText(reply.content || "");
-                }}
-              >
-                <FaPen className="mr-1" size={12} />
-                Edit
-              </div>
-              <div
-                className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                onClick={() =>
-                  deleteComment(comment.commentId as number, reply.commentId)
-                }
-              >
-                <FaTrash className="mr-1" size={12} />
-                Delete
-              </div>
+              {reply.username === currentUser && (
+                <>
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() => {
+                      setEditingCommentId(reply.commentId);
+                      setEditCommentText(reply.content || "");
+                    }}
+                  >
+                    <FaPen className="mr-1" size={12} />
+                    Edit
+                  </div>
+                  <div
+                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                    onClick={() =>
+                      deleteComment(
+                        comment.commentId as number,
+                        reply.commentId
+                      )
+                    }
+                  >
+                    <FaTrash className="mr-1" size={12} />
+                    Delete
+                  </div>
+                </>
+              )}
             </div>
             {renderReplies(reply)}
           </div>
@@ -353,21 +338,38 @@ const DiscoursePage: React.FC = () => {
       <Header />
       <main className="flex">
         <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
-          <div className="mb-4">
-            <label className="block font-bold mb-2">Current Username:</label>
-            <input
-              className="w-full p-2 border rounded"
-              placeholder="Current Username"
-              value={currentUser}
-              readOnly
-            />
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
-          >
-            Create a Post
-          </button>
+          {isAuthenticated ? (
+            <>
+              <div className="mb-4">
+                <label className="block font-bold mb-2">
+                  Current Username:
+                </label>
+                <input
+                  className="w-full p-2 border rounded"
+                  placeholder="Current Username"
+                  value={currentUser}
+                  readOnly
+                />
+              </div>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
+              >
+                Create a Post
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-full h-12 rounded bg-[var(--color-red)] text-base flex items-center justify-center font-fancy text-white mb-2">
+                Please log in first.
+              </div>
+              <a href="http://localhost:3000/login">
+                <div className="w-full h-12 rounded bg-[var(--color-red)] text-base flex items-center justify-center font-fancy text-white mb-4">
+                  Log in or Create Account
+                </div>
+              </a>
+            </>
+          )}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
             placeholder="Search..."
@@ -561,79 +563,52 @@ const DiscoursePage: React.FC = () => {
             />
           </div>
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
-          >
-            +
-          </button>
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
-                <h2 className="text-lg font-semibold mb-4">Create a Post</h2>
-                <input
-                  className="w-full p-2 border rounded-lg mb-2"
-                  placeholder="Post Title..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-                <textarea
-                  className="w-full h-30 p-2 border rounded-lg"
-                  placeholder="Write a post..."
-                  value={newPost}
-                  onChange={(e) => setNewPost(e.target.value)}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button
-                    className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
-                    onClick={createPost}
-                  >
-                    Post
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {editingPost && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
-                <h2 className="text-lg font-semibold mb-4">Edit Post</h2>
-                <input
-                  className="w-full p-2 border rounded-lg mb-2"
-                  placeholder="Edit Title..."
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                />
-                <textarea
-                  className="w-full h-30 p-2 border rounded-lg"
-                  placeholder="Edit Content..."
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button
-                    className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
-                    onClick={() => {
-                      setEditingPost(null);
-                      setEditTitle("");
-                      setEditContent("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
-                    onClick={updatePost}
-                  >
-                    Save
-                  </button>
-                </div>
+                {isAuthenticated ? (
+                  <>
+                    <h2 className="text-lg font-semibold mb-4">
+                      Create a Post
+                    </h2>
+                    <input
+                      className="w-full p-2 border rounded-lg mb-2"
+                      placeholder="Post Title..."
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                    />
+                    <textarea
+                      className="w-full h-30 p-2 border rounded-lg"
+                      placeholder="Write a post..."
+                      value={newPost}
+                      onChange={(e) => setNewPost(e.target.value)}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
+                        onClick={() => setIsModalOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
+                        onClick={createPost}
+                      >
+                        Post
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <p className="mb-4">Can't make a post if not logged in.</p>
+                    <button className="w-full rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700 mb-2">
+                      Login
+                    </button>
+                    <button className="w-full rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700">
+                      Create Account
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -684,20 +659,24 @@ const DiscoursePage: React.FC = () => {
                       {post.likes}
                       <FaThumbsUp className="ml-1" size={14} />
                     </div>
-                    <div
-                      onClick={() => handleEditClick(post)}
-                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                    >
-                      <FaPen className="mr-1" size={14} />
-                      Edit
-                    </div>
-                    <div
-                      onClick={() => deletePost(post.id)}
-                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                    >
-                      <FaTrash className="mr-1" size={14} />
-                      Delete
-                    </div>
+                    {post.username === currentUser && (
+                      <>
+                        <div
+                          onClick={() => handleEditClick(post)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaPen className="mr-1" size={14} />
+                          Edit
+                        </div>
+                        <div
+                          onClick={() => deletePost(post.id)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaTrash className="mr-1" size={14} />
+                          Delete
+                        </div>
+                      </>
+                    )}
                   </div>
                   <button
                     className="text-sm text-blue-600 mb-2"
@@ -759,25 +738,34 @@ const DiscoursePage: React.FC = () => {
                                 </p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
-                                <div
-                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                  onClick={() => {
-                                    setEditingCommentId(comment.commentId);
-                                    setEditCommentText(comment.content || "");
-                                  }}
-                                >
-                                  <FaPen className="mr-1" size={12} />
-                                  Edit
-                                </div>
-                                <div
-                                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                                  onClick={() =>
-                                    deleteComment(post.id, comment.commentId)
-                                  }
-                                >
-                                  <FaTrash className="mr-1" size={12} />
-                                  Delete
-                                </div>
+                                {comment.username === currentUser && (
+                                  <>
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() => {
+                                        setEditingCommentId(comment.commentId);
+                                        setEditCommentText(
+                                          comment.content || ""
+                                        );
+                                      }}
+                                    >
+                                      <FaPen className="mr-1" size={12} />
+                                      Edit
+                                    </div>
+                                    <div
+                                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                                      onClick={() =>
+                                        deleteComment(
+                                          post.id,
+                                          comment.commentId
+                                        )
+                                      }
+                                    >
+                                      <FaTrash className="mr-1" size={12} />
+                                      Delete
+                                    </div>
+                                  </>
+                                )}
                                 <div
                                   className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
                                   onClick={() => {
@@ -813,7 +801,7 @@ const DiscoursePage: React.FC = () => {
                                     onClick={() =>
                                       createReply(comment.commentId, post.id)
                                     }
-                                    disabled={!currentUser}
+                                    disabled={!isAuthenticated}
                                   >
                                     Reply
                                   </button>
@@ -825,7 +813,9 @@ const DiscoursePage: React.FC = () => {
                       <textarea
                         className="w-full p-2 border rounded"
                         placeholder={
-                          currentUser ? "Add a comment..." : "Log in to comment"
+                          isAuthenticated
+                            ? "Add a comment..."
+                            : "Log in to comment"
                         }
                         value={commentInputs[post.id] || ""}
                         onChange={(e) =>
@@ -834,15 +824,16 @@ const DiscoursePage: React.FC = () => {
                             [post.id]: e.target.value,
                           })
                         }
-                        disabled={!currentUser}
+                        disabled={!isAuthenticated}
                       />
-                      <button
-                        className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
-                        onClick={() => createComment(post.id)}
-                        disabled={!currentUser}
-                      >
-                        Comment
-                      </button>
+                      {isAuthenticated && (
+                        <button
+                          className="mt-1 bg-green-500 text-white px-3 py-1 rounded text-sm"
+                          onClick={() => createComment(post.id)}
+                        >
+                          Comment
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

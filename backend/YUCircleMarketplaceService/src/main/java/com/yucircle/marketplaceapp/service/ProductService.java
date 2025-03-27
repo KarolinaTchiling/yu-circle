@@ -82,7 +82,7 @@ public class ProductService {
     }
     
 
-    public List<Product> dynamicSearch(String program, String contentType, String priceType) {
+    public List<Product> dynamicSearch(List<String> program, List<String> contentType, String priceType) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Product> query = cb.createQuery(Product.class);
         Root<Product> root = query.from(Product.class);
@@ -90,11 +90,19 @@ public class ProductService {
         List<Predicate> predicates = new ArrayList<>();
 
         if (program != null && !program.isEmpty()) {
-            predicates.add(cb.equal(root.get("program"), program));
+            CriteriaBuilder.In<String> inClause = cb.in(root.get("program"));
+            for (String p : program) {
+                inClause.value(p);
+            }
+            predicates.add(inClause);
         }
 
         if (contentType != null && !contentType.isEmpty()) {
-            predicates.add(cb.equal(root.get("contentType"), contentType));
+            CriteriaBuilder.In<String> contentTypeIn = cb.in(root.get("contentType"));
+            for (String ct : contentType) {
+                contentTypeIn.value(ct);
+            }
+            predicates.add(contentTypeIn);
         }
 
         if (priceType != null) {

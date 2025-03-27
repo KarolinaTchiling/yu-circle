@@ -27,7 +27,7 @@ const ProfileComp: React.FC = () => {
       if (!response.ok) throw new Error("Failed to fetch profile.");
 
       const data = await response.json();
-      setBio(data.userBio || "No bio available.");
+      setBio(data.bio || "No bio available.");
 
       // get profile tags
       const tagsResponse = await fetch("http://localhost:8082/community/get-profile-tags", {
