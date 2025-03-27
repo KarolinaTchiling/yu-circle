@@ -563,16 +563,8 @@ const DiscoursePage: React.FC = () => {
             />
           </div>
           <h1 className="text-2xl font-bold mb-4">Discourse Page</h1>
-          {isAuthenticated && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="fixed bottom-20 right-20 w-20 h-20 rounded-full bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700"
-            >
-              +
-            </button>
-          )}
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
                 {isAuthenticated ? (
                   <>
