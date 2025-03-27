@@ -19,7 +19,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
   if (!isOpen) return null;
 
   if (!authContext) {
-    return <p>Logged out, try again..</p>;
+    return <p>..</p>;
   }
 
   const { user } = authContext;
@@ -28,7 +28,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
     
     const payload = {
       productName: newTitle,
-      username: user!.username, // you can make this dynamic later
+      username: user!.username, 
       description: newContent,
       price: isFree ? 0 : parseFloat(price),
       downloadUrl,

@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebars/MarketplaceSidebar";
 import MarketplaceComp from "../components/MarketplaceComp";
 
 type Product = {
+  productId: number;
   productName: string;
   username: string;
   description: string;
@@ -133,6 +134,7 @@ const MarketplacePage: React.FC = () => {
         {filteredProducts.map((product, index) => (
           <MarketplaceComp
             key={index}
+            productId={product.productId}
             productName={product.productName}
             username={product.username}
             description={product.description}
