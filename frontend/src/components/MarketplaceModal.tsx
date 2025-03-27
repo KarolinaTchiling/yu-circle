@@ -1,29 +1,59 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isFree: boolean;
-  setIsFree: (value: boolean) => void;
 }
 
-const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, isFree, setIsFree }) => {
+const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
+  const authContext = useContext(AuthContext);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [customTagInput, setCustomTagInput] = useState("");
-
-  const contentProgram = [
-    "Engineering",
-    "Science",
-    "Business",
-    "Liberal Arts",
-    "Education",
-    "Economics",
-    "Health"
-  ];
+  const [selectedContent, setSelectedContent] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState<string[]>([]);
+  const [isFree, setIsFree] = useState(true);
+  const [price, setPrice] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
 
   if (!isOpen) return null;
+
+  if (!authContext) {
+    return <p>Logged out, try again..</p>;
+  }
+
+  const { user } = authContext;
+
+  const handlePost = async () => {
+    
+    const payload = {
+      productName: newTitle,
+      username: user!.username, // you can make this dynamic later
+      description: newContent,
+      price: isFree ? 0 : parseFloat(price),
+      downloadUrl,
+      program: selectedProgram[0] || "",
+      contentType: selectedContent[0] || "",
+    };
+  
+    try {
+      const res = await fetch("http://localhost:8083/marketplace/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!res.ok) throw new Error("Failed to post content");
+  
+      console.log("Posted successfully");
+      onClose(); // Close the modal on success
+      window.location.reload(); 
+    } catch (err) {
+      console.error("Error posting content:", err);
+    }
+  };
 
   return (
     <div
@@ -44,37 +74,31 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, isFree, setIs
               onChange={(e) => setNewTitle(e.target.value)}
             />
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Cost</label>
-              <div className="flex rounded-full overflow-hidden border w-fit">
-                <button
-                  onClick={() => setIsFree(true)}
-                  className={`px-4 py-1 text-sm ${isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
-                >
-                  Free
-                </button>
-                <button
-                  onClick={() => setIsFree(false)}
-                  className={`px-4 py-1 text-sm ${!isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
-                >
-                  Paid
-                </button>
-              </div>
-            </div>
 
-            <div className="mt-4 flex items-center gap-2">
+            {/* <div className="mt-4 flex items-center gap-2">
               <label className="text-sm font-medium">Upload File</label>
               <button className="h-6 w-6 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100 text-black text-sm">
                 +
               </button>
+
+            </div> */}
+
+            <div className="mt-4 flex flex-col gap-2">
+              <label className="text-sm font-medium">Upload File</label>
+              <button className="h-6 w-6 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100 text-black text-sm">
+                +
+              </button>
+
+              <input
+                className="flex-1 p-2 border rounded-xl bg-white"
+                placeholder="http://your-download-link.com"
+                value={downloadUrl}
+                onChange={(e) => setDownloadUrl(e.target.value)}
+                />
+
             </div>
 
-            {!isFree && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium mb-1">Price</label>
-                <input className="w-full p-2 border rounded-md" placeholder="$0.00" />
-              </div>
-            )}
+
           </div>
 
           <div>
@@ -83,23 +107,61 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, isFree, setIs
               className="w-full h-40 p-2 border rounded-xl bg-white resize-none"
               placeholder="Add a description..."
               value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 250) {
+                  setNewContent(value);
+                }
+              }}
             />
+            <p className="text-sm text-gray-500 text-right pr-1">{newContent.length}/250</p>
           </div>
         </div>
 
+
         <div>
-          <label className="block text-sm font-medium mb-2">Select Tags</label>
+        <div className="mt-0">
+            <label className="block text-sm font-medium mb-1">Cost</label>
+                <div className="flex items-center gap-4">
+                    {/* Free/Paid Buttons */}
+                    <div className="flex rounded-full overflow-hidden border w-fit my-2">
+                    <button
+                        onClick={() => setIsFree(true)}
+                        className={`px-4 py-1 text-sm ${isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
+                    >
+                        Free
+                    </button>
+                    <button
+                        onClick={() => setIsFree(false)}
+                        className={`px-4 py-1 text-sm ${!isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
+                    >
+                        Paid
+                    </button>
+                    </div>
+                    {!isFree && (
+                    <input
+                        className="w-48 ml-5 p-2 border rounded-md"
+                        placeholder="$0.00"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                    />
+                    )}
+                </div>
+            </div>
+
+
+
+          <label className="block text-sm font-medium mt-5 mb-2">Select Content Type Tag</label>
           <div className="flex flex-wrap gap-2">
             {["Tutoring", "Lecture Notes", "Mini-course", "Video"].map((tag) => (
               <button
                 key={tag}
-                className={`px-3 py-1 rounded-full border text-sm ${selectedTags.includes(tag)
+                className={`px-3 py-1 rounded-full border text-sm ${selectedContent.includes(tag)
                   ? "bg-gray-400 text-white"
                   : "bg-white text-black"}`}
                 onClick={() =>
-                  setSelectedTags((prev) =>
-                    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                  setSelectedContent((prev) =>
+                    prev.includes(tag) ? [] : [tag] 
                   )
                 }
               >
@@ -110,65 +172,26 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, isFree, setIs
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Custom Tags</label>
-          <div className="flex gap-2 mb-2">
-            <input
-              className="flex-1 p-2 border rounded-xl bg-white"
-              placeholder="Add tag"
-              value={customTagInput}
-              onChange={(e) => setCustomTagInput(e.target.value)}
-            />
-            <button
-              onClick={() => {
-                if (customTagInput.trim()) {
-                  setSelectedTags((prev) => [...prev, customTagInput.trim()]);
-                  setCustomTagInput("");
-                }
-              }}
-              className="h-8 w-8 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100"
-            >
-              +
-            </button>
-          </div>
-
-          {contentProgram.filter((program) =>
-            customTagInput ? program.toLowerCase().startsWith(customTagInput.toLowerCase()) : true
-          ).length > 0 && (
-            <div className="mt-1 border rounded-xl bg-white shadow-md max-h-40 overflow-y-auto scrollbar-none">
-              {contentProgram
-                .filter((program) =>
-                  customTagInput ? program.toLowerCase().startsWith(customTagInput.toLowerCase()) : true
-                )
-                .map((program) => (
-                  <div
-                    key={program}
-                    onClick={() => {
-                      if (!selectedTags.includes(program)) {
-                        setSelectedTags((prev) => [...prev, program]);
-                      }
-                      setCustomTagInput("");
-                    }}
-                    className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-                  >
-                    {program}
-                  </div>
-                ))}
-            </div>
-          )}
-
+          <label className="block text-sm font-medium mb-2">Select Program Tag</label>
           <div className="flex flex-wrap gap-2">
-            {selectedTags
-              .filter((tag) => !["Tutoring", "Lecture Notes", "Mini-course", "Video"].includes(tag))
-              .map((tag) => (
-                <div
-                  key={tag}
-                  className="px-3 py-1 rounded-full border text-sm bg-white"
-                >
-                  {tag}
-                </div>
-              ))}
+            {["Engineering","Science", "Business", "Liberal Arts", "Education", "Economics", "Health"].map((tag) => (
+              <button
+                key={tag}
+                className={`px-3 py-1 rounded-full border text-sm ${selectedProgram.includes(tag)
+                  ? "bg-gray-400 text-white"
+                  : "bg-white text-black"}`}
+                onClick={() =>
+                  setSelectedProgram((prev) =>
+                    prev.includes(tag) ? [] : [tag] 
+                  )
+                }
+              >
+                {tag}
+              </button>
+            ))}
           </div>
         </div>
+
 
         <div className="flex gap-3 justify-center pt-2">
           <button
@@ -179,7 +202,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, isFree, setIs
           </button>
           <button
             className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
-            onClick={null}
+            onClick={handlePost}
           >
             Post
           </button>

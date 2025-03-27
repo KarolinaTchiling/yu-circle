@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import { Switch } from "../ui/switch";
 import MarketplaceModal from "../MarketplaceModal";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
     selectedTypes: { [type: string]: boolean };
@@ -23,24 +25,44 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
     onClearFilters,
     onSearchChange
 }) => {
-
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const contentType = ["Lecture Notes", "Tutoring", "Mini-courses", "Videos"];
+    const contentType = ["Lecture Notes", "Tutoring", "Mini-course", "Videos"];
     const contentProgram = ["Engineering", "Science", "Business", "Liberal Arts", "Education", "Economics", "Health"];
+    const navigate = useNavigate();
 
+    const { isAuthenticated } = useContext(AuthContext)!;
 
     return (
         <div className="flex flex-col items-center h-full w-full bg-grey-50 border b-black rounded-lg">
             {/* Header + Add Button */}
-            <div className="flex flex-row items-center gap-4 p-6 w-full">
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="font-bold text-3xl cursor-pointer h-12 w-12 bg-white border border-black text-black rounded-full hover:bg-mint transition-colors duration-300"
-                >
-                    +
-                </button>
-                <h1 className="text-2xl">Add Content</h1>
-            </div>
+                {isAuthenticated ? (
+                    <div className="flex flex-row items-center gap-4 p-6 w-full">
+                        <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="font-bold text-3xl cursor-pointer h-12 w-12 bg-white border border-black text-black rounded-full hover:bg-mint transition-colors duration-300"
+                        >
+                        +
+                        </button>
+                        <h1 className="text-2xl">Add Content</h1>
+                        
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center p-6 gap-2 w-full">
+                        <h1 className="text-xl">Join the Marketplace!</h1>
+                        <button
+                            className="text-md cursor-pointer w-[95%] py-1 bg-white border border-black text-black rounded-md hover:bg-minter transition-colors duration-300"
+                            onClick={() => navigate('/signup')}
+                        >
+                            Create an Account
+                        </button>
+                        <button
+                            className="text-md cursor-pointer w-[95%] py-1 bg-white border border-black text-black rounded-md hover:bg-bright-purple transition-colors duration-300"
+                            onClick={() => navigate('/login')}
+                        >
+                            Log In
+                        </button>
+                    </div>
+                )}
 
 
             <hr className="w-[80%] border-t border-black" />
@@ -127,8 +149,6 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
             <MarketplaceModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                isFree={isFree}
-                setIsFree={setIsFree}
             />
         </div>
     );

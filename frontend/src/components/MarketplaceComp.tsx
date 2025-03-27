@@ -1,10 +1,10 @@
-
-import * as React from 'react';
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
 
 interface MarketplaceProps {
-    productName: string;
+    productName: string | "";
     username: string;
     description: string;
     price: number;
@@ -13,7 +13,7 @@ interface MarketplaceProps {
     contentType: string;
   }
 
-  const MarketplaceComp: React.FC<MarketplaceProps> = ({
+const MarketplaceComp: React.FC<MarketplaceProps> = ({
     productName,
     username,
     description,
@@ -23,6 +23,8 @@ interface MarketplaceProps {
     contentType,
   }) => {
     const [value, setValue] = React.useState(2);
+
+    const { isAuthenticated } = useContext(AuthContext)!;
 
 
   return (
@@ -68,10 +70,16 @@ interface MarketplaceProps {
 
         {/* Buttons*/}
         <div className="flex flex-row items-end justify-between pt-3">
-            {price == 0 ? (
+            {!isAuthenticated ? (
+                <button
+                    className="font-fancy text-2xl cursor-not-allowed px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-red/50 transition-colors duration-300"
+                >
+                    Log in to Access
+                </button>
+                ) : downloadUrl && price <= 0 ? (
                 <button
                     className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
-                    onClick={() => window.open(downloadUrl, '_blank')}
+                    onClick={() => window.open(downloadUrl, "_blank")}
                 >
                     Download
                 </button>
@@ -81,7 +89,7 @@ interface MarketplaceProps {
                 >
                     Contact
                 </button>
-            )}
+                )}
 
 
             <div className="flex flex-row gap-3">
