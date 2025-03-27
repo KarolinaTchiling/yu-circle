@@ -268,7 +268,6 @@ const ChatPage: React.FC = () => {
                 Delete Chat
               </button>
             </div>
-            <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg my-2" />
             <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg" ref={chatWindowRef}>
               {chatTabs.find((tab) => tab.username === activeTab)?.messages?.map((msg: any) => (
                 <div key={msg.id} className={`mb-4 flex ${msg.sender === user?.username ? "justify-end" : "justify-start"}`}>
