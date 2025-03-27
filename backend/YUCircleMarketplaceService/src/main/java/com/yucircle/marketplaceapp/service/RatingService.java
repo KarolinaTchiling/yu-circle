@@ -1,7 +1,9 @@
 package com.yucircle.marketplaceapp.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,20 @@ public class RatingService {
 
     @Autowired
     private RatingRepository ratingRepository;
+
+    public List<Rating> getAllRatings() {
+        return ratingRepository.findAll();
+    }
+
+    public Map<Long, Double> getAverageRatingsForAllProducts() {
+    List<Rating> allRatings = ratingRepository.findAll();
+
+    return allRatings.stream()
+        .collect(Collectors.groupingBy(
+            Rating::getProductId,
+            Collectors.averagingInt(Rating::getRating)
+        ));
+    }
 
     public Rating addRating(String username, Long productId, int ratingValue) {
         Rating rating = new Rating(username, productId, ratingValue);

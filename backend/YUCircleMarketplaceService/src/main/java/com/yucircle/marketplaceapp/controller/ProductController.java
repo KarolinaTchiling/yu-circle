@@ -38,8 +38,8 @@ public class ProductController {
     //
     @GetMapping("/search")
     public List<Product> dynamicSearch(
-        @RequestParam(required = false) String program,
-        @RequestParam(required = false) String contentType,
+        @RequestParam(required = false) List<String> program,
+        @RequestParam(required = false) List<String> contentType,
         @RequestParam(required = false) String priceType // "free", "paid", or null
     ) {
         return productService.dynamicSearch(program, contentType, priceType);

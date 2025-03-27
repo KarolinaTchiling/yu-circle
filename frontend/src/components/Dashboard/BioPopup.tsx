@@ -8,7 +8,7 @@ interface BioModalProps {
 const BioPopup: React.FC<BioModalProps> = ({ username, onClose }) => {
   const [newBio, setNewBio] = useState("");
 
-  // Handle password reset
+  // Handle bio update
   const handleUpdateBio = async () => {
     try {
       const response = await fetch(
@@ -24,7 +24,6 @@ const BioPopup: React.FC<BioModalProps> = ({ username, onClose }) => {
         throw new Error("Failed to update Bio.");
       }
 
-      alert("Bio Updated successfully!");
       onClose(); // Close modal after success
     } catch (error) {
       console.error("Error updating bio:", error);
