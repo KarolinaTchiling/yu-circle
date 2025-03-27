@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import Header from "../components/Header/Header";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ interface Message {
   sender: string;
   receiver: string;
   content: string;
-  timestamp: string; // Adjust the type as needed
+  timestamp: string;
 }
 
 interface ChatTab {
@@ -22,15 +22,85 @@ const ChatPage: React.FC = () => {
   const [input, setInput] = useState("");
   const [newChatUsername, setNewChatUsername] = useState("");
   const { user, isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
-  const navigate = useNavigate();
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
+
+  // Function to load chat tabs from the API
+  const loadChatTabs = async () => {
+    if (!user) return;
+
+    try {
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      // Extract unique usernames from messages
+      const uniqueUsernames = new Set<string>();
+      allMessages.forEach((msg) => {
+        if (msg.sender !== user.username) {
+          uniqueUsernames.add(msg.sender);
+        }
+        if (msg.receiver !== user.username) {
+          uniqueUsernames.add(msg.receiver);
+        }
+      });
+
+      // Create chat tabs based on unique usernames
+      const newChatTabs: ChatTab[] = Array.from(uniqueUsernames).map((username) => ({
+        username,
+        messages: allMessages.filter((msg) => (msg.sender === username || msg.receiver === username)).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
+      }));
+
+      setChatTabs(newChatTabs);
+      if (newChatTabs.length > 0) {
+        setActiveTab(newChatTabs[0].username);
+      }
+    } catch (error) {
+      console.error("Error fetching messages from the API:", error);
+    }
+  };
+
+  // Function to fetch conversation from the API
+  const fetchConversation = async (receiver: string) => {
+    if (!user) return;
+
+    try {
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch conversation");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      const messages = allMessages.filter((msg) => (msg.sender === receiver || msg.receiver === receiver)).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      setChatTabs((prevTabs) =>
+        prevTabs.map((tab) =>
+          tab.username === receiver ? { ...tab, messages } : tab
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+    }
+  };
 
   useEffect(() => {
-    // Initialize with a default chat tab if none exist
-    if (chatTabs.length === 0) {
-      setChatTabs([{ username: "", messages: [] }]);
-      setActiveTab("");
+    if (isAuthenticated) {
+      loadChatTabs();
     }
-  }, [isAuthenticated, chatTabs, navigate]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!user || !activeTab) return;
@@ -38,23 +108,12 @@ const ChatPage: React.FC = () => {
     fetchConversation(activeTab);
   }, [user, activeTab]);
 
-  const fetchConversation = async (receiver: string) => {
-    if (!user) return;
-
-    try {
-      const response = await fetch(`/messages/get?user1=${user.username}&user2=${receiver}`);
-      console.log(response);
-      if (!response.ok) throw new Error("Failed to fetch conversation");
-      const data = await response.json();
-      setChatTabs((prevTabs) =>
-        prevTabs.map((tab) =>
-          tab.username === receiver ? { ...tab, messages: data } : tab
-        )
-      );
-    } catch (error) {
-      console.error("Error fetching conversation:", error);
+  useEffect(() => {
+    // Scroll to the bottom of the chat window when messages change
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
     }
-  };
+  }, [chatTabs, activeTab]);
 
   const handleSendMessage = async () => {
     if (!user || !activeTab) return;
@@ -81,26 +140,21 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const handleDeleteMessage = async (id: number) => {
-    if (!user || !activeTab) return;
+  const handleCreateNewChat = async (username: string) => {
+    if (!user) return;
 
-    try {
-      const response = await fetch(`/messages/delete/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete message");
-      fetchConversation(activeTab); // Refresh the conversation after deleting a message
-    } catch (error) {
-      console.error("Error deleting message:", error);
-    }
-  };
-
-  const handleCreateNewChat = (username: string) => {
-    if (chatTabs.some((tab) => tab.username === username)) {
+    // Check if the chat tab already exists
+    const chatTabExists = chatTabs.some((tab) => tab.username === username);
+    if (chatTabExists) {
       setActiveTab(username);
       return;
     }
-    setChatTabs((prevTabs) => [...prevTabs, { username, messages: [] }]);
+
+    // Create a new chat tab
+    setChatTabs((prevTabs) => [
+      ...prevTabs,
+      { username, messages: [] },
+    ]);
     setActiveTab(username);
   };
 
@@ -108,6 +162,48 @@ const ChatPage: React.FC = () => {
     if (newChatUsername.trim()) {
       handleCreateNewChat(newChatUsername);
       setNewChatUsername("");
+    }
+  };
+
+  const handleDeleteChat = async (username: string) => {
+    if (!user) return;
+
+    try {
+      // Fetch all messages for the chat
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      // Filter messages for the specific chat
+      const chatMessages = allMessages.filter((msg) => (msg.sender === username || msg.receiver === username));
+
+      // Delete each message
+      for (const msg of chatMessages) {
+        const deleteResponse = await fetch(`/messages/delete/${msg.id}`, {
+          method: "DELETE",
+        });
+        if (!deleteResponse.ok) {
+          throw new Error("Failed to delete message");
+        }
+      }
+
+      // Remove the chat tab
+      setChatTabs((prevTabs) =>
+        prevTabs.filter((tab) => tab.username !== username)
+      );
+      if (activeTab === username) {
+        setActiveTab(null);
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
     }
   };
 
@@ -142,55 +238,42 @@ const ChatPage: React.FC = () => {
               {chatTabs.map((tab) => (
                 <div
                   key={tab.username}
-                  className={`p-3 bg-gray-300 border rounded-lg mb-2 cursor-pointer ${activeTab === tab.username ? "bg-gray-200" : ""
+                  className={`p-3 bg-gray-300 border rounded-lg mb-2 cursor-pointer 
+                    ${activeTab === tab.username ? "bg-gray-200 border-l-4 border-[var(--color-red)]" : ""
                     }`}
                   onClick={() => setActiveTab(tab.username)}
                 >
                   <p className="font-bold text-black-800">{tab.username}</p>
-                  <p className="text-gray-600 text-sm">
-                    {tab.messages.length > 0 ? tab.messages[tab.messages.length - 1].content : "No messages yet"}
-                  </p>
                 </div>
               ))}
+              {chatTabs.length === 0 && (
+                <div className="p-3 bg-gray-100 border rounded-lg mb-2 text-center">
+                  <p className="text-gray-600">No messages, start a new one!</p>
+                </div>
+              )}
             </div>
           </div>
           {/* Requests List */}
-          <div className="p-4 border bg-white rounded-lg">
-            <h2 className="text-lg font-bold mb-2">Requests</h2>
-            <div className="p-3 border rounded-lg flex justify-between items-center bg-gray-100">
-              <div>
-                <p className="font-bold text-black-800">Brit</p>
-                <p className="text-sm">Community Match Request</p>
-              </div>
-              <div>
-                <button className="text-lg mr-2">✖</button>
-                <button className="text-lg">✔</button>
-              </div>
-            </div>
-            <div className="mt-2 p-3 border rounded-lg flex justify-between items-center bg-gray-100">
-              <div>
-                <p className="font-bold text-black-800">Mike</p>
-                <p className="text-sm">Inquiring about tutoring</p>
-              </div>
-              <div>
-                <button className="text-lg mr-2">✖</button>
-                <button className="text-lg">✔</button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Chat Window */}
         {activeTab && (
           <div className="w-2/3 bg-white p-4 flex flex-col border rounded-lg">
-            <h2 className="text-lg font-bold p-2 rounded">Chat with {activeTab}</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold p-2 rounded">Chat with {activeTab}</h2>
+              <button
+                onClick={() => handleDeleteChat(activeTab)}
+                className="px-4 py-2 text-white rounded-lg bg-[var(--color-red)] hover:bg-red-700"
+              >
+                Delete Chat
+              </button>
+            </div>
             <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg my-2" />
-            <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg">
-              {chatTabs.find((tab) => tab.username === activeTab)?.messages.map((msg) => (
+            <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg" ref={chatWindowRef}>
+              {chatTabs.find((tab) => tab.username === activeTab)?.messages?.map((msg: any) => (
                 <div key={msg.id} className={`mb-4 flex ${msg.sender === user?.username ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-xs p-3 rounded-lg ${msg.sender === user?.username ? "bg-gray-300" : "text-white bg-[var(--color-red)]"}`}>
                     <p>{msg.content}</p>
-                    <button onClick={() => handleDeleteMessage(msg.id)} className="text-sm text-gray-500">Delete</button>
                   </div>
                 </div>
               ))}
