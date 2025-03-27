@@ -12,6 +12,8 @@ interface MarketplaceProps {
     downloadUrl: string;
     program: string;
     contentType: string;
+    averageRating: number;
+    onRatingUpdate: () => void;
   }
 
 const MarketplaceComp: React.FC<MarketplaceProps> = ({
@@ -23,9 +25,10 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
     downloadUrl,
     program,
     contentType,
+    averageRating,
+    onRatingUpdate,
   }) => {
 
-    const [averageRating, setAverageRating] = useState<number>(0);
     const [userRating, setUserRating] = useState<number>(0); 
     const [hasRated, setHasRated] = useState(false);
 
@@ -34,29 +37,22 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
 
     const fetchRatings = async () => {
         try {
-          // 1. Get average rating
-          const avgRes = await fetch(`http://localhost:8083/marketplace/rating/${productId}`);
-          if (!avgRes.ok) throw new Error("Failed to fetch average rating");
-          const avgData = await avgRes.json();
-          setAverageRating(avgData);
-    
-          // 2. Get user-specific rating if authenticated
           if (isAuthenticated && user?.username) {
             const userRes = await fetch(`http://localhost:8083/marketplace/rating/user/${user.username}`);
             if (!userRes.ok) throw new Error("Failed to fetch user ratings");
-    
+      
             const userData = await userRes.json(); // array of ratings
             const existingRating = userData.find((r: any) => r.productId === productId);
-    
+      
             if (existingRating) {
               setUserRating(existingRating.rating);
               setHasRated(true);
             }
           }
         } catch (err) {
-          console.error("Error fetching ratings:", err);
+          console.error("Error fetching user rating:", err);
         }
-    };
+      };
 
     const handleRate = async (newRating: number) => {
         if (!isAuthenticated || !user?.username) return;
@@ -79,7 +75,8 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
           console.log("Rating submitted successfully");
           setUserRating(newRating);
           setHasRated(true);
-          fetchRatings(); 
+          onRatingUpdate();
+
         } catch (err) {
           console.error("Error posting rating:", err);
         }

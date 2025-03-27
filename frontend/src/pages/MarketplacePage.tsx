@@ -12,6 +12,7 @@ type Product = {
   downloadUrl: string | "";
   program: string | "";
   contentType: string | "";
+  averageRating?: number;
 };
 
 
@@ -21,10 +22,20 @@ const MarketplacePage: React.FC = () => {
   const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
   const [isFree, setIsFree] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("highestRated");
 
   const filteredProducts = products.filter((product) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOption === "highestRated") {
+      return (b.averageRating || 0) - (a.averageRating || 0);
+    } else if (sortOption === "recent") {
+      return b.productId - a.productId; // Newest first
+    }
+    return 0;
+  });
 
   const buildQuery = (
     programs: { [type: string]: boolean },
@@ -102,12 +113,31 @@ const MarketplacePage: React.FC = () => {
       .then((data) => setProducts(data));
   };
 
+  const fetchProductsAndRatings = async () => {
+    try {
+      const [productRes, ratingsRes] = await Promise.all([
+        fetch("http://localhost:8083/marketplace/products"),
+        fetch("http://localhost:8083/marketplace/rating/average/all"),
+      ]);
+
+      const productsData: Product[] = await productRes.json();
+      const ratingsData: Record<number, number> = await ratingsRes.json(); // productId => rating
+
+      // Merge rating into each product
+      const productsWithRatings = productsData.map((product) => ({
+        ...product,
+        averageRating: ratingsData[product.productId] || 0,
+      }));
+
+      setProducts(productsWithRatings);
+    } catch (err) {
+      console.error("Error fetching products or ratings:", err);
+    }
+  };
+
 
   useEffect(() => {
-    fetch("http://localhost:8083/marketplace/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Error fetching products:", err));
+    fetchProductsAndRatings();
   }, []);
 
 
@@ -131,7 +161,21 @@ const MarketplacePage: React.FC = () => {
 
 
       <div className="h-full w-full flex-[80%] flex flex-col gap-4">
-        {filteredProducts.map((product, index) => (
+
+        <div className="flex justify-start items-center gap-3 mb-0">
+          <label htmlFor="sort" className="text-sm font-medium">Sort by:</label>
+          <select
+            id="sort"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-3 py-1 border border-black rounded-md bg-white"
+          >
+            <option value="recent">Most Recent</option>
+            <option value="highestRated">Highest Rated</option>
+          </select>
+        </div>
+
+        {sortedProducts.map((product, index) => (
           <MarketplaceComp
             key={index}
             productId={product.productId}
@@ -142,6 +186,8 @@ const MarketplacePage: React.FC = () => {
             downloadUrl={product.downloadUrl}
             program={product.program}
             contentType={product.contentType}
+            averageRating={product.averageRating || 0}
+            onRatingUpdate={fetchProductsAndRatings} 
           />
         ))}
 
