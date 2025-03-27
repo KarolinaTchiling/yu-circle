@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import com.yucircle.discourceapp.model.Comment;
 import com.yucircle.discourceapp.service.CommentService;
+import com.yucircle.discourceapp.service.NotificationProducerService;
 import com.yucircle.discourceapp.service.PostService;
 
 @RestController
@@ -18,6 +19,9 @@ public class CommentController {
 
     @Autowired
     private CommentService commentService;
+    
+    @Autowired
+    private NotificationProducerService nService;
 
     @GetMapping("/{commentId}")
     public ResponseEntity<Comment> getComment(@PathVariable Long commentId) {
@@ -35,6 +39,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<Comment> addComment(@RequestBody Map<String, Object> request) {
         Comment savedComment = commentService.addComment(request);
+        nService.createCommentNotification(savedComment);
         return ResponseEntity.ok(savedComment);
     }
 

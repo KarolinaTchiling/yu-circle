@@ -119,6 +119,11 @@ public class Comment {
 		// TODO Auto-generated method stub
 		this.post = post;
 	}
+	
+	public Post getPost() {
+	// TODO Auto-generated method stub
+		return this.post;
+	}
 
 	public void setParentComment(Comment newParent) {
 		// TODO Auto-generated method stub
