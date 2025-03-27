@@ -1,18 +1,209 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import Header from "../components/Header/Header";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+interface Message {
+  id: number;
+  sender: string;
+  receiver: string;
+  content: string;
+  timestamp: string;
+}
+
+interface ChatTab {
+  username: string;
+  messages: Message[];
+}
 
 const ChatPage: React.FC = () => {
-    {/* Messages (to be tweaked when api comes along)*/}
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "Jason", text: "Do you want to stay back on campus Friday after class?", type: "received" },
-    { id: 2, sender: "You", text: "Sure! That sounds good.", type: "sent" }
-  ]);
+  const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [newChatUsername, setNewChatUsername] = useState("");
+  const { user, isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
 
-  const handleSendMessage = () => {
+  // Function to load chat tabs from the API
+  const loadChatTabs = async () => {
+    if (!user) return;
+
+    try {
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      // Extract unique usernames from messages
+      const uniqueUsernames = new Set<string>();
+      allMessages.forEach((msg) => {
+        if (msg.sender !== user.username) {
+          uniqueUsernames.add(msg.sender);
+        }
+        if (msg.receiver !== user.username) {
+          uniqueUsernames.add(msg.receiver);
+        }
+      });
+
+      // Create chat tabs based on unique usernames
+      const newChatTabs: ChatTab[] = Array.from(uniqueUsernames).map((username) => ({
+        username,
+        messages: allMessages.filter((msg) => (msg.sender === username || msg.receiver === username)).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
+      }));
+
+      setChatTabs(newChatTabs);
+      if (newChatTabs.length > 0) {
+        setActiveTab(newChatTabs[0].username);
+      }
+    } catch (error) {
+      console.error("Error fetching messages from the API:", error);
+    }
+  };
+
+  // Function to fetch conversation from the API
+  const fetchConversation = async (receiver: string) => {
+    if (!user) return;
+
+    try {
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch conversation");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      const messages = allMessages.filter((msg) => (msg.sender === receiver || msg.receiver === receiver)).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      setChatTabs((prevTabs) =>
+        prevTabs.map((tab) =>
+          tab.username === receiver ? { ...tab, messages } : tab
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadChatTabs();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!user || !activeTab) return;
+
+    fetchConversation(activeTab);
+  }, [user, activeTab]);
+
+  useEffect(() => {
+    // Scroll to the bottom of the chat window when messages change
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [chatTabs, activeTab]);
+
+  const handleSendMessage = async () => {
+    if (!user || !activeTab) return;
+
     if (input.trim()) {
-      setMessages([...messages, { id: messages.length + 1, sender: "You", text: input, type: "sent" }]);
-      setInput("");
+      try {
+        const response = await fetch("/messages/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: user.username,
+            receiver: activeTab,
+            content: input,
+          }),
+        });
+        if (!response.ok) throw new Error("Failed to send message");
+        setInput("");
+        fetchConversation(activeTab); // Refresh the conversation after sending a message
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    }
+  };
+
+  const handleCreateNewChat = async (username: string) => {
+    if (!user) return;
+
+    // Check if the chat tab already exists
+    const chatTabExists = chatTabs.some((tab) => tab.username === username);
+    if (chatTabExists) {
+      setActiveTab(username);
+      return;
+    }
+
+    // Create a new chat tab
+    setChatTabs((prevTabs) => [
+      ...prevTabs,
+      { username, messages: [] },
+    ]);
+    setActiveTab(username);
+  };
+
+  const handleAddChat = () => {
+    if (newChatUsername.trim()) {
+      handleCreateNewChat(newChatUsername);
+      setNewChatUsername("");
+    }
+  };
+
+  const handleDeleteChat = async (username: string) => {
+    if (!user) return;
+
+    try {
+      // Fetch all messages for the chat
+      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+
+      if (!sentResponse.ok || !receivedResponse.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+
+      const sentMessages: Message[] = await sentResponse.json();
+      const receivedMessages: Message[] = await receivedResponse.json();
+
+      const allMessages = [...sentMessages, ...receivedMessages];
+
+      // Filter messages for the specific chat
+      const chatMessages = allMessages.filter((msg) => (msg.sender === username || msg.receiver === username));
+
+      // Delete each message
+      for (const msg of chatMessages) {
+        const deleteResponse = await fetch(`/messages/delete/${msg.id}`, {
+          method: "DELETE",
+        });
+        if (!deleteResponse.ok) {
+          throw new Error("Failed to delete message");
+        }
+      }
+
+      // Remove the chat tab
+      setChatTabs((prevTabs) =>
+        prevTabs.filter((tab) => tab.username !== username)
+      );
+      if (activeTab === username) {
+        setActiveTab(null);
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
     }
   };
 
@@ -23,75 +214,85 @@ const ChatPage: React.FC = () => {
         {/* Chats List */}
         <div className="w-1/3 flex flex-col space-y-4">
           <div className="bg-white border p-4 flex flex-col rounded-lg">
+            <div className="mt-4">
+              <h2 className="text-lg font-bold mb-2">New Chat</h2>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={newChatUsername}
+                  onChange={(e) => setNewChatUsername(e.target.value)}
+                  className="flex-1 p-2 border rounded-lg"
+                  placeholder="Enter username"
+                />
+                <button
+                  onClick={handleAddChat}
+                  className="ml-2 px-4 py-2 bg-[var(--color-red)] text-white rounded-lg hover:bg-red-700"
+                >
+                  Add Chat
+                </button>
+              </div>
+            </div>
+            <br></br>
             <h2 className="text-lg font-bold mb-4">Chats</h2>
-            <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg mb-4" />
             <div className="flex-col flex-grow overflow-auto">
-              <div className="p-3 bg-gray-300 border rounded-lg mb-2 cursor-pointer"> 
-                <p className="font-bold text-black-800">Jason</p>
-                <p className="text-gray-600 text-sm">Do you want to stay back on campus Friday after class?</p>
-              </div>
-              <div className="p-3 bg-gray-100 border rounded-lg mb-2 cursor-pointer">
-                <p className="font-bold">Claire</p>
-                <p className="text-gray-600 text-sm">LOL I agree that midterm was hard</p>
-              </div>
+              {chatTabs.map((tab) => (
+                <div
+                  key={tab.username}
+                  className={`p-3 bg-gray-300 border rounded-lg mb-2 cursor-pointer 
+                    ${activeTab === tab.username ? "bg-gray-200 border-l-4 border-[var(--color-red)]" : ""
+                    }`}
+                  onClick={() => setActiveTab(tab.username)}
+                >
+                  <p className="font-bold text-black-800">{tab.username}</p>
+                </div>
+              ))}
+              {chatTabs.length === 0 && (
+                <div className="p-3 bg-gray-100 border rounded-lg mb-2 text-center">
+                  <p className="text-gray-600">No messages, start a new one!</p>
+                </div>
+              )}
             </div>
           </div>
           {/* Requests List */}
-          <div className="p-4 border bg-white rounded-lg">
-            <h2 className="text-lg font-bold mb-2">Requests</h2>
-            <div className="p-3 border rounded-lg flex justify-between items-center bg-gray-100">
-              <div>
-                <p className="font-bold text-black-800">Brit</p>
-                <p className="text-sm">Community Match Request</p>
-              </div>
-              <div>
-                {/* accept or reject - will either move item to chat or not (pending api)*/}
-                <button className="text-lg mr-2">✖</button>
-                <button className="text-lg">✔</button>
-              </div>
-            </div>
-            <div className="mt-2 p-3 border rounded-lg flex justify-between items-center bg-gray-100">
-              <div>
-                <p className="font-bold text-black-800">Mike</p>
-                <p className="text-sm">Inquiring about tutoring</p>
-              </div>
-              <div>
-                <button className="text-lg mr-2">✖</button>
-                <button className="text-lg">✔</button>
-              </div>
-            </div>
-          </div>
         </div>
-        
-        {/* Chat Window */}
-        <div className="w-2/3 bg-white p-4 flex flex-col border rounded-lg">
-          <h2 className="text-lg font-bold p-2 rounded">Jason</h2>
-          <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg my-2" />
-          <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg">
-            {/* maps message from earlier into dialog boxes */}
-            {messages.map((msg) => (
-              <div key={msg.id} className={`mb-4 flex ${msg.type === "sent" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-xs p-3 rounded-lg ${msg.type === "sent" ? "bg-gray-300" : "text-white bg-[var(--color-red)]"}`}>
-                  <p>{msg.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
 
-          {/* dynamically create messages from user side (to be modified when api comes) */}
-          <div className="mt-4 flex items-center">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1 p-2 border rounded-lg"
-              placeholder="Type your message"
-            />
-            <button onClick={handleSendMessage} className="ml-2 px-4 py-2 bg-[var(--color-red)] text-white rounded-lg hover:bg-red-700">
-              Send
-            </button>
+        {/* Chat Window */}
+        {activeTab && (
+          <div className="w-2/3 bg-white p-4 flex flex-col border rounded-lg">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold p-2 rounded">Chat with {activeTab}</h2>
+              <button
+                onClick={() => handleDeleteChat(activeTab)}
+                className="px-4 py-2 text-white rounded-lg bg-[var(--color-red)] hover:bg-red-700"
+              >
+                Delete Chat
+              </button>
+            </div>
+            <input type="text" placeholder="Search Messages" className="w-full p-2 border rounded-lg my-2" />
+            <div className="flex-grow overflow-y-auto bg-white p-4 border rounded-lg" ref={chatWindowRef}>
+              {chatTabs.find((tab) => tab.username === activeTab)?.messages?.map((msg: any) => (
+                <div key={msg.id} className={`mb-4 flex ${msg.sender === user?.username ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-xs p-3 rounded-lg ${msg.sender === user?.username ? "bg-gray-300" : "text-white bg-[var(--color-red)]"}`}>
+                    <p>{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-1 p-2 border rounded-lg"
+                placeholder="Type your message"
+              />
+              <button onClick={handleSendMessage} className="ml-2 px-4 py-2 bg-[var(--color-red)] text-white rounded-lg hover:bg-red-700">
+                Send
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

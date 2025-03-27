@@ -41,14 +41,14 @@ const ChatMenu: React.FC = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Profile Icon */}
+      {/* Chat Icon */}
       <img
         src={Chat}
         alt="Chat"
         className={`h-10 cursor-pointer transition-transform hover:scale-110 ${
           isDropdownOpen ? "scale-110" : ""
         }`}
-        onClick={toggleDropdown}
+        onClick={() => navigate('/chat')}
       />
 
       {/* Dropdown Menu */}
