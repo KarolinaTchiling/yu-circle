@@ -338,26 +338,37 @@ const DiscoursePage: React.FC = () => {
       <Header />
       <main className="flex">
         <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
-          <div className="mb-4">
-            <label className="block font-bold mb-2">Current Username:</label>
-            <input
-              className="w-full p-2 border rounded"
-              placeholder="Current Username"
-              value={currentUser}
-              readOnly
-            />
-          </div>
           {isAuthenticated ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
-            >
-              Create a Post
-            </button>
+            <>
+              <div className="mb-4">
+                <label className="block font-bold mb-2">
+                  Current Username:
+                </label>
+                <input
+                  className="w-full p-2 border rounded"
+                  placeholder="Current Username"
+                  value={currentUser}
+                  readOnly
+                />
+              </div>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"
+              >
+                Create a Post
+              </button>
+            </>
           ) : (
-            <div className="w-full h-12 rounded bg-gray-300 text-2xl flex items-center justify-center font-fancy text-white mb-4">
-              Can't post when not logged in
-            </div>
+            <>
+              <div className="w-full h-12 rounded bg-[var(--color-red)] text-base flex items-center justify-center font-fancy text-white mb-2">
+                Please log in first.
+              </div>
+              <a href="http://localhost:3000/login">
+                <div className="w-full h-12 rounded bg-[var(--color-red)] text-base flex items-center justify-center font-fancy text-white mb-4">
+                  Log in or Create Account
+                </div>
+              </a>
+            </>
           )}
           <input
             className="w-full p-2 border rounded mb-4 bg-white"
@@ -606,43 +617,6 @@ const DiscoursePage: React.FC = () => {
                     </button>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-          {editingPost && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
-                <h2 className="text-lg font-semibold mb-4">Edit Post</h2>
-                <input
-                  className="w-full p-2 border rounded-lg mb-2"
-                  placeholder="Edit Title..."
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                />
-                <textarea
-                  className="w-full h-30 p-2 border rounded-lg"
-                  placeholder="Edit Content..."
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button
-                    className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
-                    onClick={() => {
-                      setEditingPost(null);
-                      setEditTitle("");
-                      setEditContent("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
-                    onClick={updatePost}
-                  >
-                    Save
-                  </button>
-                </div>
               </div>
             </div>
           )}
