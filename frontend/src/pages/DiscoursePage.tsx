@@ -660,21 +660,23 @@ const DiscoursePage: React.FC = () => {
                       <FaThumbsUp className="ml-1" size={14} />
                     </div>
                     {post.username === currentUser && (
-                      <div
-                        onClick={() => handleEditClick(post)}
-                        className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                      >
-                        <FaPen className="mr-1" size={14} />
-                        Edit
-                      </div>
+                      <>
+                        <div
+                          onClick={() => handleEditClick(post)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaPen className="mr-1" size={14} />
+                          Edit
+                        </div>
+                        <div
+                          onClick={() => deletePost(post.id)}
+                          className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
+                        >
+                          <FaTrash className="mr-1" size={14} />
+                          Delete
+                        </div>
+                      </>
                     )}
-                    <div
-                      onClick={() => deletePost(post.id)}
-                      className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer"
-                    >
-                      <FaTrash className="mr-1" size={14} />
-                      Delete
-                    </div>
                   </div>
                   <button
                     className="text-sm text-blue-600 mb-2"
