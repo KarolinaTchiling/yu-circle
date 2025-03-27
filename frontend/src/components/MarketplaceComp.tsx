@@ -49,7 +49,7 @@ interface MarketplaceProps {
         <div className="flex flex-row justify-between pt-2">
             <div>
                 <div className="text-lg font-semibold py-1 px-10 bg-purple border border-black text-black rounded-2xl">
-                    {price}
+                    {price == 0 ? "Free" : `$${price}`}
                 </div>
             </div>
 
@@ -68,11 +68,21 @@ interface MarketplaceProps {
 
         {/* Buttons*/}
         <div className="flex flex-row items-end justify-between pt-3">
+            {price == 0 ? (
                 <button
                     className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
+                    // onclick = nagvate to {downloadUrl}
                 >
                     Download
                 </button>
+                ) : (
+                <button
+                    className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
+                >
+                    Contact
+                </button>
+            )}
+
 
             <div className="flex flex-row gap-3">
                 <p className="text-lg">Rate It!</p>
