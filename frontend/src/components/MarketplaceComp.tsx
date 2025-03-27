@@ -71,7 +71,7 @@ interface MarketplaceProps {
             {price == 0 ? (
                 <button
                     className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
-                    // onclick = nagvate to {downloadUrl}
+                    onClick={() => window.open(downloadUrl, '_blank')}
                 >
                     Download
                 </button>
