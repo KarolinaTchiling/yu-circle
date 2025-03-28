@@ -33,6 +33,10 @@ const DiscourseComp: React.FC = () => {
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
   const { user } = useContext(AuthContext)!;
 
   const fetchUserPosts = async () => {
@@ -86,6 +90,27 @@ const DiscourseComp: React.FC = () => {
     }
   };
 
+  const handleEditPost = async (postId: number, newTitle: string, newContent: string) => {
+    try {
+      const res = await fetch(`http://localhost:8081/posts/update/${postId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+        }),
+      });
+  
+      if (!res.ok && res.status !== 204) {
+        throw new Error("Failed to update post");
+      }
+  
+      console.log(`Post ${postId} updated successfully`);
+      await fetchUserPosts(); // 🔁 refresh posts after update
+    } catch (err) {
+      console.error("Error updating post:", err);
+    }
+  };
 
   const handleDeleteComment = async (commentId: number) => {
     const confirmDelete = window.confirm("Delete this comment?");
@@ -127,52 +152,105 @@ const DiscourseComp: React.FC = () => {
 
       <div className="flex flex-row w-full">
 
-        {/* Post Section */}
-        <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
-          <h1 className="font-medium text-lg">Posts</h1>
+          {/* Post Section */}
+          <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
+            <h1 className="font-medium text-lg">Posts</h1>
 
-          {userPosts.length === 0 ? (
-            <p className="italic text-sm mt-4">You haven't made any posts yet.</p>
-          ) : (
-            userPosts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-white border b-black rounded-lg p-2 px-3 text-left"
-              >
-                <p className="text-md font-semibold">{post.title}</p>
-                <p className="text-sm">{post.content}</p>
+            {userPosts.length === 0 ? (
+              <p className="italic text-sm mt-4">You haven't made any posts yet.</p>
+            ) : (
+              userPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="bg-white border b-black rounded-lg p-2 px-3 text-left"
+                >
+                  {editingPostId === post.id ? (
+                    <>
+                      <input
+                        className="w-full border border-black rounded p-1 text-sm mb-2"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="Edit title"
+                      />
+                      <textarea
+                        className="w-full border border-black rounded p-1 text-sm"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        placeholder="Edit content"
+                        rows={3}
+                      />
+                      <div className="flex gap-2 justify-end mt-2">
+                        <button
+                          onClick={() => setEditingPostId(null)}
+                          className="text-sm px-3 py-1 bg-gray-200 border border-black rounded hover:bg-gray-300"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleEditPost(post.id, editTitle, editContent);
+                            setEditingPostId(null);
+                          }}
+                          className="text-sm px-3 py-1 bg-mint border border-black rounded hover:bg-minter"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-md font-semibold">{post.title}</p>
+                      <p className="text-sm">{post.content}</p>
+                    </>
+                  )}
 
-                <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold items-end">
-                  <div className="flex flex-row items-end text-sm font-medium">
-                    <img src={Clock} className="h-5 pr-2" />
-                    <span>{dayjs(post.timestamp).fromNow()}</span>
+                  <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold items-end">
+                    <div className="flex flex-row items-end text-sm font-medium">
+                      <img src={Clock} className="h-5 pr-2" />
+                      <span>{dayjs(post.timestamp).fromNow()}</span>
+                    </div>
+
+                    <p className="text-sm font-medium">{post.comments.length} Comments</p>
+
+                    <div className="flex flex-row items-end">
+                      <span className="text-sm font-bold">2</span>
+                      <img src={Thumbs} className="h-6 pl-1" />
+                    </div>
                   </div>
 
-                  <p className="text-sm font-medium">{post.comments.length} Comments</p>
+                  <div className="flex flex-row gap-2 justify-center mt-3">
+                    <button
+                      onClick={() => setSelectedPostId(post.id)}
+                      className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300"
+                    >
+                      See Post
+                    </button>
 
-                  <div className="flex flex-row items-end">
-                    <span className="text-sm font-bold">2</span>
-                    <img src={Thumbs} className="h-6 pl-1" />
+                    <button
+                      onClick={() => {
+                        setEditingPostId(post.id);
+                        setEditTitle(post.title);
+                        setEditContent(post.content);
+                      }}
+                      className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-mint hover:bg-minter transition-colors duration-300"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex flex-row gap-2 justify-center mt-3">
-                  <button 
-                    onClick={() => setSelectedPostId(post.id)}
-                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
-                    See Post
-                  </button>
-
-                  <button 
-                    onClick={() => handleDeletePost(post.id)}
-                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
         </div>
+
+
+        
 
 
         <div className="border-r-1"></div>
@@ -213,6 +291,12 @@ const DiscourseComp: React.FC = () => {
                     onClick={() => handleSeeThread(comment.commentId)}
                   >
                     See Thread
+                  </button>
+
+                  <button 
+                    onClick={() => handleDeletePost(comment.commentId)}
+                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-mint hover:bg-minter transition-colors duration-300">
+                    Edit
                   </button>
 
                   <button
