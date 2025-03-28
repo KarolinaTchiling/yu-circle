@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,7 @@ import com.yucircle.community_service.model.Profile;
 import com.yucircle.community_service.model.ProfileTag;
 import com.yucircle.community_service.model.ProfileTagsDTO;
 import com.yucircle.community_service.service.CommunityService;
+import com.yucircle.community_service.service.NotificationProducerService;
 import com.yucircle.community_service.service.ProfileTaggingService;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -32,6 +34,9 @@ public class CommunityProfileController {
 	
 	@Autowired
 	private ProfileTaggingService ptService;
+	
+	@Autowired
+	private NotificationProducerService nService;
 	
 	
 	//return list of tags belonging to given profile
@@ -101,6 +106,18 @@ public class CommunityProfileController {
 	@GetMapping("/search")
 	public List<ProfileTagsDTO> searchUser(@RequestParam String query, @RequestParam(required = false) Optional<String> sort) {
 		return commService.queryProfile(query, sort);
+	}
+	
+	//Sends a connection request notification
+	@PostMapping("/send-connection-request")
+	public ResponseEntity<HttpStatus> sendConnectionRequest(@RequestParam String sender, @RequestParam String receiver){
+		try {
+			nService.createConnectionRequestNotification(sender, receiver);
+			return ResponseEntity.ok(HttpStatus.OK);
+		}
+		catch (Exception e) {
+			return ResponseEntity.notFound().build();			
+		}
 	}
 
 }
