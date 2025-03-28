@@ -85,7 +85,9 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
     useEffect(() => {
         fetchRatings();
     }, [productId, isAuthenticated, user]);
-    
+
+    // console.log(productName + ":" + userRating + ":" + hasRated);
+    // console.count(`${productName} render count`);
 
 
     return (

@@ -175,9 +175,9 @@ const MarketplacePage: React.FC = () => {
           </select>
         </div>
 
-        {sortedProducts.map((product, index) => (
+        {sortedProducts.map((product) => (
           <MarketplaceComp
-            key={index}
+            key={product.productId}
             productId={product.productId}
             productName={product.productName}
             username={product.username}
