@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import Thumbs from "/thumbs.svg";
+import Thumb from "/thumb.svg";
+import ThumbFill from "/thumb-fill.svg";
 import Clock from "/clock.svg";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -15,6 +16,7 @@ type Comment = {
   parentComment: any;
   timestamp: string;
   replies: Comment[];
+  likes?: number;
 };
 
 type Post = {
@@ -24,6 +26,8 @@ type Post = {
   username: string;
   timestamp: string;
   comments: Comment[];
+  likes?: number;
+  likedByUser?: boolean;
 };
 
 
@@ -44,14 +48,28 @@ const DiscourseComp: React.FC = () => {
 
   const fetchUserPosts = async () => {
     if (!user?.username) return;
-
+  
     try {
       const res = await fetch(`http://localhost:8081/posts/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch posts");
-      const data = await res.json();
-      setUserPosts(data);
+      const posts = await res.json();
+  
+      // Fetch likes for each post
+      const postsWithLikes = await Promise.all(
+        posts.map(async (post: Post) => {
+          try {
+            const likeRes = await fetch(`http://localhost:8081/posts/like/postId/${post.id}`);
+            const likes = likeRes.ok ? await likeRes.json() : 0;
+            return { ...post, likes };
+          } catch {
+            return { ...post, likes: 0 };
+          }
+        })
+      );
+  
+      setUserPosts(postsWithLikes);
     } catch (err) {
-      console.error("Error fetching user posts:", err);
+      console.error("Error fetching user posts or likes:", err);
     }
   };
 
@@ -61,10 +79,24 @@ const DiscourseComp: React.FC = () => {
     try {
       const res = await fetch(`http://localhost:8081/comments/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch comments");
-      const data = await res.json();
-      setUserComments(data);
+      const comments = await res.json();
+  
+      // Fetch likes for each comment
+      const commentsWithLikes = await Promise.all(
+        comments.map(async (comment: Comment) => {
+          try {
+            const likeRes = await fetch(`http://localhost:8081/comments/like/commentId/${comment.commentId}`);
+            const likes = likeRes.ok ? await likeRes.json() : 0;
+            return { ...comment, likes };
+          } catch {
+            return { ...comment, likes: 0 };
+          }
+        })
+      );
+  
+      setUserComments(commentsWithLikes);
     } catch (err) {
-      console.error("Error fetching user comments:", err);
+      console.error("Error fetching user comments or likes:", err);
     }
   };
 
@@ -237,8 +269,8 @@ const DiscourseComp: React.FC = () => {
                     <p className="text-sm font-medium">{post.comments.length} Comments</p>
 
                     <div className="flex flex-row items-end">
-                      <span className="text-sm font-bold">2</span>
-                      <img src={Thumbs} className="h-6 pl-1" />
+                      <span className="text-sm font-medium">{post.likes ?? 0}</span>
+                      <img src={Thumb} className="h-6 pl-1" />
                     </div>
                   </div>
 
@@ -332,8 +364,8 @@ const DiscourseComp: React.FC = () => {
                   </div>
                   <p>{comment.replies?.length ?? 0} Replies</p>
                   <div className="flex flex-row items-center">
-                    <span>2</span>
-                    <img src={Thumbs} className="h-6 pl-2" />
+                    <span>{comment.likes ?? 0}</span>
+                    <img src={Thumb} className="h-6 pl-2" />
                   </div>
                 </div>
 
