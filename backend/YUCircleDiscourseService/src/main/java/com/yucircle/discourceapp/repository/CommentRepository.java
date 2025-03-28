@@ -9,6 +9,7 @@ import com.yucircle.discourceapp.model.Post;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByPostId(Long postId);
+	List<Comment> findAllByUsername(String username);
 
 //	List<Comment> findByCommentId(Long commentId);
 	

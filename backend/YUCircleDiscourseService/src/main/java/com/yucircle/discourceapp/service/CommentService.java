@@ -28,6 +28,10 @@ public class CommentService {
     public Optional<Comment> getCommentsById(Long commentId) {
         return commentRepository.findByCommentId(commentId);
     }
+
+    public List<Comment> getCommentsByUsername(String username) {
+        return commentRepository.findAllByUsername(username);
+    }
     
     public List<Comment> getTopLevelCommentsForPost(Long postId) {
         Post post = new Post();

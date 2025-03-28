@@ -29,24 +29,39 @@ type Post = {
 
 const DiscourseComp: React.FC = () => {
   const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [userComments, setUserComments] = useState<Comment[]>([]);
   const { user } = useContext(AuthContext)!;
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
+  const fetchUserPosts = async () => {
+    if (!user?.username) return;
+
+    try {
+      const res = await fetch(`http://localhost:8081/posts/user/${user.username}`);
+      if (!res.ok) throw new Error("Failed to fetch posts");
+      const data = await res.json();
+      setUserPosts(data);
+    } catch (err) {
+      console.error("Error fetching user posts:", err);
+    }
+  };
+
+  const fetchUserComments = async () => {
+    if (!user?.username) return;
+  
+    try {
+      const res = await fetch(`http://localhost:8081/comments/user/${user.username}`);
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      const data = await res.json();
+      setUserComments(data);
+    } catch (err) {
+      console.error("Error fetching user comments:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchUserPosts = async () => {
-      if (!user?.username) return;
-
-      try {
-        const res = await fetch(`http://localhost:8081/posts/user/${user.username}`);
-        if (!res.ok) throw new Error("Failed to fetch posts");
-        const data = await res.json();
-        setUserPosts(data);
-      } catch (err) {
-        console.error("Error fetching user posts:", err);
-      }
-    };
-
     fetchUserPosts();
+    fetchUserComments();
   }, [user?.username]);
 
   const handleDeletePost = async (postId: number) => {
@@ -69,7 +84,24 @@ const DiscourseComp: React.FC = () => {
     }
   };
 
-  console.log(userPosts);
+
+  const handleDeleteComment = async (commentId: number) => {
+    const confirmDelete = window.confirm("Delete this comment?");
+    if (!confirmDelete) return;
+  
+    try {
+      const res = await fetch(`http://localhost:8081/comments/delete/${commentId}`, {
+        method: "DELETE",
+      });
+  
+      if (!res.ok && res.status !== 204) throw new Error("Failed to delete comment");
+  
+      setUserComments((prev) => prev.filter((c) => c.commentId !== commentId));
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+    }
+  };
+  
 
   return (
 
@@ -140,93 +172,51 @@ const DiscourseComp: React.FC = () => {
 
           <h1 className="font-medium text-lg"> Comments </h1>
 
-          {/* Comment Bubble*/}
-          <div className="bg-white border b-black rounded-lg p-2 px-3 text-left">
-              <p className="text-sm">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean diam sapien, sollicitudin non ipsum non, commodo congue risus.
-              </p>
+          {userComments.length === 0 ? (
+            <p className="italic text-sm mt-4">You haven’t commented on anything yet.</p>
+          ) : (
+            userComments.map((comment) => (
+              <div key={comment.commentId} className="bg-white border b-black rounded-lg p-2 px-3 text-left">
+                <p className="text-sm">{comment.content}</p>
 
-              <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold">
+                {comment.parentComment && (
+                  <div className="mt-1 text-xs italic text-gray-600">
+                    Reply to: "{comment.parentComment.content}"
+                  </div>
+                )}
 
-                <p>
-                  0 Comments
-                </p>  
-
-                <div className="flex flex-row items-end">
-                  <span> 2 </span>
-                  <img src={Thumbs} className="h-7 pl-2"/>
+                <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold text-sm items-end">
+                  <div className="flex flex-row items-center">
+                    <img src={Clock} className="h-5 pr-2" />
+                    <span>{comment.timestamp ? dayjs(comment.timestamp).fromNow() : "No timestamp"}</span>
+                  </div>
+                  <p>{comment.replies?.length ?? 0} Replies</p>
+                  <div className="flex flex-row items-center">
+                    <span>2</span>
+                    <img src={Thumbs} className="h-6 pl-2" />
+                  </div>
                 </div>
 
-              </div>
-              <div className="flex flex-row gap-2 justify-center mt-2">
-                <button className=" w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
-                See Comment 
-                </button>
+                <div className="flex flex-row gap-2 justify-center mt-3">
+                  <button
+                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300"
+                    onClick={() => alert("Open thread view coming soon")}
+                  >
+                    See Comment
+                  </button>
 
-                <button className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
-                Delete
-                </button>
-              </div>
-          </div>
-
-          {/* Comment Bubble*/}
-          <div className="bg-white border b-black rounded-lg p-2 px-3 text-left">
-              <p className="text-sm">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean diam sapien, sollicitudin non ipsum non, commodo congue risus.
-              </p>
-
-              <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold">
-
-                <p>
-                  0 Comments
-                </p>  
-
-                <div className="flex flex-row items-end">
-                  <span> 2 </span>
-                  <img src={Thumbs} className="h-7 pl-2"/>
+                  <button
+                    onClick={() => handleDeleteComment(comment.commentId)}
+                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300"
+                  >
+                    Delete
+                  </button>
                 </div>
-
               </div>
-              <div className="flex flex-row gap-2 justify-center mt-2">
-                <button className=" w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
-                See Comment 
-                </button>
+            ))
+          )}
 
-                <button className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
-                Delete
-                </button>
-              </div>
-          </div>
 
-          {/* Comment Bubble*/}
-          <div className="bg-white border b-black rounded-lg p-2 px-3 text-left">
-              <p className="text-sm">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean diam sapien, sollicitudin non ipsum non, commodo congue risus.
-              </p>
-
-              <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold">
-
-                <p>
-                  0 Comments
-                </p>  
-
-                <div className="flex flex-row items-end">
-                  <span> 2 </span>
-                  <img src={Thumbs} className="h-7 pl-2"/>
-                </div>
-
-              </div>
-              <div className="flex flex-row gap-2 justify-center mt-2">
-                <button className=" w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
-                See Comment 
-                </button>
-
-                <button className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
-                Delete
-                </button>
-              </div>
-          </div>
-          
         </div>
         
       </div>
