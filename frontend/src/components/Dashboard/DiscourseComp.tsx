@@ -48,28 +48,34 @@ const DiscourseComp: React.FC = () => {
 
   const fetchUserPosts = async () => {
     if (!user?.username) return;
-  
+
     try {
       const res = await fetch(`http://localhost:8081/posts/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch posts");
       const posts = await res.json();
-  
-      // Fetch likes for each post
+
+      const likedPostsRes = await fetch(`http://localhost:8081/posts/like/username/${user.username}`);
+      const likedPosts: { postId: number }[] = likedPostsRes.ok ? await likedPostsRes.json() : [];
+      const likedPostIds = likedPosts.map((entry) => entry.postId);
+
       const postsWithLikes = await Promise.all(
         posts.map(async (post: Post) => {
           try {
-            const likeRes = await fetch(`http://localhost:8081/posts/like/postId/${post.id}`);
-            const likes = likeRes.ok ? await likeRes.json() : 0;
-            return { ...post, likes };
+            const likeRes = await fetch(`http://localhost:8081/posts/like/postid/${post.id}`);
+            if (!likeRes.ok) throw new Error("Failed to fetch likes");
+            const allLikes: { postId: number }[] = await likeRes.json();
+            const likes = allLikes.filter((like) => like.postId === post.id).length;
+            const likedByUser = likedPostIds.includes(post.id);
+            return { ...post, likes, likedByUser };
           } catch {
-            return { ...post, likes: 0 };
+            return { ...post, likes: 0, likedByUser: false };
           }
         })
       );
-  
+
       setUserPosts(postsWithLikes);
     } catch (err) {
-      console.error("Error fetching user posts or likes:", err);
+      console.error("Error fetching user posts:", err);
     }
   };
 
@@ -124,6 +130,39 @@ const DiscourseComp: React.FC = () => {
       console.error("Error deleting post:", err);
     }
   };
+
+  const toggleLike = async (post: Post) => {
+    if (!user?.username) return;
+
+    const liked = post.likedByUser;
+    const url = liked ? "http://localhost:8081/posts/unlike" : "http://localhost:8081/posts/like";
+
+    try {
+      const res = await fetch(url, {
+        method: liked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user.username, postId: post.id }),
+      });
+
+      if (!res.ok) throw new Error("Failed to toggle like");
+
+      // Optimistic update
+      setUserPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id
+            ? {
+                ...p,
+                likes: liked ? (p.likes ?? 1) - 1 : (p.likes ?? 0) + 1,
+                likedByUser: !liked,
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
+
 
   const handleEditPost = async (postId: number, newTitle: string, newContent: string) => {
     try {
@@ -266,11 +305,18 @@ const DiscourseComp: React.FC = () => {
                       <span>{dayjs(post.timestamp).fromNow()}</span>
                     </div>
 
+
                     <p className="text-sm font-medium">{post.comments.length} Comments</p>
 
-                    <div className="flex flex-row items-end">
+                    <div className="flex flex-row items-end gap-1">
                       <span className="text-sm font-medium">{post.likes ?? 0}</span>
-                      <img src={Thumb} className="h-6 pl-1" />
+                      <button onClick={() => toggleLike(post)} className="focus:outline-none">
+                        <img
+                          src={post.likedByUser ? ThumbFill : Thumb}
+                          className="h-5 w-5 object-contain"
+                          alt="Like"
+                        />
+                      </button>
                     </div>
                   </div>
 
