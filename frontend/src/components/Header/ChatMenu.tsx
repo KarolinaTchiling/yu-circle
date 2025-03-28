@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Chat from "/chat.svg";
+import { AuthContext } from "../../context/AuthContext";
 
 const ChatMenu: React.FC = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const checkLoggedIn = Boolean(true);
-
-  const toggleDropdown = () => setDropdownOpen(!isDropdownOpen);
+  const { isAuthenticated, user, logout } = useContext(AuthContext)!;
   const closeDropdown = () => setDropdownOpen(false); // Function to close dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,15 +42,21 @@ const ChatMenu: React.FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Chat Icon */}
-      <img
+      {isAuthenticated ? (
+        <img
         src={Chat}
         alt="Chat"
-        className={`h-10 cursor-pointer transition-transform hover:scale-110 ${
-          isDropdownOpen ? "scale-110" : ""
-        }`}
-        onClick={() => navigate("/chat")}
-      />
-
+        className={`h-10 cursor-pointer transition-transform hover:scale-110 ${isDropdownOpen ? "scale-110" : ""
+          }`}
+        onClick={() => navigate("/chat")}/>
+      ) : (
+        <img
+        src={Chat}
+        alt="Chat"
+        className={`h-10 cursor-pointer transition-transform hover:scale-110 ${isDropdownOpen ? "scale-110" : ""
+          }`}
+        onClick={() => navigate("/signup")}/>
+      )}
       {/* Dropdown Menu */}
       {isDropdownOpen && (
         <div className="absolute top-full -right-18 mt-5 bg-white rounded-lg text-black border border-camel shadow-md w-80 z-50">

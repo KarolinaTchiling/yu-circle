@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import Header from "../components/Header/Header";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 interface Message {
   id: number;
@@ -21,7 +20,7 @@ const ChatPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [newChatUsername, setNewChatUsername] = useState("");
-  const { user, isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
+  const { user, isAuthenticated } = useContext(AuthContext)!;
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
 
   // Function to load chat tabs from the API
@@ -95,6 +94,12 @@ const ChatPage: React.FC = () => {
       console.error("Error fetching conversation:", error);
     }
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      window.location.href = '/login';
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
