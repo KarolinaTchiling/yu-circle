@@ -1,100 +1,206 @@
-import { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import Header from "../components/Header/Header";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
-import CommunityComp from "../components/Dashboard/CommunityComp";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "../components/ui/select";
-import { CheckCircle, UserCircle } from "lucide-react";
+import Sidebar from "../components/Sidebars/CommunitySidebar";
+import CommunityComp from "../components/CommunityComp";
 
-const users = [
-  {
-    name: "Samantha Doe",
-    role: "Mentor",
-    year: "4th Year",
-    rating: 4.8,
-    tags: ["CompSci", "Career Focus"],
-  },
-  {
-    name: "James Smith",
-    role: "Mentee",
-    year: "2nd Year",
-    rating: 4.5,
-    tags: ["Engineering", "Skill Development"],
-  },
-  {
-    name: "Alex Johnson",
-    role: "Study Partners",
-    year: "3rd Year",
-    rating: 4.7,
-    tags: ["Business", "Exam Prep"],
-  },
-];
+type User = {
+  username: string,
+  tags: string[]
+};
 
-export default function CommunityPage() {
-  const [filter, setFilter] = useState("Mentor");
+
+const CommunityPage: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<{ [type: string]: boolean }>({});
+  const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
+  const [isRecommended, setIsRecommended] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const { user } = useContext(AuthContext)!;
+
+  const filteredUsers = searchTerm
+  ? users.filter((user) =>
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.tags.some((tag) =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  : users;
+
+
+  const buildTagQuery = (
+    programs: { [type: string]: boolean },
+    types: { [type: string]: boolean }
+  ) => {
+    const selectedPrograms = Object.keys(programs).filter((key) => programs[key]);
+    const selectedTypes = Object.keys(types).filter((key) => types[key]);
+
+    const params = new URLSearchParams();
+
+    selectedPrograms.forEach((tag) => params.append("programs", tag));
+    selectedTypes.forEach((tag) => params.append("types", tag));
+
+    return params.toString(); // ?programs=Health&programs=Science&types=Mentor&types=Mentee
+  };
+
+
+  const fetchFilteredCommunityUsers = async (
+    programs: { [type: string]: boolean },
+    types: { [type: string]: boolean }
+  ) => {
+    const query = buildTagQuery(programs, types);
+
+    if (!query) {
+      isRecommended ? fetchRecUsers() : fetchAllUsers();
+      return;
+    }
+
+    if (isRecommended) {
+      fetchRecUsers(); // ignore filters if recommended selected
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8082/community/filter?${query}`);
+      if (!res.ok) throw new Error("Failed to fetch filtered users");
+
+      const data = await res.json();
+
+      const transformedUsers = data.map((user: any) => ({
+        username: user.username,
+        tags: user.tags || [],
+      }));
+
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error fetching filtered users:", err);
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    try {
+      const res = await fetch("http://localhost:8082/community/get-default-profiles");
+      if (!res.ok) throw new Error("Failed to fetch community users");
+
+      const data = await res.json();
+
+      const transformedUsers = data.map((user: any) => ({
+        username: user.username,
+        tags: user.tags || [],
+      }));
+
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  const fetchRecUsers = async () => {
+    try {
+      const res = await fetch("http://localhost:8082/community/get-recommended-profiles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: user!.username
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch recommended users");
+
+      const data = await res.json();
+
+      const transformedUsers = data.map((user: any) => ({
+        username: user.username,
+        tags: user.tags || [],
+      }));
+
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error fetching recommended users:", err);
+    }
+  };
+
+  const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
+    setSelectedTypes(updatedTypes);
+    fetchFilteredCommunityUsers(selectedPrograms, updatedTypes);
+  };
+
+  const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
+    setSelectedPrograms(updatedPrograms);
+    fetchFilteredCommunityUsers(updatedPrograms, selectedTypes);
+  };
+
+  const handleIsRecommended = (value: boolean) => {
+    setIsRecommended(value);
+    value ? fetchRecUsers() : fetchFilteredCommunityUsers(selectedPrograms, selectedTypes);
+  };
+
+
+  const handleClearFilters = () => {
+    const clearedTypes = Object.fromEntries(
+      Object.keys(selectedTypes).map((key) => [key, false])
+    );
+  
+    const clearedPrograms = Object.fromEntries(
+      Object.keys(selectedPrograms).map((key) => [key, false])
+    );
+  
+    setSelectedTypes(clearedTypes);
+    setSelectedPrograms(clearedPrograms);
+  
+    fetchFilteredCommunityUsers(clearedPrograms, clearedTypes);
+  };
+
+
+  useEffect(() => {
+    if (isRecommended) {
+      fetchRecUsers();
+    } else {
+      fetchFilteredCommunityUsers(selectedPrograms, selectedTypes);
+    }
+  }, [isRecommended]);
+
+
 
   return (
-    <div>
-      <Header />
-      <div className="p-4">
-        <Select
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        >
-          <SelectTrigger className="border rounded px-2 py-1">
-            {filter || "Select a role"}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Mentor">Mentor</SelectItem>
-            <SelectItem value="Mentee">Mentee</SelectItem>
-            <SelectItem value="Study Partners">Study Partners</SelectItem>
-          </SelectContent>
-        </Select>
+    <>
+    <Header />
+    <main className="flex flex-row min-h-[calc(100vh-150px)] mx-14 py-8 gap-10 ">
+
+      <div className="h-full w-full flex-[20%]">
+        <Sidebar 
+            selectedTypes={selectedTypes}
+            onTypeChange={handleTypeChange}
+            selectedPrograms={selectedPrograms}
+            onProgramChange={handleProgramChange}
+            onSearchChange={setSearchTerm}
+            isRecommended={isRecommended}                     
+            setIsRecommended={handleIsRecommended}  
+            onClearFilters={handleClearFilters}
+         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-        {users
-          .filter((user) => user.role === filter)
+
+      <div className="h-full w-full flex-[80%] grid grid-cols-3 gap-x-3 gap-y-3">
+        {filteredUsers
+          .filter((u) => u.username !== user?.username) // skip own profile
           .map((user, index) => (
-            <Card key={index} className="p-6 shadow-md rounded-lg">
-              <CardContent className="text-center">
-                <UserCircle size={64} className="text-gray-400 mx-auto mb-3" />
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <div className="flex justify-center gap-2 my-2">
-                  <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-                    {user.role}
-                  </span>
-                  <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-                    {user.year}
-                  </span>
-                  <span className="bg-yellow-400 px-2 py-1 rounded text-sm flex items-center gap-1">
-                    {user.rating}
-                  </span>
-                </div>
-                <div className="flex flex-wrap justify-center gap-2 mb-4">
-                  {user.tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Button className="w-full flex items-center gap-2">
-                  <CheckCircle size={16} /> Connect
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+            <CommunityComp
+              key={index}
+              username={user.username}
+              tags={user.tags}
+              profileImg="/profile.svg"
+            />
+        ))}
       </div>
 
-      <CommunityComp filter={filter} />
-    </div>
+
+    </main>
+    </>
   );
-}
+};
+
+export default CommunityPage;

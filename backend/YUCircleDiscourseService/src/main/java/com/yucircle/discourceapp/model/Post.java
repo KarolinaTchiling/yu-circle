@@ -1,19 +1,17 @@
 package com.yucircle.discourceapp.model;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @Entity
 @Table(name = "posts")
-@JsonPropertyOrder({"id", "title", "content", "username", "comments"}) 
+@JsonPropertyOrder({"id", "title", "content", "username", "timestamp", "comments"}) 
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,22 +26,15 @@ public class Post {
     
     @JsonProperty("title")
     private String title;
-    private int likes = 0;
+    
+    private LocalDateTime timestamp;
+    
     private boolean isDeleted = false;
     
     
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
-//    @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
-    
-//    // Custom getter to return only top-level comments
-//    @JsonProperty("topLevelComments")
-//    public List<Comment> getTopLevelComments() {
-//        return comments.stream()
-//                .filter(comment -> comment.getParentComment() == null)
-//                .collect(Collectors.toList());
-//    }
 
     
     public void softDelete() {
@@ -83,6 +74,10 @@ public class Post {
 		// TODO Auto-generated method stub
 		return this.postId;
 	}
+	
+	public LocalDateTime getTimestamp() {
+		return this.timestamp;
+	}
 
 	
 	public void addComment(Comment newComment) {
@@ -103,5 +98,10 @@ public class Post {
 	public void setId(Long postId) {
 		// TODO Auto-generated method stub
 		this.postId = postId;
+	}
+
+	public void setTimestamp(LocalDateTime timestamp) {
+		// TODO Auto-generated method stub
+		this.timestamp = timestamp;
 	}
 }

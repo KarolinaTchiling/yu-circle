@@ -32,7 +32,7 @@ public class ProfileService {
     public String getUserBio(String username) {
         return profileRepository.findById(username)
                 .map(Profile::getBio)
-                .orElse(null);
+                .orElse("");
     }
     
     // Create Profile

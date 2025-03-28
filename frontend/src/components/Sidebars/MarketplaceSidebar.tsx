@@ -48,7 +48,7 @@ const MarketplaceSidebar: React.FC<SidebarProps> = ({
                     </div>
                 ) : (
                     <div className="flex flex-col items-center p-6 gap-2 w-full">
-                        <h1 className="text-xl">Join the Marketplace!</h1>
+                        <h1 className="text-xl text-center">Join the Marketplace!</h1>
                         <button
                             className="text-md cursor-pointer w-[95%] py-1 bg-white border border-black text-black rounded-md hover:bg-minter transition-colors duration-300"
                             onClick={() => navigate('/signup')}

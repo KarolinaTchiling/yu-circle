@@ -3,6 +3,7 @@ package com.yucircle.discourceapp.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +18,11 @@ import com.yucircle.discourceapp.repository.*;
 public class PostService {
     @Autowired
     private PostRepository postRepository;
-
+    
     @Autowired
-    private CommentRepository commentRepository;
+    private PostLikeRepository postLikeRepository;
 
+    // Get all posts
     public List<Post> getAllPosts() {
         // return postRepository.findAll();
         List<Post> posts = postRepository.findAll();
@@ -36,7 +38,8 @@ public class PostService {
         }
         return posts;
     }
-
+    
+    // Get by id
     public Optional<Post> getPostById(Long id) {
         // return postRepository.findById(id);
         Post post = postRepository.findById(id)
@@ -47,21 +50,21 @@ public class PostService {
                 .toList();
 
         post.setComments(topLevelComments);
-
-        // List<Comment> comments = commentRepository.findByPostId(id);
-        // post.setComments(comments);
         return Optional.ofNullable(post);
     }
 
+    // Create post
     public Post createPost(Map<String, Object> newPost) {
         Post post = new Post();
         post.setTitle((String) newPost.get("title"));
         post.setUsername((String) newPost.get("username"));
         post.setContent((String) newPost.get("content"));
+        post.setTimestamp(LocalDateTime.now());
 
         return postRepository.save(post);
     }
 
+    // Delete post
     public void deletePost(Long id) {
         postRepository.findById(id).ifPresent(post -> {
             post.softDelete();
@@ -69,6 +72,7 @@ public class PostService {
         });
     }
 
+    // Update post
     public Post updatePost(Long id, Map<String, Object> updatedPost) {
         Post existingPost = postRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
@@ -81,5 +85,33 @@ public class PostService {
         }
         return postRepository.save(existingPost);
     }
+    
+    ///
+    /// Likes
+    ///
+    
+    // Liking post
+	public PostLike likePost(Map<String, Object> like) {
+        PostLike postLike = new PostLike();
+        postLike.setUsername((String) like.get("username"));
+        postLike.setPostId(	(	(Integer) like.get("postId")	).longValue()	);
+        postLike.setTimestamp(LocalDateTime.now());
 
+        return postLikeRepository.save(postLike);
+	}
+	
+	// Unlike post
+    public void unlikePost(Map<String, Object> like) {
+    	postLikeRepository.deleteByPostIdAndUsername(((Integer)like.get("postId")).longValue(), (String) like.get("username"));
+    }
+    
+    // Get likes by postId
+	public List<PostLike> getAllLikesByPostId(Long postId) {
+		return postLikeRepository.findAllByPostId(postId);
+	}
+	
+	// Get likes by username
+	public List<PostLike> getAllLikesByUsername(String username) {
+        return postLikeRepository.findAllByUsername(username);
+	}
 }

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.yucircle.discourceapp.model.Comment;
+import com.yucircle.discourceapp.model.CommentLike;
+import com.yucircle.discourceapp.model.PostLike;
 import com.yucircle.discourceapp.service.CommentService;
 import com.yucircle.discourceapp.service.NotificationProducerService;
 import com.yucircle.discourceapp.service.PostService;
@@ -16,7 +18,6 @@ import com.yucircle.discourceapp.service.PostService;
 @RestController
 @RequestMapping("/comments")
 public class CommentController {
-
     @Autowired
     private CommentService commentService;
     
@@ -55,34 +56,26 @@ public class CommentController {
         Comment comment = commentService.updateComment(id, updatedComment);
         return ResponseEntity.ok(comment);
     }
+    
+    @PostMapping("/like")
+    public ResponseEntity<CommentLike> likeComment(@RequestBody Map<String, Object> like) {
+        CommentLike newCommentLike = commentService.likeComment(like);
+        return ResponseEntity.ok(newCommentLike);
+    }
+    
+    @DeleteMapping("/unlike")
+    public ResponseEntity<Void> unlikePost(@RequestBody Map<String, Object> like) {
+    	commentService.unlikeComment(like);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/like/commentid/{commentId}")
+    public List<CommentLike> getAllLikesByPostId(@PathVariable Long commentId) {
+        return commentService.getAllLikesByPostId(commentId);
+    }
+    
+    @GetMapping("/like/username/{username}")
+    public List<CommentLike> getAllLikesByUsername(@PathVariable String username) {
+        return commentService.getAllLikesByUsername(username);
+    }
 }
-
-// @GetMapping("/{id}")
-// public ResponseEntity<Comment> getCommentWithParent(@PathVariable Long id) {
-// try {
-// Comment comment = commentService.getCommentWithParent(id);
-// return ResponseEntity.ok(comment);
-// } catch (RuntimeException ex) {
-// return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-// }
-// }
-
-// @PostMapping
-// public ResponseEntity<Comment> addComment(@RequestBody Comment comment) {
-// // Check if Post is null before saving the comment
-//// if (comment.getPost() == null) {
-//// throw new IllegalArgumentException("Post must be provided");
-//// }
-// return ResponseEntity.ok(commentService.addComment(comment));
-// }
-
-//// Add a new comment (or reply to an existing comment)
-// @PostMapping("/{postId}")
-// public ResponseEntity<Comment> addComment(@PathVariable Long postId,
-// @RequestBody Comment commentRequest) {
-// // Add the comment using the service
-// Comment newComment = commentService.addComment(postId,
-//// commentRequest.getParentId(),
-// commentRequest.getUsername(), commentRequest.getContent());
-// return ResponseEntity.status(HttpStatus.CREATED).body(newComment);
-// }

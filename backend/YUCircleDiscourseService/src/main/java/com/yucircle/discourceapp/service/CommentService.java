@@ -2,6 +2,8 @@ package com.yucircle.discourceapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +18,8 @@ public class CommentService {
     private CommentRepository commentRepository;
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private CommentLikeRepository commentLikeRepository;
 
     public List<Comment> getCommentsByPost(Long postId) {
         return commentRepository.findByPostId(postId);
@@ -30,28 +34,12 @@ public class CommentService {
         post.setId(postId);
         return commentRepository.findByPostAndParentCommentIsNull(post);
     }
-    
-    
-//    public List<Comment> getCommentsById(Long commentId) {
-//        return commentRepository.findByCommentId(commentId);
-//    }
-    	
-//    public Comment getCommentWithParent(Long id) {
-//        Comment comment = commentRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Comment not found"));
-//
-//        // Ensure the parentComment is initialized
-//        if (comment.getParentComment() != null) {
-//            comment.getParentComment().getCommentId(); // Access the parentComment to initialize it
-//        }
-//
-//        return comment;
-//    }
 
     public Comment addComment(Map<String, Object> request) {
         Comment newComment = new Comment();
         newComment.setContent((String) request.get("content"));
         newComment.setUsername((String) request.get("username"));
+        newComment.setTimestamp(LocalDateTime.now());
 
         Long postId = ((Number) request.get("postId")).longValue();
         Post post = postRepository.findById(postId)
@@ -68,7 +56,6 @@ public class CommentService {
         return commentRepository.save(newComment);
     }
 
-
     public void deleteComment(Long id) {
         commentRepository.findById(id).ifPresent(comment -> {
             comment.softDelete();
@@ -83,4 +70,33 @@ public class CommentService {
 
         return commentRepository.save(comment);
     }
+    
+    ///
+    /// Likes
+    ///
+    
+    // Liking post
+	public CommentLike likeComment(Map<String, Object> like) {
+        CommentLike commentLike = new CommentLike();
+        commentLike.setUsername((String) like.get("username"));
+        commentLike.setCommentId(	(	(Integer) like.get("commentId")	).longValue()	);
+        commentLike.setTimestamp(LocalDateTime.now());
+
+        return commentLikeRepository.save(commentLike);
+	}
+	
+	// Unlike post
+    public void unlikeComment(Map<String, Object> like) {
+    	commentLikeRepository.deleteByCommentIdAndUsername(((Integer)like.get("commentId")).longValue(), (String) like.get("username"));
+    }
+    
+    // Get likes by postId
+	public List<CommentLike> getAllLikesByPostId(Long commentId) {
+		return commentLikeRepository.findAllByCommentId(commentId);
+	}
+	
+	// Get likes by username
+	public List<CommentLike> getAllLikesByUsername(String username) {
+        return commentLikeRepository.findAllByUsername(username);
+	}
 }
