@@ -33,6 +33,11 @@ public class ProductController {
         Optional<Product> product = productService.getProductById(id);
         return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/products/user/{username}")
+    public List<Product> getProductsByUsername(@PathVariable String username) {
+        return productService.getProductsByUsername(username);
+    }
     
     // Search by tags.
     //

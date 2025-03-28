@@ -32,6 +32,19 @@ public class CommentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{commentId}/post")
+    public ResponseEntity<Long> getPostIdForComment(@PathVariable Long commentId) {
+        Optional<Comment> comment = commentService.getCommentsById(commentId);
+        return comment.map(c -> ResponseEntity.ok(c.getPost().getId()))
+                    .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<Comment>> getCommentsByUser(@PathVariable String username) {
+        List<Comment> comments = commentService.getCommentsByUsername(username);
+        return ResponseEntity.ok(comments);
+    }
+
     @GetMapping("/posts/{postId}")
     public List<Comment> getPostComments(@PathVariable Long postId) {
         return commentService.getTopLevelCommentsForPost(postId);

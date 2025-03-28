@@ -31,6 +31,11 @@ public class PostController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/user/{username}")
+    public List<Post> getPostsByUsername(@PathVariable String username) {
+        return postService.getPostsByUsername(username);
+    }
+
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Map<String, Object> post) {
         Post newPost = postService.createPost(post);
