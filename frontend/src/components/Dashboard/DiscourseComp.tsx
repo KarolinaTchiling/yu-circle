@@ -17,6 +17,7 @@ type Comment = {
   timestamp: string;
   replies: Comment[];
   likes?: number;
+  likedByUser?: boolean;
 };
 
 type Post = {
@@ -81,25 +82,30 @@ const DiscourseComp: React.FC = () => {
 
   const fetchUserComments = async () => {
     if (!user?.username) return;
-  
+
     try {
       const res = await fetch(`http://localhost:8081/comments/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch comments");
       const comments = await res.json();
-  
-      // Fetch likes for each comment
+
+      const likedCommentsRes = await fetch(`http://localhost:8081/comments/like/username/${user.username}`);
+      const likedComments: { commentId: number }[] = likedCommentsRes.ok ? await likedCommentsRes.json() : [];
+      const likedCommentIds = likedComments.map((entry) => entry.commentId);
+
       const commentsWithLikes = await Promise.all(
         comments.map(async (comment: Comment) => {
           try {
-            const likeRes = await fetch(`http://localhost:8081/comments/like/commentId/${comment.commentId}`);
-            const likes = likeRes.ok ? await likeRes.json() : 0;
-            return { ...comment, likes };
+            const likeRes = await fetch(`http://localhost:8081/comments/like/commentid/${comment.commentId}`);
+            const allLikes: { commentId: number }[] = likeRes.ok ? await likeRes.json() : [];
+            const likes = allLikes.filter((like) => like.commentId === comment.commentId).length;
+            const likedByUser = likedCommentIds.includes(comment.commentId);
+            return { ...comment, likes, likedByUser };
           } catch {
-            return { ...comment, likes: 0 };
+            return { ...comment, likes: 0, likedByUser: false };
           }
         })
       );
-  
+
       setUserComments(commentsWithLikes);
     } catch (err) {
       console.error("Error fetching user comments or likes:", err);
@@ -131,7 +137,7 @@ const DiscourseComp: React.FC = () => {
     }
   };
 
-  const toggleLike = async (post: Post) => {
+  const togglePostLike = async (post: Post) => {
     if (!user?.username) return;
 
     const liked = post.likedByUser;
@@ -156,6 +162,40 @@ const DiscourseComp: React.FC = () => {
                 likedByUser: !liked,
               }
             : p
+        )
+      );
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
+
+  const toggleCommentLike = async (comment: Comment) => {
+    if (!user?.username) return;
+
+    const liked = comment.likedByUser;
+    const url = liked
+      ? "http://localhost:8081/comments/unlike"
+      : "http://localhost:8081/comments/like";
+
+    try {
+      const res = await fetch(url, {
+        method: liked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user.username, commentId: comment.commentId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to toggle like");
+
+      // Optimistic update
+      setUserComments((prev) =>
+        prev.map((c) =>
+          c.commentId === comment.commentId
+            ? {
+                ...c,
+                likes: liked ? (c.likes ?? 1) - 1 : (c.likes ?? 0) + 1,
+                likedByUser: !liked,
+              }
+            : c
         )
       );
     } catch (err) {
@@ -310,10 +350,10 @@ const DiscourseComp: React.FC = () => {
 
                     <div className="flex flex-row items-end gap-1">
                       <span className="text-sm font-medium">{post.likes ?? 0}</span>
-                      <button onClick={() => toggleLike(post)} className="focus:outline-none">
+                      <button onClick={() => togglePostLike(post)} className="focus:outline-none">
                         <img
                           src={post.likedByUser ? ThumbFill : Thumb}
-                          className="h-5 w-5 object-contain"
+                          className="h-5 w-5 object-contain cursor-pointer"
                           alt="Like"
                         />
                       </button>
@@ -411,7 +451,13 @@ const DiscourseComp: React.FC = () => {
                   <p>{comment.replies?.length ?? 0} Replies</p>
                   <div className="flex flex-row items-center">
                     <span>{comment.likes ?? 0}</span>
-                    <img src={Thumb} className="h-6 pl-2" />
+                    <button onClick={() => toggleCommentLike(comment)} className="focus:outline-none">
+                        <img
+                          src={comment.likedByUser ? ThumbFill : Thumb}
+                          className="h-5 w-5 object-contain cursor-pointer"
+                          alt="Like"
+                        />
+                      </button>
                   </div>
                 </div>
 
