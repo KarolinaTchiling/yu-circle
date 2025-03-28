@@ -131,6 +131,7 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
                   setReplyContent={setReplyContent}
                   onCancel={handleCancelReply}
                   onSubmit={handleSubmitReply}
+                  refreshPost={fetchPost}
                 />
               ))
             )}
