@@ -4,6 +4,7 @@ import Thumbs from "/thumbs.svg";
 import Clock from "/clock.svg";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import PostPopup from "./PostPopup";
 
 dayjs.extend(relativeTime);
 
@@ -29,6 +30,7 @@ type Post = {
 const DiscourseComp: React.FC = () => {
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const { user } = useContext(AuthContext)!;
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -78,6 +80,7 @@ const DiscourseComp: React.FC = () => {
       </div>
 
       <div className="flex flex-row w-full">
+
         {/* Post Section */}
         <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
           <h1 className="font-medium text-lg">Posts</h1>
@@ -108,9 +111,15 @@ const DiscourseComp: React.FC = () => {
                 </div>
 
                 <div className="flex flex-row gap-2 justify-center mt-3">
-                  <button className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
+                  <button 
+                    onClick={() => setSelectedPostId(post.id)}
+                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
                     See Post
                   </button>
+
+                  {selectedPostId && (
+                    <PostPopup postId={selectedPostId} onClose={() => setSelectedPostId(null)} />
+                  )}
 
                   <button 
                     onClick={() => handleDeletePost(post.id)}
