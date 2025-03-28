@@ -56,7 +56,7 @@ public class NotificationProducerService {
 	private Notification buildReplyNotification(Comment comment) {
 		Notification n = new Notification();
 		
-		String message = comment.getUsername() + " has replied to your comment! "; 
+		String message = comment.getUsername() + " has replied to your comment; "; 
 		message += "\"" + comment.getParentComment().getContent() + "\"";
 		
 		n.setUsername(comment.getParentComment().getUsername());
