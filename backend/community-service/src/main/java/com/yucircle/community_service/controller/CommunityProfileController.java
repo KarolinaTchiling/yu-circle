@@ -79,18 +79,23 @@ public class CommunityProfileController {
 	
 	//Return recommended profiles with their profile tags,
 	//returns empty list if no recommendations can be made
-	@GetMapping("/get-recommended-profiles")
+	@PostMapping("/get-recommended-profiles")
 	public List<ProfileTagsDTO> getRecommendedProfiles(@RequestBody Profile profile, @RequestParam(required = false) Optional<String> sort) throws Exception {
 		return commService.getRecommendedProfiles(profile.getUsername(), sort);
 	}
+
 	
 	//Filter and return profiles with specified tag
 	//URL Example: localhost:8080/community/filter?tag=Chemistry
 	@GetMapping("/filter")
-	public List<ProfileTagsDTO> filterTags(@RequestParam String tag, @RequestParam(required = false) Optional<String> sort) {
-		return commService.filterTags(tag, sort);
+	public List<ProfileTagsDTO> filterTags(
+		@RequestParam(required = false) List<String> programs,
+		@RequestParam(required = false) List<String> types,
+		@RequestParam(required = false) Optional<String> sort
+	) {
+		return commService.filterTags(programs, types, sort);
 	}
-	
+
 	//Return potential matches to search query
 	//URL Example: localhost:8080/community/search?query=j
 	@GetMapping("/search")

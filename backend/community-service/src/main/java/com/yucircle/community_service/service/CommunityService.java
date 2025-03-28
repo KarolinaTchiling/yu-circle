@@ -1,6 +1,7 @@
 package com.yucircle.community_service.service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -88,23 +89,34 @@ public class CommunityService {
      * @param tag to filter for
      * @return list of profiles with tag, or empty list if tag does not exist
      */
-    @Transactional
-	public List<ProfileTagsDTO> filterTags(String tag, Optional<String> sort) {
-    	
-    	List<ProfileTagsDTO> list = new ArrayList<>();
-    	
-    	//return empty list if Tag does not exist
-    	if (!tagRepository.existsById(tag)) {
-    		return list;
-    	}
-    	
-    	for (Profile p : tagRepository.findById(tag).get().getProfiles()) {
-    		ProfileTagsDTO pt = createProfileTagsDTO(p);
-    		list.add(pt);
-    	}
-    	    	
-    	return CommunitySort.sortProfiles(list, sort.orElse(""));
-    }
+	@Transactional
+	public List<ProfileTagsDTO> filterTags(List<String> programs, List<String> types, Optional<String> sort) {
+		Set<ProfileTagsDTO> allProfiles = new HashSet<>();
+	
+		// Handle null case to avoid NullPointerException
+		if (programs == null) programs = new ArrayList<>();
+		if (types == null) types = new ArrayList<>();
+	
+		for (Profile profile : profileRepository.findAll()) {
+			// Convert Set<Tag> to Set<String>
+			Set<String> tagSet = profile.getTags()
+				.stream()
+				.map(Tag::getTag)
+				.collect(Collectors.toSet());
+	
+			// OR logic within types and programs, AND logic between them
+			boolean hasType = types.isEmpty() || types.stream().anyMatch(tagSet::contains);
+			boolean hasProgram = programs.isEmpty() || programs.stream().anyMatch(tagSet::contains);
+	
+			if (hasType && hasProgram) {
+				allProfiles.add(createProfileTagsDTO(profile));
+			}
+		}
+	
+		List<ProfileTagsDTO> result = new ArrayList<>(allProfiles);
+		return CommunitySort.sortProfiles(result, sort.orElse(""));
+	}
+
 
     /**
      * Queries profiles to search and find closest match
