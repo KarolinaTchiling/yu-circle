@@ -48,6 +48,25 @@ const MarketplaceComp: React.FC = () => {
     fetchUserProductsAndRatings();
   }, [user?.username]);
 
+  const handleDelete = async (productId: number) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this post?");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`http://localhost:8083/marketplace/products/${productId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete product");
+
+      // Remove product from UI
+      setUserProducts((prev) => prev.filter((p) => p.productId !== productId));
+      console.log(`Product ${productId} deleted successfully`);
+    } catch (err) {
+      console.error("Error deleting product:", err);
+    }
+  };
+
   return (
     <main className="flex flex-col items-center bg-light-green border b-black rounded-lg w-full">
       <div className="bg-mint rounded-t-lg border-b b-black text-center font-fancy py-1 text-xl w-full">
@@ -68,7 +87,7 @@ const MarketplaceComp: React.FC = () => {
                 <h1 className="text-3xl">{product.productName}</h1>
                 <p className="text-sm">{product.description}</p>
 
-                <div className="flex flex-row gap-2 justify-between mt-3 mx-1 items-end">
+                <div className="flex flex-row gap-2 justify-between mt-3 mx-1">
                   <div className="border b-black px-6 rounded-lg">
                     {product.price === 0 ? "Free" : `$${product.price}`}
                   </div>
@@ -83,18 +102,17 @@ const MarketplaceComp: React.FC = () => {
                     <div className="border b-black px-6 rounded-lg">
                       {product.program}
                     </div>
+                    
+
                   </div>
-                </div>
-
-                <div className="flex flex-row gap-2 justify-center mt-3">
-                  <button className="w-[30%] py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300">
-                    Edit Post
-                  </button>
-
-                  <button className="w-[30%] py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
+                  <button 
+                    onClick={() => handleDelete(product.productId)}
+                    className="w-[15%] py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
                     Delete
                   </button>
                 </div>
+
+
               </div>
             ))
           )}
