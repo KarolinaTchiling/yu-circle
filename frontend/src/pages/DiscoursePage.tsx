@@ -497,17 +497,7 @@ const DiscoursePage: React.FC = () => {
         <aside className="w-80 min-w-[280px] p-4 flex-shrink-0">
           {isAuthenticated ? (
             <>
-              <div className="mb-4">
-                <label className="block font-bold mb-2">
-                  Current Username:
-                </label>
-                <input
-                  className="w-full p-2 border rounded"
-                  placeholder="Current Username"
-                  value={currentUser}
-                  readOnly
-                />
-              </div>
+              {/* Removed current username bar */}
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="w-full h-12 rounded bg-[var(--color-red)] text-2xl flex items-center justify-center font-fancy text-white transition hover:bg-red-700 mb-4"

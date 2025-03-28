@@ -10,6 +10,7 @@ interface Notification {
   username: string;
   message: string;
   timestamp: string;
+  dismissed?: boolean;
 }
 
 const NotificationMenu: React.FC = () => {
@@ -28,8 +29,13 @@ const NotificationMenu: React.FC = () => {
   };
 
   const handleDismiss = (notificationId: number) => {
+    // Update the notification's message to "deleted" and mark it as dismissed
     setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== notificationId)
+      prev.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, message: "deleted", dismissed: true }
+          : notification
+      )
     );
   };
 
@@ -74,6 +80,11 @@ const NotificationMenu: React.FC = () => {
     };
   }, [isDropdownOpen]);
 
+  // Only display notifications that haven't been dismissed
+  const visibleNotifications = notifications.filter(
+    (notification) => !notification.dismissed
+  );
+
   return (
     <div className="relative" ref={dropdownRef}>
       <img
@@ -86,15 +97,10 @@ const NotificationMenu: React.FC = () => {
       />
       {isDropdownOpen && (
         <div className="absolute top-full right-0 mt-2 bg-white border border-gray-300 rounded shadow-md w-64 z-50">
-          {isAuthenticated && user && (
-            <div className="px-4 py-2 bg-gray-200 text-sm border-b border-gray-300">
-              Logged in as: <strong>{user.username}</strong>
-            </div>
-          )}
           {isAuthenticated ? (
-            notifications.length > 0 ? (
+            visibleNotifications.length > 0 ? (
               <ul className="list-none p-0 m-0">
-                {notifications.map((notif) => (
+                {visibleNotifications.map((notif) => (
                   <li
                     key={notif.id}
                     className="px-4 py-2 flex justify-between items-center border-b border-gray-200"
