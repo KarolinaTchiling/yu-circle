@@ -14,26 +14,33 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-	  '/messages': {
+      '/messages': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
-	  '/messages/send': {
+      '/messages/send': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
-	  '/messages/get': {
+      '/messages/get': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
-	  '/messages/delete': {
+      '/messages/delete': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
+      
+         '/notificationProxy': {
+          target: 'http://localhost:8085',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/notificationProxy/, '/notification')
+        },
     },
   },
 });

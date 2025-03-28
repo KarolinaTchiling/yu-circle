@@ -48,7 +48,7 @@ const ChatMenu: React.FC = () => {
         className={`h-10 cursor-pointer transition-transform hover:scale-110 ${
           isDropdownOpen ? "scale-110" : ""
         }`}
-        onClick={() => navigate('/chat')}
+        onClick={() => navigate("/chat")}
       />
 
       {/* Dropdown Menu */}
