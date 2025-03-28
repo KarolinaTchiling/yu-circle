@@ -28,9 +28,10 @@ type Post = {
 interface PostModalProps {
   postId: number;
   onClose: () => void;
+  highlightCommentId?: number | null;
 }
 
-const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
+const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightCommentId }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
@@ -132,6 +133,7 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
                   onCancel={handleCancelReply}
                   onSubmit={handleSubmitReply}
                   refreshPost={fetchPost}
+                  highlightCommentId={highlightCommentId} 
                 />
               ))
             )}

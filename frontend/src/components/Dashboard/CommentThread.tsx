@@ -21,6 +21,7 @@ interface Props {
   onCancel: () => void;
   onSubmit: () => void;
   refreshPost: () => void;
+  highlightCommentId?: number | null;
 }
 
 const CommentThread: React.FC<Props> = ({
@@ -33,6 +34,7 @@ const CommentThread: React.FC<Props> = ({
   onCancel,
   onSubmit,
   refreshPost,
+  highlightCommentId
 }) => {
     const { user } = useContext(AuthContext)!;
     const [isEditing, setIsEditing] = useState(false);
@@ -74,11 +76,14 @@ const CommentThread: React.FC<Props> = ({
 
     const isReplying = activeReplyId === comment.commentId;
     const isAuthor = user?.username === comment.username;
+    const isHighlighted = highlightCommentId === comment.commentId;
 
     return (
         <div
-          className={`bg-${level === 0 ? "offwhite" : "white"} border border-black rounded-lg p-3 mb-3 ml-${level * 4}`}
-        >
+            className={`border border-black rounded-lg p-3 mb-3 ml-${level * 4} ${
+                level === 0 ? "bg-offwhite" : "bg-white"
+            } ${isHighlighted ? "ring-2 ring-purple-500 bg-yellow-100" : ""}`}
+            >
           <p className="text-sm font-semibold">{comment.username}</p>
     
           {isEditing ? (
@@ -179,6 +184,7 @@ const CommentThread: React.FC<Props> = ({
                   onCancel={onCancel}
                   onSubmit={onSubmit}
                   refreshPost={refreshPost}
+                  highlightCommentId={highlightCommentId}
                 />
               ))}
             </div>

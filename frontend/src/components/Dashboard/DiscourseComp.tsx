@@ -30,8 +30,10 @@ type Post = {
 const DiscourseComp: React.FC = () => {
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userComments, setUserComments] = useState<Comment[]>([]);
-  const { user } = useContext(AuthContext)!;
+  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+
+  const { user } = useContext(AuthContext)!;
 
   const fetchUserPosts = async () => {
     if (!user?.username) return;
@@ -101,6 +103,18 @@ const DiscourseComp: React.FC = () => {
       console.error("Error deleting comment:", err);
     }
   };
+
+  const handleSeeThread = async (commentId: number) => {
+    try {
+      const res = await fetch(`http://localhost:8081/comments/${commentId}/post`);
+      if (!res.ok) throw new Error("Failed to fetch postId");
+      const postId = await res.json();
+      setSelectedPostId(postId);
+      setSelectedCommentId(commentId); // optional, if you want to scroll/highlight
+    } catch (err) {
+      console.error("Error fetching postId:", err);
+    }
+  };
   
 
   return (
@@ -149,10 +163,6 @@ const DiscourseComp: React.FC = () => {
                     See Post
                   </button>
 
-                  {selectedPostId && (
-                    <PostPopup postId={selectedPostId} onClose={() => setSelectedPostId(null)} />
-                  )}
-
                   <button 
                     onClick={() => handleDeletePost(post.id)}
                     className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
@@ -200,9 +210,9 @@ const DiscourseComp: React.FC = () => {
                 <div className="flex flex-row gap-2 justify-center mt-3">
                   <button
                     className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300"
-                    onClick={() => alert("Open thread view coming soon")}
+                    onClick={() => handleSeeThread(comment.commentId)}
                   >
-                    See Comment
+                    See Thread
                   </button>
 
                   <button
@@ -218,6 +228,17 @@ const DiscourseComp: React.FC = () => {
 
 
         </div>
+
+        {selectedPostId && (
+          <PostPopup
+            postId={selectedPostId}
+            onClose={() => {
+              setSelectedPostId(null);
+              setSelectedCommentId(null);
+            }}
+            highlightCommentId={selectedCommentId}
+          />
+        )}
         
       </div>
 
