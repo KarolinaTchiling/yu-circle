@@ -185,29 +185,16 @@ const CommunityPage: React.FC = () => {
 
 
       <div className="h-full w-full flex-[80%] grid grid-cols-3 gap-x-3 gap-y-3">
-
-        {/* <div className="flex justify-start items-center gap-3 mb-0">
-          <label htmlFor="sort" className="text-sm font-medium">Sort by:</label>
-          <select
-            id="sort"
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="px-3 py-1 border border-black rounded-md bg-white"
-          >
-            <option value="recent">Most Recent</option>
-            <option value="highestRated">Highest Rated</option>
-          </select>
-        </div> */}
-
-        {filteredUsers.map((user, index) => (
-          <CommunityComp
-            key={index}
-            username={user.username}
-            tags={user.tags}
-            profileImg="/profile.svg" 
-          />
+        {filteredUsers
+          .filter((u) => u.username !== user?.username) // skip own profile
+          .map((user, index) => (
+            <CommunityComp
+              key={index}
+              username={user.username}
+              tags={user.tags}
+              profileImg="/profile.svg"
+            />
         ))}
-
       </div>
 
 

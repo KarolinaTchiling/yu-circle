@@ -12,9 +12,9 @@ const CommunityComp: React.FC<CommunityProps> = ({
   tags,
   profileImg,
 }) => {
-  const { isAuthenticated, user } = useContext(AuthContext)!;
-  const isOwnProfile = user?.username === username;
+  const { isAuthenticated } = useContext(AuthContext)!;
   const [bio, setBio] = useState<string>("Loading bio...");
+
 
 useEffect(() => {
   const fetchBio = async () => {
@@ -87,7 +87,7 @@ useEffect(() => {
           >
             Log in to Connect
           </button>
-        ) : isOwnProfile ? null : (
+        ) :  (
           <button
             className="font-fancy cursor-pointer text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
           >
