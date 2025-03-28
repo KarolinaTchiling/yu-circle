@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import React from "react";
 import Thumbs from "/thumbs.svg";
 import Clock from "/clock.svg";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import CommentThread from "./CommentThread";
 
 type Comment = {
   commentId: number;
@@ -31,9 +33,15 @@ interface PostModalProps {
 const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const { user } = useContext(AuthContext)!;
 
   useEffect(() => {
-    const fetchPost = async () => {
+    fetchPost();
+  }, [postId]);
+
+  const fetchPost = async () => {
       try {
         const res = await fetch(`http://localhost:8081/posts/${postId}`);
         if (!res.ok) throw new Error("Failed to fetch post");
@@ -44,11 +52,47 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
       } finally {
         setLoading(false);
       }
-    };
+  };
 
-    fetchPost();
-  }, [postId]);
+
+  const handleCancelReply = () => {
+    setActiveReplyId(null);
+    setReplyContent("");
+  };
+
+  const handleSubmitReply = async () => {
+    if (!replyContent.trim() || !user?.username || !post) return;
   
+    const payload: any = {
+      content: replyContent,
+      username: user.username,
+      postId: post.id,
+    };
+  
+    if (activeReplyId !== null) {
+      payload.parentId = activeReplyId;
+    }
+  
+    try {
+      const res = await fetch("http://localhost:8081/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!res.ok) throw new Error("Failed to submit comment");
+  
+      console.log("Comment submitted");
+      await fetchPost();
+      handleCancelReply();
+
+    } catch (err) {
+      console.error("Error submitting reply:", err);
+    }
+  };
+
+
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="bg-white rounded-lg border border-black p-6 w-[95%] max-w-4xl shadow-lg max-h-[90vh] overflow-y-auto">
@@ -70,42 +114,26 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
             <hr className="my-4 border-black" />
 
             <h3 className="text-lg font-semibold mb-2">Comments</h3>
-
+            
             {post.comments.length === 0 ? (
               <p className="italic text-sm text-gray-500">No comments yet.</p>
             ) : (
               post.comments.map((comment) => (
-                <div
+                <CommentThread
                   key={comment.commentId}
-                  className="bg-offwhite border border-black rounded-lg p-3 mb-3"
-                >
-                  <p className="text-sm font-semibold">{comment.username}</p>
-                  <p className="text-sm mt-1">{comment.content}</p>
-                  <div className="text-xs text-gray-600 mt-1">
-                    {dayjs(comment.timestamp).fromNow()}
-                  </div>
-
-                  {/* Replies */}
-                  {comment.replies.length > 0 && (
-                    <div className="mt-3 ml-4 border-l border-gray-300 pl-4">
-                      {comment.replies.map((reply) => (
-                        <div
-                          key={reply.commentId}
-                          className="bg-white border border-black rounded-lg p-2 mb-2"
-                        >
-                          <p className="text-sm font-semibold">{reply.username}</p>
-                          <p className="text-sm mt-1">{reply.content}</p>
-                          <div className="text-xs text-gray-600 mt-1">
-                            {dayjs(reply.timestamp).fromNow()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  comment={comment}
+                  activeReplyId={activeReplyId}
+                  replyContent={replyContent}
+                  onReply={(id) => {
+                    setActiveReplyId(id);
+                    setReplyContent("");
+                  }}
+                  setReplyContent={setReplyContent}
+                  onCancel={handleCancelReply}
+                  onSubmit={handleSubmitReply}
+                />
               ))
             )}
-
             <div className="flex justify-end mt-6">
               <button
                 onClick={onClose}
@@ -122,5 +150,5 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose }) => {
     </div>
   );
 };
-  
-  export default PostPopup;
+
+export default PostPopup;
