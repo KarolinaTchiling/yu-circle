@@ -37,6 +37,9 @@ const DiscourseComp: React.FC = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editComment, setEditComment] = useState("");
+
   const { user } = useContext(AuthContext)!;
 
   const fetchUserPosts = async () => {
@@ -106,7 +109,7 @@ const DiscourseComp: React.FC = () => {
       }
   
       console.log(`Post ${postId} updated successfully`);
-      await fetchUserPosts(); // 🔁 refresh posts after update
+      await fetchUserPosts(); // refresh posts after update
     } catch (err) {
       console.error("Error updating post:", err);
     }
@@ -126,6 +129,27 @@ const DiscourseComp: React.FC = () => {
       setUserComments((prev) => prev.filter((c) => c.commentId !== commentId));
     } catch (err) {
       console.error("Error deleting comment:", err);
+    }
+  };
+
+  const handleEditComment = async (commentId: number, newComment: string) => {
+    try {
+      const res = await fetch(`http://localhost:8081/comments/update/${commentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newComment,
+        }),
+      });
+  
+      if (!res.ok && res.status !== 204) {
+        throw new Error("Failed to update comment");
+      }
+  
+      console.log(`Comment ${commentId} updated successfully`);
+      await fetchUserComments(); // refresh comments after update
+    } catch (err) {
+      console.error("Error updating comment:", err);
     }
   };
 
@@ -251,9 +275,7 @@ const DiscourseComp: React.FC = () => {
 
 
         
-
-
-        <div className="border-r-1"></div>
+            <div className="border-r-1"></div>
 
         {/* Comment Section */}
         <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
@@ -265,7 +287,37 @@ const DiscourseComp: React.FC = () => {
           ) : (
             userComments.map((comment) => (
               <div key={comment.commentId} className="bg-white border b-black rounded-lg p-2 px-3 text-left">
-                <p className="text-sm">{comment.content}</p>
+                
+                {/* Editable or Static Content */}
+                {editingCommentId === comment.commentId ? (
+                  <>
+                    <textarea
+                      value={editComment}
+                      onChange={(e) => setEditComment(e.target.value)}
+                      className="w-full border border-black rounded p-2 text-sm mt-1"
+                      rows={2}
+                    />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <button
+                        onClick={() => setEditingCommentId(null)}
+                        className="px-3 py-1 text-sm border border-black rounded bg-gray-200 hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await handleEditComment(comment.commentId, editComment);
+                          setEditingCommentId(null);
+                        }}
+                        className="px-3 py-1 text-sm border border-black rounded bg-mint hover:bg-minter"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm">{comment.content}</p>
+                )}
 
                 {comment.parentComment && (
                   <div className="mt-1 text-xs italic text-gray-600">
@@ -273,7 +325,7 @@ const DiscourseComp: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-bold text-sm items-end">
+                <div className="flex flex-row gap-2 justify-between mt-2 mx-1 font-medium text-sm items-end">
                   <div className="flex flex-row items-center">
                     <img src={Clock} className="h-5 pr-2" />
                     <span>{comment.timestamp ? dayjs(comment.timestamp).fromNow() : "No timestamp"}</span>
@@ -293,9 +345,13 @@ const DiscourseComp: React.FC = () => {
                     See Thread
                   </button>
 
-                  <button 
-                    onClick={() => handleDeletePost(comment.commentId)}
-                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-mint hover:bg-minter transition-colors duration-300">
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(comment.commentId);
+                      setEditComment(comment.content);
+                    }}
+                    className="w-full py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-mint hover:bg-minter transition-colors duration-300"
+                  >
                     Edit
                   </button>
 
@@ -309,9 +365,8 @@ const DiscourseComp: React.FC = () => {
               </div>
             ))
           )}
-
-
         </div>
+
 
         {selectedPostId && (
           <PostPopup
