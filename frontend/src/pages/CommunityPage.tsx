@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebars/CommunitySidebar";
 import CommunityComp from "../components/CommunityComp";
@@ -13,107 +14,77 @@ const CommunityPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<{ [type: string]: boolean }>({});
   const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
-  // const [isFree, setIsFree] = useState(false);
-  // const [searchTerm, setSearchTerm] = useState("");
-  // const [sortOption, setSortOption] = useState("highestRated");
-
-  // const filteredProducts = products.filter((product) =>
-  //   product.productName.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
-
-  // const sortedProducts = [...filteredProducts].sort((a, b) => {
-  //   if (sortOption === "highestRated") {
-  //     return (b.averageRating || 0) - (a.averageRating || 0);
-  //   } else if (sortOption === "recent") {
-  //     return b.productId - a.productId; // Newest first
-  //   }
-  //   return 0;
-  // });
-
-  // const buildQuery = (
-  //   programs: { [type: string]: boolean },
-  //   types: { [type: string]: boolean },
-  //   isFree: boolean
-  // ) => {
-  //   const selectedPrograms = Object.keys(programs).filter((key) => programs[key]);
-  //   const selectedTypes = Object.keys(types).filter((key) => types[key]);
+  const [isRecommended, setIsRecommended] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
-  //   const params = new URLSearchParams();
-  
-  //   if (selectedPrograms.length > 0) {
-  //     params.append("program", selectedPrograms.join(","));
-  //   }
-  
-  //   if (selectedTypes.length > 0) {
-  //     params.append("contentType", selectedTypes.join(","));
-  //   }
+  const { user } = useContext(AuthContext)!;
 
-  //   if (isFree) {
-  //     params.append("priceType", "free");
-  //   }
-  
-  //   return params.toString();
-  // };
+  const filteredUsers = searchTerm
+  ? users.filter((user) =>
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.tags.some((tag) =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  : users;
 
-  const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
-    setSelectedTypes(updatedTypes);
 
-    // const query = buildQuery(selectedPrograms, updatedTypes, isFree);
-    // fetch(`http://localhost:8083/marketplace/search?${query}`)
-    //   .then((res) => res.json())
-    //   .then((data) => setProducts(data))
-    //   .catch((err) => console.error("Error fetching filtered products:", err));
+  const buildTagQuery = (
+    programs: { [type: string]: boolean },
+    types: { [type: string]: boolean }
+  ) => {
+    const selectedPrograms = Object.keys(programs).filter((key) => programs[key]);
+    const selectedTypes = Object.keys(types).filter((key) => types[key]);
 
+    const params = new URLSearchParams();
+
+    selectedPrograms.forEach((tag) => params.append("programs", tag));
+    selectedTypes.forEach((tag) => params.append("types", tag));
+
+    return params.toString(); // ?programs=Health&programs=Science&types=Mentor&types=Mentee
   };
 
-  const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
-    setSelectedPrograms(updatedPrograms);
 
-    // const query = buildQuery(updatedPrograms, selectedTypes, isFree);
-    // fetch(`http://localhost:8083/marketplace/search?${query}`)
-    //   .then((res) => res.json())
-    //   .then((data) => setProducts(data))
-    //   .catch((err) => console.error("Error fetching filtered products:", err));
+  const fetchFilteredCommunityUsers = async (
+    programs: { [type: string]: boolean },
+    types: { [type: string]: boolean }
+  ) => {
+    const query = buildTagQuery(programs, types);
 
+    if (!query) {
+      isRecommended ? fetchRecUsers() : fetchAllUsers();
+      return;
+    }
+
+    if (isRecommended) {
+      fetchRecUsers(); // ignore filters if recommended selected
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8082/community/filter?${query}`);
+      if (!res.ok) throw new Error("Failed to fetch filtered users");
+
+      const data = await res.json();
+
+      const transformedUsers = data.map((user: any) => ({
+        username: user.username,
+        tags: user.tags || [],
+      }));
+
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error fetching filtered users:", err);
+    }
   };
 
-  // const handleIsFreeChange = (free: boolean) => {
-  //   setIsFree(free);
-  //   const query = buildQuery(selectedPrograms, selectedTypes, free);
-  //   fetch(`http://localhost:8083/marketplace/search?${query}`)
-  //     .then((res) => res.json())
-  //     .then((data) => setProducts(data))
-  //     .catch((err) => console.error("Error fetching filtered products:", err));
-  // };
-
-
-  // const handleClearFilters = () => {
-  //   const clearedTypes = Object.fromEntries(
-  //     Object.keys(selectedTypes).map((key) => [key, false])
-  //   );
-  
-  //   const clearedPrograms = Object.fromEntries(
-  //     Object.keys(selectedPrograms).map((key) => [key, false])
-  //   );
-  
-  //   setSelectedTypes(clearedTypes);
-  //   setSelectedPrograms(clearedPrograms);
-  //   setIsFree(false);
-  
-  //   // Fetch unfiltered products
-  //   fetch("http://localhost:8083/marketplace/products")
-  //     .then((res) => res.json())
-  //     .then((data) => setProducts(data));
-  // };
-
-  const fetchUsers = async () => {
+  const fetchAllUsers = async () => {
     try {
       const res = await fetch("http://localhost:8082/community/get-default-profiles");
       if (!res.ok) throw new Error("Failed to fetch community users");
 
       const data = await res.json();
-      
-      // Transform data to fit <CommunityComp> props
+
       const transformedUsers = data.map((user: any) => ({
         username: user.username,
         tags: user.tags || [],
@@ -125,12 +96,73 @@ const CommunityPage: React.FC = () => {
     }
   };
 
+  const fetchRecUsers = async () => {
+    try {
+      const res = await fetch("http://localhost:8082/community/get-recommended-profiles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: user!.username
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch recommended users");
+
+      const data = await res.json();
+
+      const transformedUsers = data.map((user: any) => ({
+        username: user.username,
+        tags: user.tags || [],
+      }));
+
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error fetching recommended users:", err);
+    }
+  };
+
+  const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
+    setSelectedTypes(updatedTypes);
+    fetchFilteredCommunityUsers(selectedPrograms, updatedTypes);
+  };
+
+  const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
+    setSelectedPrograms(updatedPrograms);
+    fetchFilteredCommunityUsers(updatedPrograms, selectedTypes);
+  };
+
+  const handleIsRecommended = (value: boolean) => {
+    setIsRecommended(value);
+    value ? fetchRecUsers() : fetchFilteredCommunityUsers(selectedPrograms, selectedTypes);
+  };
+
+
+  const handleClearFilters = () => {
+    const clearedTypes = Object.fromEntries(
+      Object.keys(selectedTypes).map((key) => [key, false])
+    );
+  
+    const clearedPrograms = Object.fromEntries(
+      Object.keys(selectedPrograms).map((key) => [key, false])
+    );
+  
+    setSelectedTypes(clearedTypes);
+    setSelectedPrograms(clearedPrograms);
+  
+    fetchFilteredCommunityUsers(clearedPrograms, clearedTypes);
+  };
+
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isRecommended) {
+      fetchRecUsers();
+    } else {
+      fetchFilteredCommunityUsers(selectedPrograms, selectedTypes);
+    }
+  }, [isRecommended]);
 
-  console.log(users);
 
 
   return (
@@ -144,6 +176,10 @@ const CommunityPage: React.FC = () => {
             onTypeChange={handleTypeChange}
             selectedPrograms={selectedPrograms}
             onProgramChange={handleProgramChange}
+            onSearchChange={setSearchTerm}
+            isRecommended={isRecommended}                     
+            setIsRecommended={handleIsRecommended}  
+            onClearFilters={handleClearFilters}
          />
       </div>
 
@@ -163,7 +199,7 @@ const CommunityPage: React.FC = () => {
           </select>
         </div> */}
 
-        {users.map((user, index) => (
+        {filteredUsers.map((user, index) => (
           <CommunityComp
             key={index}
             username={user.username}

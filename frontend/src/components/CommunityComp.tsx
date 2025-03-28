@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 interface CommunityProps {
@@ -14,15 +14,41 @@ const CommunityComp: React.FC<CommunityProps> = ({
 }) => {
   const { isAuthenticated, user } = useContext(AuthContext)!;
   const isOwnProfile = user?.username === username;
+  const [bio, setBio] = useState<string>("Loading bio...");
+
+useEffect(() => {
+  const fetchBio = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/profiles/bio/${username}`);
+
+      // If bio is missing (404), just silently set default
+      if (res.status === 404) {
+        setBio("No bio available.");
+        return;
+      }
+
+      if (!res.ok) throw new Error("Failed to fetch bio");
+
+      const text = await res.text();
+      setBio(text || "No bio available.");
+    } catch (err) {
+      console.warn(`No bio for ${username}. Skipping.`);
+      setBio("No bio available.");
+    }
+  };
+
+  fetchBio();
+}, [username]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-light-green border border-black rounded-lg p-6 justify-between">
+    <div className="flex flex-col h-full w-full bg-light-green border border-black rounded-lg p-4 justify-between">
 
       {/* Top Content */}
       <div>
         {/* Header */}
         <div className="flex flex-col items-center justify-between">
           <div className="text-3xl pb-5 font-semibold">{username}</div>
+          
           <img
             src={profileImg}
             alt={`${username}'s profile`}
@@ -30,6 +56,12 @@ const CommunityComp: React.FC<CommunityProps> = ({
           />
         </div>
 
+        {bio && (
+        <div className="pt-4">
+            <p className="text-sm text-gray-800 italic text-center">“{bio}”</p>
+        </div>
+        )}
+        
         {/* Tags */}
         <div className="flex flex-wrap gap-2 pt-4">
           {tags.length > 0 ? (
@@ -53,7 +85,7 @@ const CommunityComp: React.FC<CommunityProps> = ({
           <button
             className="font-fancy cursor-not-allowed text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-red/50 transition-colors duration-300"
           >
-            Log in to Access
+            Log in to Connect
           </button>
         ) : isOwnProfile ? null : (
           <button
