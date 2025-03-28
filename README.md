@@ -426,5 +426,73 @@ curl -X PUT http://localhost:8080/comments/update/1 \
            "content": "updated text.",
          }'
 ```
+
+## Likes:
+There are different endpoints for comment likes and post likes.
+### Like a post:
+```
+curl -X POST http://localhost:8081/posts/like\
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "bob",
+           "postId": 5
+         }'
+```
+
+### Unlike a post:
+```
+curl -X DELETE http://localhost:8081/comments/unlike\
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "bob",
+           "postId": 5
+         }'
+```
+
+### Get all posts liked by a user, using username:
+You put the username at the end of the url, here in the example the username = bob.
+```
+curl -X GET http://localhost:8081/posts/like/username/bob
+```
+
+### Get all likes for a post, using the postId:
+You put the postId at the end of the url, here in the example the postId = 3.
+```
+curl -X GET http://localhost:8081/posts/like/postId/3
+```
+
+### Like a commment:
+```
+curl -X POST http://localhost:8081/posts/like\
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "bob",
+           "commentId": 5
+         }'
+```
+
+### Unlike a comment:
+```
+curl -X DELETE http://localhost:8081/comments/unlike\
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "bob",
+           "commentId": 5
+         }'
+```
+
+### Get all comments liked by a user, using their username:
+You put the username at the end of the url, here in the example the username = bob.
+```
+curl -X GET http://localhost:8081/comments/like/username/bob
+```
+
+### Get all likes for a comment, using the commentId:
+You put the commentId at the end of the url, here in the example the commentId = 3.
+```
+curl -X GET http://localhost:8081/comments/like/commentId/3
+```
+
+
 </details>
 </details>
