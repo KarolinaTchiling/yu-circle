@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import com.yucircle.discourceapp.model.Post;
 import com.yucircle.discourceapp.model.PostLike;
+import com.yucircle.discourceapp.service.NotificationProducerService;
 import com.yucircle.discourceapp.service.PostService;
 
 @RestController
@@ -14,6 +15,9 @@ import com.yucircle.discourceapp.service.PostService;
 public class PostController {
     @Autowired
     private PostService postService;
+    
+    @Autowired
+    private NotificationProducerService nService;
 
     @GetMapping
     public List<Post> getAllPosts() {
@@ -48,6 +52,7 @@ public class PostController {
     @PostMapping("/like")
     public ResponseEntity<PostLike> likePost(@RequestBody Map<String, Object> like) {
         PostLike newPostLike = postService.likePost(like);
+        nService.createLikePostNotification(newPostLike);
         return ResponseEntity.ok(newPostLike);
     }
     

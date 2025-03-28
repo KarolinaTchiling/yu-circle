@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import com.yucircle.discourceapp.model.Comment;
 import com.yucircle.discourceapp.model.CommentLike;
 import com.yucircle.discourceapp.model.Notification;
+import com.yucircle.discourceapp.model.Post;
+import com.yucircle.discourceapp.model.PostLike;
 import com.yucircle.discourceapp.repository.CommentRepository;
 import com.yucircle.discourceapp.repository.NotificationRepository;
 import com.yucircle.discourceapp.repository.PostRepository;
@@ -84,6 +86,21 @@ public class NotificationProducerService {
 		message += "\"" + comment.getContent() + "\"";
 		
 		n.setUsername(comment.getUsername());
+		n.setMessage(message);
+		
+		nRepo.save(n);
+	}
+
+	public void createLikePostNotification(PostLike pLike) {
+		
+		Notification n = new Notification();
+		
+		Post post = postRepository.findById(pLike.getPostId()).get();
+		
+		String message = pLike.getUsername() + " liked your post; ";
+		message += "\"" + post.getTitle() + "\"";
+		
+		n.setUsername(post.getUsername());
 		n.setMessage(message);
 		
 		nRepo.save(n);
