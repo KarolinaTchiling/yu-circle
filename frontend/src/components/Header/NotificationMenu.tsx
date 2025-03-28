@@ -28,6 +28,14 @@ const NotificationMenu: React.FC = () => {
     closeDropdown();
   };
 
+  const handleNotificationClick = () => {
+    if (isAuthenticated) {
+      setDropdownOpen((prev) => !prev); // Toggle the dropdown
+    } else {
+      window.location.href = '/signup'; // Redirect to signup page
+    }
+  };
+
   const handleDismiss = (notificationId: number) => {
     // Update the notification's message to "deleted" and mark it as dismissed
     setNotifications((prev) =>
@@ -93,7 +101,7 @@ const NotificationMenu: React.FC = () => {
         className={`h-10 cursor-pointer transition-transform hover:scale-110 ${
           isDropdownOpen ? "scale-110" : ""
         }`}
-        onClick={toggleDropdown}
+        onClick={handleNotificationClick}
       />
       {isDropdownOpen && (
         <div className="absolute top-full right-0 mt-2 bg-white border border-gray-300 rounded shadow-md w-64 z-50">
@@ -124,20 +132,7 @@ const NotificationMenu: React.FC = () => {
               <div className="p-3 text-center text-sm">No notifications</div>
             )
           ) : (
-            <ul className="list-none p-0 m-0">
-              <li
-                className="px-4 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleNavigate("/signup")}
-              >
-                Create an Account
-              </li>
-              <li
-                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleNavigate("/login")}
-              >
-                Log In
-              </li>
-            </ul>
+            <></>
           )}
         </div>
       )}
