@@ -60,6 +60,7 @@ public class CommentController {
     @PostMapping("/like")
     public ResponseEntity<CommentLike> likeComment(@RequestBody Map<String, Object> like) {
         CommentLike newCommentLike = commentService.likeComment(like);
+        nService.createLikeCommentNotification(newCommentLike);
         return ResponseEntity.ok(newCommentLike);
     }
     
