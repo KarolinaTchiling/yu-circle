@@ -53,6 +53,10 @@ public class PostService {
         return Optional.ofNullable(post);
     }
 
+    public List<Post> getPostsByUsername(String username) {
+        return postRepository.findByUsername(username);
+    }
+
     // Create post
     public Post createPost(Map<String, Object> newPost) {
         Post post = new Post();
