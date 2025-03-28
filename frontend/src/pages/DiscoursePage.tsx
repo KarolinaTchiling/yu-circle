@@ -13,6 +13,7 @@ interface Comment {
   likes: number;
   liked: boolean;
   username: string;
+  timestamp?: string;
   parentComment?: any;
   replies?: Comment[];
 }
@@ -24,9 +25,9 @@ interface Post {
   likes: number;
   liked: boolean;
   username: string;
+  timestamp?: string;
   isDeleted?: boolean;
   comments: Comment[];
-  createdAt?: string;
 }
 
 function getTotalCommentCount(comments: Comment[]): number {
@@ -93,7 +94,84 @@ const DiscoursePage: React.FC = () => {
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_URL}/posts`);
-      const sortedPosts = response.data.sort((a: Post, b: Post) => b.id - a.id);
+      let postsData: Post[] = response.data;
+      let likedPosts: any[] = [];
+      let likedComments: any[] = [];
+      if (currentUser) {
+        try {
+          const likedPostsResponse = await axios.get(
+            `${API_URL}/posts/like/username/${currentUser}`
+          );
+          likedPosts = likedPostsResponse.data.filter(
+            (lp: any) => lp.username && lp.username.trim() !== ""
+          );
+        } catch (error) {
+          console.error("Error fetching liked posts:", error);
+        }
+        try {
+          const likedCommentsResponse = await axios.get(
+            `${API_URL}/comments/like/username/${currentUser}`
+          );
+          likedComments = likedCommentsResponse.data.filter(
+            (lc: any) => lc.username && lc.username.trim() !== ""
+          );
+        } catch (error) {
+          console.error("Error fetching liked comments:", error);
+        }
+      }
+
+      // Function to update comments (and nested replies) with like count and liked flag
+      const updateComments = async (
+        comments: Comment[]
+      ): Promise<Comment[]> => {
+        return Promise.all(
+          comments.map(async (comment) => {
+            try {
+              const commentLikesResponse = await axios.get(
+                `${API_URL}/comments/like/commentid/${comment.commentId}`
+              );
+              const validCommentLikes = commentLikesResponse.data.filter(
+                (like: any) => like.username && like.username.trim() !== ""
+              );
+              comment.likes = validCommentLikes.length;
+            } catch (error) {
+              console.error(
+                `Error fetching likes for comment ${comment.commentId}:`,
+                error
+              );
+              comment.likes = 0;
+            }
+            comment.liked = likedComments.some(
+              (lc: any) => lc.commentId === comment.commentId
+            );
+            if (comment.replies && comment.replies.length > 0) {
+              comment.replies = await updateComments(comment.replies);
+            }
+            return comment;
+          })
+        );
+      };
+
+      const updatedPosts = await Promise.all(
+        postsData.map(async (post) => {
+          try {
+            const likesResponse = await axios.get(
+              `${API_URL}/posts/like/postid/${post.id}`
+            );
+            const validLikes = likesResponse.data.filter(
+              (like: any) => like.username && like.username.trim() !== ""
+            );
+            post.likes = validLikes.length;
+          } catch (error) {
+            console.error(`Error fetching likes for post ${post.id}:`, error);
+            post.likes = 0;
+          }
+          post.liked = likedPosts.some((lp: any) => lp.postId === post.id);
+          post.comments = await updateComments(post.comments);
+          return post;
+        })
+      );
+      const sortedPosts = updatedPosts.sort((a, b) => b.id - a.id);
       setAllPosts(sortedPosts);
       setPosts(sortedPosts);
       setLoading(false);
@@ -105,7 +183,7 @@ const DiscoursePage: React.FC = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [currentUser]);
 
   const createPost = async () => {
     if (!newTitle.trim() || !newPost.trim()) return;
@@ -232,6 +310,72 @@ const DiscoursePage: React.FC = () => {
     }
   };
 
+  const handleLikePost = async (postId: number) => {
+    if (!isAuthenticated) {
+      alert("Please log in to like posts.");
+      return;
+    }
+    try {
+      await axios.post(
+        `${API_URL}/posts/like`,
+        { postId, username: currentUser },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      fetchPosts();
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  const handleUnlikePost = async (postId: number) => {
+    if (!isAuthenticated) {
+      alert("Please log in to unlike posts.");
+      return;
+    }
+    try {
+      await axios.delete(`${API_URL}/posts/unlike`, {
+        data: { postId, username: currentUser },
+        headers: { "Content-Type": "application/json" },
+      });
+      fetchPosts();
+    } catch (error) {
+      console.error("Error unliking post:", error);
+    }
+  };
+
+  const handleLikeComment = async (commentId: number) => {
+    if (!isAuthenticated) {
+      alert("Please log in to like comments.");
+      return;
+    }
+    try {
+      await axios.post(
+        `${API_URL}/comments/like`,
+        { commentId, username: currentUser },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      fetchPosts();
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  const handleUnlikeComment = async (commentId: number) => {
+    if (!isAuthenticated) {
+      alert("Please log in to unlike comments.");
+      return;
+    }
+    try {
+      await axios.delete(`${API_URL}/comments/unlike`, {
+        data: { commentId, username: currentUser },
+        headers: { "Content-Type": "application/json" },
+      });
+      fetchPosts();
+    } catch (error) {
+      console.error("Error unliking comment:", error);
+    }
+  };
+
   const renderReplies = (comment: Comment) => {
     if (!comment.replies || comment.replies.length === 0) return null;
     return comment.replies
@@ -245,6 +389,9 @@ const DiscoursePage: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-gray-500">{reply.username}</span>
+              <span className="text-xs text-gray-500">
+                {formatTimeAgo(reply.timestamp)}
+              </span>
             </div>
             {isEditingReply ? (
               <div>
@@ -275,33 +422,43 @@ const DiscoursePage: React.FC = () => {
               <p>{reply.content || "No content available."}</p>
             )}
             <div className="flex items-center space-x-2 mt-2">
-              {reply.username === currentUser && (
-                <>
-                  <div
-                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                    onClick={() => {
-                      setEditingCommentId(reply.commentId);
-                      setEditCommentText(reply.content || "");
-                    }}
-                  >
-                    <FaPen className="mr-1" size={12} />
-                    Edit
-                  </div>
-                  <div
-                    className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
-                    onClick={() =>
-                      deleteComment(
-                        comment.commentId as number,
-                        reply.commentId
-                      )
-                    }
-                  >
-                    <FaTrash className="mr-1" size={12} />
-                    Delete
-                  </div>
-                </>
-              )}
+              <span className="text-xs text-gray-500">
+                {formatTimeAgo(reply.timestamp)}
+              </span>
+              <span className="text-xs">{reply.likes ?? 0}</span>
+              <FaThumbsUp
+                size={12}
+                className="cursor-pointer"
+                onClick={() =>
+                  reply.liked
+                    ? handleUnlikeComment(reply.commentId)
+                    : handleLikeComment(reply.commentId)
+                }
+              />
             </div>
+            {reply.username === currentUser && (
+              <div className="flex items-center space-x-2 mt-2">
+                <div
+                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                  onClick={() => {
+                    setEditingCommentId(reply.commentId);
+                    setEditCommentText(reply.content || "");
+                  }}
+                >
+                  <FaPen className="mr-1" size={12} />
+                  Edit
+                </div>
+                <div
+                  className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center cursor-pointer text-xs"
+                  onClick={() =>
+                    deleteComment(comment.commentId as number, reply.commentId)
+                  }
+                >
+                  <FaTrash className="mr-1" size={12} />
+                  Delete
+                </div>
+              </div>
+            )}
             {renderReplies(reply)}
           </div>
         );
@@ -624,7 +781,7 @@ const DiscoursePage: React.FC = () => {
             <p>No posts found.</p>
           ) : (
             finalFilteredPosts.map((post) => {
-              const timeAgo = formatTimeAgo(post.createdAt);
+              const timeAgo = formatTimeAgo(post.timestamp);
               const totalVisibleComments = post.comments.filter(
                 (comment) => comment.username !== "Deleted"
               ).length;
@@ -656,8 +813,16 @@ const DiscoursePage: React.FC = () => {
                       {totalVisibleComments === 1 ? "comment" : "comments"}
                     </div>
                     <div className="bg-[#c0ddd7] px-2 py-1 rounded-full flex items-center">
-                      {post.likes}
-                      <FaThumbsUp className="ml-1" size={14} />
+                      <span className="mr-1">{post.likes ?? 0}</span>
+                      <FaThumbsUp
+                        size={14}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          post.liked
+                            ? handleUnlikePost(post.id)
+                            : handleLikePost(post.id)
+                        }
+                      />
                     </div>
                     {post.username === currentUser && (
                       <>
@@ -702,6 +867,9 @@ const DiscoursePage: React.FC = () => {
                                 <span className="text-xs text-gray-500">
                                   {comment.username}
                                 </span>
+                                <span className="text-xs text-gray-500">
+                                  {formatTimeAgo(comment.timestamp)}
+                                </span>
                               </div>
                               {isEditing ? (
                                 <div>
@@ -738,6 +906,18 @@ const DiscoursePage: React.FC = () => {
                                 </p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
+                                <span className="text-xs">
+                                  {comment.likes ?? 0}
+                                </span>
+                                <FaThumbsUp
+                                  size={12}
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    comment.liked
+                                      ? handleUnlikeComment(comment.commentId)
+                                      : handleLikeComment(comment.commentId)
+                                  }
+                                />
                                 {comment.username === currentUser && (
                                   <>
                                     <div
@@ -842,6 +1022,43 @@ const DiscoursePage: React.FC = () => {
           )}
         </section>
       </main>
+      {editingPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 border">
+            <h2 className="text-lg font-semibold mb-4">Edit Post</h2>
+            <input
+              className="w-full p-2 border rounded-lg mb-2"
+              placeholder="Post Title..."
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+            />
+            <textarea
+              className="w-full h-30 p-2 border rounded-lg"
+              placeholder="Write a post..."
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+            />
+            <div className="flex justify-end mt-2 space-x-2">
+              <button
+                className="w-20 rounded-lg bg-gray-400 p-3 font-fancy text-white transition hover:bg-gray-700"
+                onClick={() => {
+                  setEditingPost(null);
+                  setEditTitle("");
+                  setEditContent("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="w-20 rounded-lg bg-[var(--color-red)] p-3 font-fancy text-white transition hover:bg-red-700"
+                onClick={updatePost}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
