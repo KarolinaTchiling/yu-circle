@@ -449,7 +449,7 @@ const DiscourseComp: React.FC = () => {
                     <span>{comment.timestamp ? dayjs(comment.timestamp).fromNow() : "No timestamp"}</span>
                   </div>
                   <p>{comment.replies?.length ?? 0} Replies</p>
-                  <div className="flex flex-row items-center">
+                  <div className="flex flex-row items-center gap-1">
                     <span>{comment.likes ?? 0}</span>
                     <button onClick={() => toggleCommentLike(comment)} className="focus:outline-none">
                         <img
@@ -498,6 +498,8 @@ const DiscourseComp: React.FC = () => {
             onClose={() => {
               setSelectedPostId(null);
               setSelectedCommentId(null);
+              fetchUserPosts();
+              fetchUserComments();
             }}
             highlightCommentId={selectedCommentId}
           />

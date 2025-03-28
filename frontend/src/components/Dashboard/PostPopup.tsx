@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import React from "react";
-import Thumbs from "/thumbs.svg";
+import Thumb from "/thumb.svg";
+import ThumbFill from "/thumb-fill.svg";
 import Clock from "/clock.svg";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -14,6 +15,8 @@ type Comment = {
   parentComment: Comment | null;
   timestamp: string;
   replies: Comment[];
+  likes?: number;
+  likedByUser?: boolean;
 };
 
 type Post = {
@@ -23,6 +26,8 @@ type Post = {
   username: string;
   timestamp: string;
   comments: Comment[];
+  likes?: number;
+  likedByUser?: boolean;
 };
 
 interface PostModalProps {
@@ -43,16 +48,84 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
   }, [postId]);
 
   const fetchPost = async () => {
-      try {
-        const res = await fetch(`http://localhost:8081/posts/${postId}`);
-        if (!res.ok) throw new Error("Failed to fetch post");
-        const data = await res.json();
-        setPost(data);
-      } catch (err) {
-        console.error("Error fetching post:", err);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      const res = await fetch(`http://localhost:8081/posts/${postId}`);
+      if (!res.ok) throw new Error("Failed to fetch post");
+      const postData: Post = await res.json();
+  
+      // Fetch user's liked comments
+      const likedCommentsRes = await fetch(`http://localhost:8081/comments/like/username/${user?.username}`);
+      const likedComments: { commentId: number }[] = likedCommentsRes.ok ? await likedCommentsRes.json() : [];
+      const likedCommentIds = likedComments.map((entry) => entry.commentId);
+  
+      // Fetch all likes for this post
+      const postLikesRes = await fetch(`http://localhost:8081/posts/like/postid/${postData.id}`);
+      const postLikes = postLikesRes.ok ? await postLikesRes.json() : [];
+      const postLikesCount = postLikes.length;
+      const likedByUser = user ? postLikes.some((like: any) => like.username === user.username) : false;
+  
+      // Recursively enrich comments
+      const enrichComments = async (comments: Comment[]): Promise<Comment[]> => {
+        return Promise.all(
+          comments.map(async (comment) => {
+            try {
+              const likeRes = await fetch(`http://localhost:8081/comments/like/commentid/${comment.commentId}`);
+              const allLikes = likeRes.ok ? await likeRes.json() : [];
+              const likes = allLikes.length;
+              const likedByUser = likedCommentIds.includes(comment.commentId);
+              const enrichedReplies = await enrichComments(comment.replies || []);
+              return {
+                ...comment,
+                likes,
+                likedByUser,
+                replies: enrichedReplies,
+              };
+            } catch {
+              return { ...comment, likes: 0, likedByUser: false, replies: [] };
+            }
+          })
+        );
+      };
+  
+      const enrichedComments = await enrichComments(postData.comments);
+  
+      // 💡 Update post state with correct like data
+      setPost({
+        ...postData,
+        likes: postLikesCount,
+        likedByUser,
+        comments: enrichedComments,
+      });
+    } catch (err) {
+      console.error("Error fetching post:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const toggleLike = async () => {
+    if (!user || !post) return;
+
+    const liked = post.likedByUser;
+    const url = liked ? "http://localhost:8081/posts/unlike" : "http://localhost:8081/posts/like";
+
+    try {
+      const res = await fetch(url, {
+        method: liked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user.username, postId: post.id }),
+      });
+
+      if (!res.ok) throw new Error("Failed to toggle like");
+
+      setPost({
+        ...post,
+        likes: liked ? (post.likes ?? 1) - 1 : (post.likes ?? 0) + 1,
+        likedByUser: !liked,
+      });
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
   };
 
 
@@ -108,7 +181,19 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
               <div className="flex items-center gap-2">
                 <img src={Clock} className="h-5" />
                 <span>{dayjs(post.timestamp).fromNow()}</span>
+
+                <div className="pl-3 flex items-center gap-1">
+                <span>{post.likes ?? 0}</span>
+                  <button onClick={toggleLike} className="focus:outline-none">
+                    <img
+                      src={post.likedByUser ? ThumbFill : Thumb}
+                      className="h-5 w-5 object-contain cursor-pointer"
+                      alt="Like"
+                    />
+                  </button>
+                </div>
               </div>
+
               <span>Posted by {post.username}</span>
             </div>
 

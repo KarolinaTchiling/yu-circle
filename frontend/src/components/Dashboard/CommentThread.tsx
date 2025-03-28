@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import dayjs from "dayjs";
 import { AuthContext } from "../../context/AuthContext";
+import Thumb from "/thumb.svg";
+import ThumbFill from "/thumb-fill.svg";
 
 type Comment = {
   commentId: number;
@@ -9,6 +11,8 @@ type Comment = {
   parentComment: Comment | null;
   timestamp: string;
   replies: Comment[];
+  likes?: number;
+  likedByUser?: boolean;
 };
 
 interface Props {
@@ -39,6 +43,8 @@ const CommentThread: React.FC<Props> = ({
     const { user } = useContext(AuthContext)!;
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(comment.content);
+    const [likes, setLikes] = useState(comment.likes ?? 0);
+    const [likedByUser, setLikedByUser] = useState(comment.likedByUser ?? false);
 
     const handleEditSubmit = async () => {
         try {
@@ -73,6 +79,29 @@ const CommentThread: React.FC<Props> = ({
           console.error("Error deleting comment:", err);
         }
     };
+
+    const toggleCommentLike = async () => {
+        if (!user?.username) return;
+    
+        const url = likedByUser
+          ? "http://localhost:8081/comments/unlike"
+          : "http://localhost:8081/comments/like";
+    
+        try {
+          const res = await fetch(url, {
+            method: likedByUser ? "DELETE" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user.username, commentId: comment.commentId }),
+          });
+    
+          if (!res.ok) throw new Error("Failed to toggle like");
+    
+          setLikes((prev) => likedByUser ? prev - 1 : prev + 1);
+          setLikedByUser((prev) => !prev);
+        } catch (err) {
+          console.error("Error toggling like:", err);
+        }
+      };
 
     const isReplying = activeReplyId === comment.commentId;
     const isAuthor = user?.username === comment.username;
@@ -117,12 +146,27 @@ const CommentThread: React.FC<Props> = ({
               </div>
     
               <div className="flex justify-between mt-2">
-                <button
-                  onClick={() => onReply(comment.commentId)}
-                  className="text-xs py-1 px-2 bg-purple text-black border border-black rounded hover:bg-bright-purple transition"
-                >
-                  Reply
-                </button>
+
+                <div className="flex flex-row">
+
+                    <button
+                        onClick={() => onReply(comment.commentId)}
+                        className="text-xs py-1 px-2 bg-purple text-black border border-black rounded hover:bg-bright-purple transition"
+                        >
+                        Reply
+                    </button>
+
+                    <div className="ml-4 flex items-center gap-1">
+                        <span className="text-sm font-semibold">{likes}</span>
+                        <button onClick={toggleCommentLike} className="focus:outline-none">
+                            <img
+                            src={likedByUser ? ThumbFill : Thumb}
+                            className="h-5 w-5 object-contain cursor-pointer"
+                            alt="Like"
+                            />
+                        </button>
+                    </div>
+                </div>
     
                 {isAuthor && (
                 <div className="flex gap-2">
