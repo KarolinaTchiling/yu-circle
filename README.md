@@ -104,6 +104,17 @@ program: String
 contentType: String
 ```
 
+
+### File Upload:
+Here you want to replace PATH_TO_FILE with the path to the file.
+You will get a URL returned.
+```
+  curl -X POST "http://localhost:8080/marketplace/upload" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@PATH_TO_FILE"
+```
+
+
 ### Get all products:
 ```
 curl -X GET http://localhost:8080/marketplace/products
