@@ -495,6 +495,7 @@ const DiscourseComp: React.FC = () => {
             ))
           )}
         </div>
+        </div>
 
 
         {selectedPostId && (
@@ -509,8 +510,7 @@ const DiscourseComp: React.FC = () => {
             highlightCommentId={selectedCommentId}
           />
         )}
-        
-      </div>
+
       </div>
 
 
