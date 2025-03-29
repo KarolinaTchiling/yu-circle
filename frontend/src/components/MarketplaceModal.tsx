@@ -15,14 +15,50 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
   const [isFree, setIsFree] = useState(true);
   const [price, setPrice] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [uploadSuccessUrl, setUploadSuccessUrl] = useState("");
+
+  const handleCancel = () => {
+    setNewTitle("");
+    setNewContent("");
+    setSelectedContent([]);
+    setSelectedProgram([]);
+    setIsFree(true);
+    setPrice("");
+    setDownloadUrl("");
+    setUploadSuccessUrl("");
+    onClose();
+  };
+
 
   if (!isOpen) return null;
 
-  if (!authContext) {
-    return <p>..</p>;
-  }
+  const { user } = authContext!;
 
-  const { user } = authContext;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8083/marketplace/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const url = await res.text(); 
+      setDownloadUrl(url);
+      setUploadSuccessUrl(url);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setUploadSuccessUrl("Error uploading file.");
+    }
+  };
+
+
 
   const handlePost = async () => {
     
@@ -64,7 +100,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
       <div className="bg-[#e9ece3] p-6 rounded-lg shadow-lg w-[600px] border space-y-4">
         <h2 className="text-2xl font-semibold text-center">Create your Marketplace Post</h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
             <input
@@ -73,31 +109,6 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
-
-
-            {/* <div className="mt-4 flex items-center gap-2">
-              <label className="text-sm font-medium">Upload File</label>
-              <button className="h-6 w-6 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100 text-black text-sm">
-                +
-              </button>
-
-            </div> */}
-
-            <div className="mt-4 flex flex-col gap-2">
-              <label className="text-sm font-medium">Upload File</label>
-              <button className="h-6 w-6 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100 text-black text-sm">
-                +
-              </button>
-
-              <input
-                className="flex-1 p-2 border rounded-xl bg-white"
-                placeholder="http://your-download-link.com"
-                value={downloadUrl}
-                onChange={(e) => setDownloadUrl(e.target.value)}
-                />
-
-            </div>
-
 
           </div>
 
@@ -116,37 +127,73 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
             />
             <p className="text-sm text-gray-500 text-right pr-1">{newContent.length}/250</p>
           </div>
+
         </div>
 
 
         <div>
-        <div className="mt-0">
-            <label className="block text-sm font-medium mb-1">Cost</label>
-                <div className="flex items-center gap-4">
-                    {/* Free/Paid Buttons */}
-                    <div className="flex rounded-full overflow-hidden border w-fit my-2">
-                    <button
-                        onClick={() => setIsFree(true)}
-                        className={`px-4 py-1 text-sm ${isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
-                    >
-                        Free
-                    </button>
-                    <button
-                        onClick={() => setIsFree(false)}
-                        className={`px-4 py-1 text-sm ${!isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
-                    >
-                        Paid
-                    </button>
-                    </div>
-                    {!isFree && (
-                    <input
-                        className="w-48 ml-5 p-2 border rounded-md"
-                        placeholder="$0.00"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                    />
+        <div className="-mt-3 flex flex-col gap-5">
+
+          <div className="flex flex-row items-center gap-3">
+
+                <label className="text-sm font-medium">Upload File</label>
+
+                <label className="h-6 w-6 bg-white border border-black rounded-full flex items-center justify-center hover:bg-gray-100 text-black text-sm cursor-pointer">
+                  +
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+
+              {uploadSuccessUrl && (
+                  <div className="mt-2 text-sm">
+                    {uploadSuccessUrl.startsWith("http") ? (
+                      <a
+                        href={uploadSuccessUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        View Uploaded File
+                      </a>
+                    ) : (
+                      <p className="text-red-600">{uploadSuccessUrl}</p>
                     )}
-                </div>
+                  </div>
+                )}
+
+            </div>
+
+              <div className="flex flex-row gap-5">
+                <label className="flex flex-row items-center text-sm font-medium">Cost</label>
+                    <div className="flex items-center gap-4">
+                        {/* Free/Paid Buttons */}
+                        <div className="flex rounded-full overflow-hidden border w-fit my-2">
+                        <button
+                            onClick={() => setIsFree(true)}
+                            className={`px-4 py-1 text-sm ${isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
+                        >
+                            Free
+                        </button>
+                        <button
+                            onClick={() => setIsFree(false)}
+                            className={`px-4 py-1 text-sm ${!isFree ? "bg-indigo-200 font-semibold" : "bg-white"}`}
+                        >
+                            Paid
+                        </button>
+                        </div>
+                        {!isFree && (
+                        <input
+                            className="w-48 ml-5 p-2 border rounded-md"
+                            placeholder="$0.00"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                        />
+                        )}
+                    </div>
+              </div>
             </div>
 
 
@@ -196,7 +243,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
         <div className="flex gap-3 justify-center pt-2">
           <button
             className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
-            onClick={onClose}
+            onClick={handleCancel}
           >
             Cancel
           </button>
