@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { AuthContext } from "../../context/AuthContext";
 import Thumb from "/thumb.svg";
 import ThumbFill from "/thumb-fill.svg";
+import ProfilePopup from '../ProfilePopup'; 
 
 type Comment = {
   commentId: number;
@@ -45,6 +46,7 @@ const CommentThread: React.FC<Props> = ({
     const [editContent, setEditContent] = useState(comment.content);
     const [likes, setLikes] = useState(comment.likes ?? 0);
     const [likedByUser, setLikedByUser] = useState(comment.likedByUser ?? false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleEditSubmit = async () => {
         try {
@@ -108,12 +110,18 @@ const CommentThread: React.FC<Props> = ({
     const isHighlighted = highlightCommentId === comment.commentId;
 
     return (
+      <>
         <div
             className={`border border-black rounded-lg p-3 mb-3 ml-${level * 4} ${
                 level === 0 ? "bg-offwhite" : "bg-white"
             } ${isHighlighted ? "ring-2 ring-purple-500 bg-yellow-100" : ""}`}
             >
-          <p className="text-sm font-semibold">{comment.username}</p>
+            <button
+                onClick={() => setIsPopupOpen(true)}
+                className="text-dark-teal text-sm underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
+                >
+                {comment.username}
+            </button>
     
           {isEditing ? (
             <>
@@ -234,6 +242,15 @@ const CommentThread: React.FC<Props> = ({
             </div>
           )}
         </div>
+
+          {isPopupOpen && (
+            <ProfilePopup
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            username={comment.username}
+            />
+          )}
+        </>
       );
     };
     

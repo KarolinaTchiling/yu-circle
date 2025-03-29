@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
+import ProfilePopup from './ProfilePopup'; 
+import ContactButton from "./ContactButton"
 
 interface MarketplaceProps {
     productId: number,
@@ -31,6 +33,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
 
     const [userRating, setUserRating] = useState<number>(0); 
     const [hasRated, setHasRated] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const { isAuthenticated, user } = useContext(AuthContext)!;
 
@@ -86,11 +89,9 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
         fetchRatings();
     }, [productId, isAuthenticated, user]);
 
-    // console.log(productName + ":" + userRating + ":" + hasRated);
-    // console.count(`${productName} render count`);
-
 
     return (
+        <>
     <div className="flex flex-col h-full w-full bg-light-green border b-black rounded-lg p-6">
 
         {/* Header */}
@@ -99,9 +100,12 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
                 {productName}
             </div>
 
-            <div className="text-dark-teal">
-                <p>{username}</p>
-            </div>
+            <button
+                onClick={() => setIsPopupOpen(true)}
+                className="text-dark-teal underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
+                >
+                {username}
+            </button>
 
         </div>
 
@@ -147,11 +151,10 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
                     Download
                 </button>
                 ) : (
-                <button
+   
+                <ContactButton 
                     className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
-                >
-                    Contact
-                </button>
+                    receiver={username} />
                 )}
 
 
@@ -177,8 +180,16 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
             </div>
 
         </div>
-
+        
     </div>
+        {isPopupOpen && (
+            <ProfilePopup
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            username={username}
+            />
+        )}
+    </>
   )
 }
 
