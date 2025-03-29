@@ -15,7 +15,9 @@ type Product = {
 
 const MarketplaceComp: React.FC = () => {
   const [userProducts, setUserProducts] = useState<Product[]>([]);
+  const [copiedMap, setCopiedMap] = useState<Record<number, boolean>>({});
   const { user } = useContext(AuthContext)!;
+
 
   useEffect(() => {
     const fetchUserProductsAndRatings = async () => {
@@ -67,11 +69,25 @@ const MarketplaceComp: React.FC = () => {
     }
   };
 
+  const handleCopy = (product: Product) => {
+    navigator.clipboard.writeText(product.downloadUrl);
+  
+    setCopiedMap((prev) => ({ ...prev, [product.productId]: true }));
+  
+    setTimeout(() => {
+      setCopiedMap((prev) => ({ ...prev, [product.productId]: false }));
+    }, 2000);
+  };
+
+  
+
   return (
     <main className="flex flex-col items-center bg-light-green border b-black rounded-lg w-full">
       <div className="bg-mint rounded-t-lg border-b b-black text-center font-fancy py-1 text-xl w-full">
         Marketplace Activity
       </div>
+
+      <div className="flex flex-col gap-2 text-center max-h-141 mx-2 mt-2 overflow-y-auto">
 
       {/* Main Section */}
       <div className="flex flex-row w-full">
@@ -105,18 +121,56 @@ const MarketplaceComp: React.FC = () => {
                     
 
                   </div>
-                  <button 
-                    onClick={() => handleDelete(product.productId)}
-                    className="w-[15%] py-0.5 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300">
-                    Delete
-                  </button>
+
                 </div>
+
+                <div className="flex flex-row justify-between items-center pt-2 pb-1 px-1">
+                  <div className="flex-1">
+                      <div className="flex flex-row gap-2">
+                          {product.downloadUrl && product.downloadUrl.trim() !== "" && (
+                            <button 
+                              onClick={() => window.open(product.downloadUrl, "_blank")}
+                              className="py-0.5 px-10 rounded-lg border b-black cursor-pointer text-sm bg-purple hover:bg-bright-purple transition-colors duration-300"
+                            >
+                              View File
+                            </button>
+                          )}
+
+                          {product.downloadUrl && product.downloadUrl.trim() !== "" && (
+                            <button
+                              onClick={() => handleCopy(product)}
+                              className={`py-0.5 px-4 rounded-lg border b-black cursor-pointer text-sm transition-colors duration-300 ${
+                                copiedMap[product.productId] ? "bg-grey" : "bg-grey-50"
+                              }`}
+                            >
+                              {copiedMap[product.productId] ? "Copied!" : "Copy Link"}
+                            </button>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="flex-1 flex justify-end">
+                    <button 
+                      onClick={() => handleDelete(product.productId)}
+                      className="py-0.5 px-10 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                
 
 
               </div>
             ))
           )}
+
+          
+
         </div>
+
+      </div>
       </div>
     </main>
   );

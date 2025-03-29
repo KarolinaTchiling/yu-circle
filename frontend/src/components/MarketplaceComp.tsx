@@ -141,7 +141,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
                 </button>
                 ) : downloadUrl && price <= 0 ? (
                 <button
-                    className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
+                    className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-bright-purple transition-colors duration-300"
                     onClick={() => window.open(downloadUrl, "_blank")}
                 >
                     Download
