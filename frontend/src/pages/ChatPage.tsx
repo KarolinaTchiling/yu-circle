@@ -212,6 +212,13 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  const linkify = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline">${url}</a>`;
+    });
+  };
+
   return (
     <div className="flex flex-col w-full h-screen rounded-lg overflow-hidden">
       <Header />
@@ -277,8 +284,11 @@ const ChatPage: React.FC = () => {
               {chatTabs.find((tab) => tab.username === activeTab)?.messages?.map((msg: any) => (
                 <div key={msg.id} className={`mb-4 flex ${msg.sender === user?.username ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-xs p-3 rounded-lg ${msg.sender === user?.username ? "bg-gray-300" : "text-white bg-[var(--color-red)]"}`}>
-                    <p>{msg.content}</p>
-                  </div>
+                    <div
+                          className="text-sm break-words whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: linkify(msg.content) }}
+                        />
+                    </div>
                 </div>
               ))}
             </div>
