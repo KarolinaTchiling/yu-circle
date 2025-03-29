@@ -1,12 +1,25 @@
-import React, { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../context/AuthContext";
+
+type Product = {
+  productId: number;
+  productName: string;
+  username: string;
+  description: string;
+  price: number;
+  downloadUrl: string | "";
+  program: string | "";
+  contentType: string | "";
+  averageRating?: number;
+};
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  product?: Product; 
 }
 
-const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
+const EditMarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, product}) => {
   const authContext = useContext(AuthContext);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
@@ -17,18 +30,6 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
   const [downloadUrl, setDownloadUrl] = useState("");
   const [uploadSuccessUrl, setUploadSuccessUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-
-  const handleCancel = () => {
-    setNewTitle("");
-    setNewContent("");
-    setSelectedContent([]);
-    setSelectedProgram([]);
-    setIsFree(true);
-    setPrice("");
-    setDownloadUrl("");
-    setUploadSuccessUrl("");
-    onClose();
-  };
 
 
   if (!isOpen) return null;
@@ -63,8 +64,9 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
   };
 
 
+  const handleUpdate = async () => {
 
-  const handlePost = async () => {
+    if (!product) return;
     
     const payload = {
       productName: newTitle,
@@ -77,8 +79,8 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
     };
   
     try {
-      const res = await fetch("http://localhost:8083/marketplace/products", {
-        method: "POST",
+      const res = await fetch(`http://localhost:8083/marketplace/update/${product.productId}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -88,12 +90,24 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
       if (!res.ok) throw new Error("Failed to post content");
   
       console.log("Posted successfully");
-      onClose(); // Close the modal on success
-      window.location.reload(); 
+      onClose();
     } catch (err) {
       console.error("Error posting content:", err);
     }
   };
+
+  useEffect(() => {
+    if (product) {
+      setNewTitle(product.productName);
+      setNewContent(product.description);
+      setSelectedContent(product.contentType ? [product.contentType] : []);
+      setSelectedProgram(product.program ? [product.program] : []);
+      setIsFree(product.price === 0);
+      setPrice(product.price !== 0 ? String(product.price) : "");
+      setDownloadUrl(product.downloadUrl || "");
+      setUploadSuccessUrl(product.downloadUrl || "");
+    }
+  }, [product]);
 
   return (
     <div
@@ -102,7 +116,7 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
       <div className="bg-[#e9ece3] p-6 rounded-lg shadow-lg w-[600px] border space-y-4">
-        <h2 className="text-2xl font-semibold text-center">Create your Marketplace Post</h2>
+        <h2 className="text-2xl font-semibold text-center">Edit your Marketplace Post</h2>
 
         <div className="flex flex-col gap-4">
           <div>
@@ -250,16 +264,16 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
 
         <div className="flex gap-3 justify-center pt-2">
           <button
-            className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
-            onClick={handleCancel}
+            className="px-10 py-2 rounded-md bg-white cursor-pointer border text-lg font-medium hover:bg-gray-100"
+            onClick={() => onClose()}
           >
             Cancel
           </button>
           <button
-            className="px-10 py-2 rounded-md bg-white border text-lg font-medium hover:bg-gray-100"
-            onClick={handlePost}
+            className="px-10 py-2 rounded-md bg-white border cursor-pointer text-lg font-medium hover:bg-gray-100"
+            onClick={handleUpdate}
           >
-            Post
+            Update
           </button>
         </div>
       </div>
@@ -267,4 +281,4 @@ const MarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose}) => {
   );
 };
 
-export default MarketplaceModal;
+export default EditMarketplaceModal;
