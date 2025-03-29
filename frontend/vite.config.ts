@@ -15,22 +15,22 @@ export default defineConfig({
         secure: false,
       },
       '/messages': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8084',
         changeOrigin: true,
         secure: false,
       },
       '/messages/send': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8084',
         changeOrigin: true,
         secure: false,
       },
       '/messages/get': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8084',
         changeOrigin: true,
         secure: false,
       },
       '/messages/delete': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8084',
         changeOrigin: true,
         secure: false,
       },
