@@ -31,4 +31,8 @@ public class NotificationService {
 	public void removeNotification(Long id) {
 		nRepo.deleteById(id);
 	}
+
+	public Notification createNotification(Notification notification) {
+		return nRepo.save(notification);
+	}
 }
