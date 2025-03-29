@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yucircle.marketplaceapp.model.Rating;
+import com.yucircle.marketplaceapp.service.NotificationProducerService;
 import com.yucircle.marketplaceapp.service.RatingService;
 
 @RestController
@@ -21,6 +22,9 @@ public class RatingController {
 
     @Autowired
     private RatingService ratingService;
+    
+    @Autowired
+    private NotificationProducerService nService;
 
 	@GetMapping("/all")
 	public ResponseEntity<List<Rating>> getAllRatings() {
@@ -36,7 +40,9 @@ public class RatingController {
 
 	@PostMapping("/add")
 	public ResponseEntity<Rating> addRating(@RequestBody Map<String, String> request) {
-		return ResponseEntity.ok(ratingService.addRating(request.get("username"), Long.valueOf(request.get("productId")), Integer.valueOf(request.get("rating"))));
+		Rating rating = ratingService.addRating(request.get("username"), Long.valueOf(request.get("productId")), Integer.valueOf(request.get("rating")));
+		nService.createRatingNotification(rating);
+		return ResponseEntity.ok(rating);
 	}
 	
 	@GetMapping("/user/{username}")

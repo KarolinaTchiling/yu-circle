@@ -27,4 +27,8 @@ public class NotificationService {
 
 		return notifications;
 	}
+
+	public void removeNotification(Long id) {
+		nRepo.deleteById(id);
+	}
 }
