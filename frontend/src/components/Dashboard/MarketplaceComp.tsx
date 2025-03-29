@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import EditMarketplaceModal from "./EditMarketplaceModal";
 
 type Product = {
   productId: number;
@@ -16,37 +17,40 @@ type Product = {
 const MarketplaceComp: React.FC = () => {
   const [userProducts, setUserProducts] = useState<Product[]>([]);
   const [copiedMap, setCopiedMap] = useState<Record<number, boolean>>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   const { user } = useContext(AuthContext)!;
+
+  const fetchUserProductsAndRatings = async () => {
+    if (!user?.username) return;
+
+    try {
+      const [productRes, ratingsRes] = await Promise.all([
+        fetch(`http://localhost:8083/marketplace/products/user/${user.username}`),
+        fetch("http://localhost:8083/marketplace/rating/average/all"),
+      ]);
+
+      if (!productRes.ok || !ratingsRes.ok) {
+        throw new Error("One or more requests failed");
+      }
+
+      const productsData: Product[] = await productRes.json();
+      const ratingsData: Record<number, number> = await ratingsRes.json(); // productId => rating
+
+      const merged = productsData.map((product) => ({
+        ...product,
+        averageRating: ratingsData[product.productId] || 0,
+      }));
+
+      setUserProducts(merged);
+    } catch (err) {
+      console.error("Error fetching user products or ratings:", err);
+    }
+  };
 
 
   useEffect(() => {
-    const fetchUserProductsAndRatings = async () => {
-      if (!user?.username) return;
-
-      try {
-        const [productRes, ratingsRes] = await Promise.all([
-          fetch(`http://localhost:8083/marketplace/products/user/${user.username}`),
-          fetch("http://localhost:8083/marketplace/rating/average/all"),
-        ]);
-
-        if (!productRes.ok || !ratingsRes.ok) {
-          throw new Error("One or more requests failed");
-        }
-
-        const productsData: Product[] = await productRes.json();
-        const ratingsData: Record<number, number> = await ratingsRes.json(); // productId => rating
-
-        const merged = productsData.map((product) => ({
-          ...product,
-          averageRating: ratingsData[product.productId] || 0,
-        }));
-
-        setUserProducts(merged);
-      } catch (err) {
-        console.error("Error fetching user products or ratings:", err);
-      }
-    };
-
     fetchUserProductsAndRatings();
   }, [user?.username]);
 
@@ -149,7 +153,17 @@ const MarketplaceComp: React.FC = () => {
                       </div>
                   </div>
 
-                  <div className="flex-1 flex justify-end">
+                  <div className="flex-1 flex gap-2 justify-end">
+                    <button 
+                      onClick={() => {
+                        setEditingProduct(product); // save product data
+                        setIsModalOpen(true);       // open modal
+                      }}
+                      className="py-0.5 px-10 rounded-lg border b-black cursor-pointer text-sm bg-mint hover:bg-minter transition-colors duration-300"
+                    >
+                      Edit
+                    </button>
+
                     <button 
                       onClick={() => handleDelete(product.productId)}
                       className="py-0.5 px-10 rounded-lg border b-black cursor-pointer text-sm bg-light-red hover:bg-red/40 transition-colors duration-300"
@@ -159,19 +173,25 @@ const MarketplaceComp: React.FC = () => {
                   </div>
                 </div>
 
-                
-
-
               </div>
             ))
           )}
-
-          
-
         </div>
 
       </div>
       </div>
+
+      {editingProduct && (
+          <EditMarketplaceModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingProduct(null);
+              fetchUserProductsAndRatings();
+            }}
+            product={editingProduct}
+          />
+        )}
     </main>
   );
 };
