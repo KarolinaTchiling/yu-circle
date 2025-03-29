@@ -291,6 +291,8 @@ const DiscourseComp: React.FC = () => {
           <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
             <h1 className="font-medium text-lg">Posts</h1>
 
+            <div className="flex flex-col gap-2 pr-1 text-center max-h-130 overflow-y-auto">
+
             {userPosts.length === 0 ? (
               <p className="italic text-sm mt-4">You haven't made any posts yet.</p>
             ) : (
@@ -390,15 +392,18 @@ const DiscourseComp: React.FC = () => {
               ))
             )}
         </div>
+        </div>
 
 
         
-            <div className="border-r-1"></div>
+            <div className="border-r-1 h-145"></div>
 
         {/* Comment Section */}
         <div className="w-[50%] flex flex-col gap-2 m-2 text-center">
 
           <h1 className="font-medium text-lg"> Comments </h1>
+
+          <div className="flex flex-col gap-2 pr-1 text-center max-h-130 overflow-y-auto">
 
           {userComments.length === 0 ? (
             <p className="italic text-sm mt-4">You haven’t commented on anything yet.</p>
@@ -506,6 +511,8 @@ const DiscourseComp: React.FC = () => {
         )}
         
       </div>
+      </div>
+
 
 
     </main>

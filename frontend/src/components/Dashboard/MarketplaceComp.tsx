@@ -73,6 +73,8 @@ const MarketplaceComp: React.FC = () => {
         Marketplace Activity
       </div>
 
+      <div className="flex flex-col gap-2 text-center max-h-141 mx-2 mt-2 overflow-y-auto">
+
       {/* Main Section */}
       <div className="flex flex-row w-full">
         <div className="w-full flex flex-col gap-2 m-2 text-center">
@@ -116,7 +118,10 @@ const MarketplaceComp: React.FC = () => {
               </div>
             ))
           )}
+
         </div>
+
+      </div>
       </div>
     </main>
   );

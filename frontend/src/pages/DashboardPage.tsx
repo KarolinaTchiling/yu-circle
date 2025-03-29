@@ -16,7 +16,7 @@ const DashboardPage: React.FC = () => {
   }, [isAuthenticated]);
 
   return (
-    <>
+    <div className="min-w-[1145px]">
       <Header />
       <main className=" bg-offwhite grid grid-cols-2 py-8 px-12 gap-4">
         <ProfileComp />
@@ -24,7 +24,7 @@ const DashboardPage: React.FC = () => {
         <DiscourseComp />
         <MarketplaceComp />
       </main>
-    </>
+    </div>
   );
 };
 
