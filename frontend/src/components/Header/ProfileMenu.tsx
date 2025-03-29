@@ -17,6 +17,22 @@ const ProfileMenu: React.FC = () => {
         closeDropdown();
     };
     
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+          if (
+            dropdownRef.current &&
+            !dropdownRef.current.contains(event.target as Node)
+          ) {
+            closeDropdown();
+          }
+        }
+      
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, []);
+    
     return (
         <div className="relative" ref={dropdownRef}>
             {/* Profile Icon */}
