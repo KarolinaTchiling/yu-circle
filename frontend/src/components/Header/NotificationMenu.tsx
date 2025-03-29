@@ -23,28 +23,35 @@ const NotificationMenu: React.FC = () => {
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
   const closeDropdown = () => setDropdownOpen(false);
 
+  const handleNotificationClick = () => {
+    if (isAuthenticated) {
+      setDropdownOpen((prev) => !prev);
+    } else {
+      window.location.href = "/signup";
+    }
+  };
+
   const handleNavigate = (path: string) => {
     navigate(path);
     closeDropdown();
   };
 
-  const handleNotificationClick = () => {
-    if (isAuthenticated) {
-      setDropdownOpen((prev) => !prev); // Toggle the dropdown
-    } else {
-      window.location.href = '/signup'; // Redirect to signup page
-    }
-  };
-
+  // Connects to the delete mapping in the backend to remove a notification.
   const handleDismiss = (notificationId: number) => {
-    // Update the notification's message to "deleted" and mark it as dismissed
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, message: "deleted", dismissed: true }
-          : notification
-      )
-    );
+    axios
+      .delete(`/notificationProxy/${notificationId}`)
+      .then(() => {
+        setNotifications((prev) =>
+          prev.map((notification) =>
+            notification.id === notificationId
+              ? { ...notification, message: "deleted", dismissed: true }
+              : notification
+          )
+        );
+      })
+      .catch((err) => {
+        console.error("Error deleting notification:", err);
+      });
   };
 
   useEffect(() => {
@@ -66,7 +73,7 @@ const NotificationMenu: React.FC = () => {
         })
         .catch((err) => {
           console.error("Error fetching notifications:", err);
-          setNotifications([]); // fallback to empty array
+          setNotifications([]);
         });
     }
   }, [isAuthenticated, user]);
@@ -88,7 +95,6 @@ const NotificationMenu: React.FC = () => {
     };
   }, [isDropdownOpen]);
 
-  // Only display notifications that haven't been dismissed
   const visibleNotifications = notifications.filter(
     (notification) => !notification.dismissed
   );
@@ -107,12 +113,11 @@ const NotificationMenu: React.FC = () => {
         <div className="absolute top-full -right-30 mt-5 bg-white rounded-lg text-black border shadow-md w-80 z-50">
           {isAuthenticated ? (
             visibleNotifications.length > 0 ? (
-              <ul className="list-none p-0 m-0 mr-1 my-2 max-h-100 overflow-y-auto ">
+              <ul className="list-none p-0 m-0 mr-1 my-2 max-h-100 overflow-y-auto">
                 {visibleNotifications.map((notif) => (
                   <li
                     key={notif.id}
                     className="px-4 py-2 flex justify-between items-center border-b border-slate"
-                    
                   >
                     <div>
                       <div className="text-sm">{notif.message}</div>
