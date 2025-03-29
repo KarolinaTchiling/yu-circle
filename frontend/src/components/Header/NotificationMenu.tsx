@@ -104,14 +104,15 @@ const NotificationMenu: React.FC = () => {
         onClick={handleNotificationClick}
       />
       {isDropdownOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-white border border-gray-300 rounded shadow-md w-64 z-50">
+        <div className="absolute top-full -right-30 mt-5 bg-white rounded-lg text-black border shadow-md w-80 z-50">
           {isAuthenticated ? (
             visibleNotifications.length > 0 ? (
-              <ul className="list-none p-0 m-0">
+              <ul className="list-none p-0 m-0 mr-1 my-2 max-h-100 overflow-y-auto ">
                 {visibleNotifications.map((notif) => (
                   <li
                     key={notif.id}
-                    className="px-4 py-2 flex justify-between items-center border-b border-gray-200"
+                    className="px-4 py-2 flex justify-between items-center border-b border-slate"
+                    
                   >
                     <div>
                       <div className="text-sm">{notif.message}</div>
@@ -120,7 +121,7 @@ const NotificationMenu: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      className="text-xs text-red-600 ml-2"
+                      className="text-xs text-red-600 ml-2 cursor-pointer"
                       onClick={() => handleDismiss(notif.id)}
                     >
                       Dismiss
