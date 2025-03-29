@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
+import ContactButton from "./ContactButton"
 
 interface CommunityProps {
   username: string;
@@ -88,11 +89,7 @@ useEffect(() => {
             Log in to Connect
           </button>
         ) :  (
-          <button
-            className="font-fancy cursor-pointer text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-minter transition-colors duration-300"
-          >
-            Connect
-          </button>
+          <ContactButton receiver={username} />
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import Profile from "/profile.svg";
 import { AuthContext } from "../context/AuthContext";
+import ContactButton from "./ContactButton"
 
 interface ModalProps {
     username: string;
@@ -76,8 +77,17 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
           <div>
             {/* Header */}
             <div className="flex flex-col items-center justify-between">
-              <div className="text-3xl pb-5 font-semibold">{username}</div>
-              
+              <div className="flex flex-row w-full justify-between">
+                <div className="w-8"></div>
+                <div className="text-3xl pb-5 font-semibold">{username}</div>
+                <button
+                    onClick={onClose}
+                    className="font-bold text-lg cursor-pointer h-8 w-8 bg-offwhite border border-black text-black rounded-full hover:bg-red/50 transition-colors duration-300"
+                >
+                    ✖
+                </button>
+              </div>
+
               <img
                 src={profile?.pfp || Profile}
                 alt={`${username}'s profile`}
@@ -112,6 +122,7 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
     
           {/* Button at Bottom */}
           <div className="pt-6 flex gap-4 flex-row">
+            <div className="flex-1">
                 {!isAuthenticated ? (
                     <button
                     className="font-fancy cursor-not-allowed text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-red/50 transition-colors duration-300"
@@ -119,21 +130,11 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
                     Log in to Connect
                     </button>
                 ) : user?.username !== username ? (
-                    <button
-                    className="font-fancy cursor-pointer text-lg py-1 w-full bg-minter border border-black text-black rounded-lg hover:bg-mint transition-colors duration-300"
-                    >
-                    Connect
-                    </button>
+                    <ContactButton receiver={username} />
                 ) : null}
+                </div>
 
-                <button
-                    onClick={onClose}
-                    className="font-fancy cursor-pointer text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-grey transition-colors duration-300"
-                >
-                    Close
-                </button>
             </div>
-
         </div>
 
         </div>
