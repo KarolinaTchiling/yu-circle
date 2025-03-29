@@ -20,7 +20,7 @@ const ChatPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [newChatUsername, setNewChatUsername] = useState("");
-  const { user, isAuthenticated } = useContext(AuthContext)!;
+  const { user, isAuthenticated, isLoading } = useContext(AuthContext)!;
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
 
   // Function to load chat tabs from the API
@@ -96,10 +96,10 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      window.location.href = '/login';
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = "/signup";
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (isAuthenticated) {

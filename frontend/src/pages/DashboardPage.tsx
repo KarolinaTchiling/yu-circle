@@ -7,13 +7,13 @@ import MarketplaceComp from "../components/Dashboard/MarketplaceComp";
 import { AuthContext } from "../context/AuthContext";
 
 const DashboardPage: React.FC = () => {
-  const { isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
+  const { isLoading, isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      window.location.href = '/signup';
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = "/signup";
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading]);
 
   return (
     <div className="min-w-[1145px]">

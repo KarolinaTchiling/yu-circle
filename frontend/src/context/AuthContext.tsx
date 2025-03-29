@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (updatedFields: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 // Create the context with an empty default value
@@ -24,6 +25,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -31,6 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -106,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
