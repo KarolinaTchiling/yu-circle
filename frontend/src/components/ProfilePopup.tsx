@@ -21,7 +21,7 @@ type Profile = {
 const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
 
     const [profile, setProfile] = useState<Profile | null>(null);
-     const { isAuthenticated } = useContext(AuthContext)!;
+     const { isAuthenticated, user } = useContext(AuthContext)!;
 
     useEffect(() => {
         const fetchProfileWithTags = async () => {
@@ -111,28 +111,27 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
           </div>
     
           {/* Button at Bottom */}
-            <div className="pt-6 flex gap-4 flex-row">
+          <div className="pt-6 flex gap-4 flex-row">
                 {!isAuthenticated ? (
-                <button
+                    <button
                     className="font-fancy cursor-not-allowed text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-red/50 transition-colors duration-300"
-                >
+                    >
                     Log in to Connect
-                </button>
-                ) :  (
-                <button
+                    </button>
+                ) : user?.username !== username ? (
+                    <button
                     className="font-fancy cursor-pointer text-lg py-1 w-full bg-minter border border-black text-black rounded-lg hover:bg-mint transition-colors duration-300"
-                >
+                    >
                     Connect
-                </button>
-                )}
+                    </button>
+                ) : null}
 
                 <button
                     onClick={onClose}
                     className="font-fancy cursor-pointer text-lg py-1 w-full bg-white border border-black text-black rounded-lg hover:bg-grey transition-colors duration-300"
-                    >
+                >
                     Close
                 </button>
-            
             </div>
 
         </div>

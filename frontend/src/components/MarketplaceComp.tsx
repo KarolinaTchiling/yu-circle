@@ -104,7 +104,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
 
             <button
                 onClick={() => setIsPopupOpen(true)}
-                className="text-dark-teal underline hover:text-teal-700 transition-colors duration-200"
+                className="text-dark-teal underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
                 >
                 {username}
             </button>

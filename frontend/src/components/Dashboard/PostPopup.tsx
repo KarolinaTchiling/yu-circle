@@ -5,8 +5,9 @@ import Thumb from "/thumb.svg";
 import ThumbFill from "/thumb-fill.svg";
 import Clock from "/clock.svg";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import CommentThread from "./CommentThread";
+import ProfilePopup from '../ProfilePopup'; 
+
 
 type Comment = {
   commentId: number;
@@ -41,6 +42,8 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
   const [loading, setLoading] = useState(true);
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
   const { user } = useContext(AuthContext)!;
 
   useEffect(() => {
@@ -194,7 +197,24 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
                 </div>
               </div>
 
-              <span>Posted by {post.username}</span>
+              <div>
+                <span>Posted by </span>
+                <button
+                  onClick={() => setIsPopupOpen(true)}
+                  className="text-dark-teal underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
+                  >
+                  {post.username}
+                </button>
+
+                  {isPopupOpen && (
+                      <ProfilePopup
+                      isOpen={isPopupOpen}
+                      onClose={() => setIsPopupOpen(false)}
+                      username={post.username}
+                      />
+                  )}
+              </div>
+
             </div>
 
             <hr className="my-4 border-black" />
