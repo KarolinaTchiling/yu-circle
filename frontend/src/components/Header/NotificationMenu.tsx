@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
 const NotificationIcon = `${import.meta.env.BASE_URL}notification.svg`;
+const NotificationIconActive = `${import.meta.env.BASE_URL}notification.png`;
 
 interface Notification {
   id: number;
@@ -102,7 +103,7 @@ const NotificationMenu: React.FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <img
-        src={NotificationIcon}
+        src={visibleNotifications.length > 0 ? NotificationIconActive : NotificationIcon}
         alt="Notifications"
         className={`h-10 cursor-pointer transition-transform hover:scale-110 ${
           isDropdownOpen ? "scale-110" : ""
