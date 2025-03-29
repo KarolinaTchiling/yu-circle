@@ -85,6 +85,31 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
         }
     };
 
+    const handleDownload = async () => {
+        if (!isAuthenticated || !user?.username) return;
+    
+        const payload = {
+          username: username,
+          message: `${user.username} downloaded your marketplace item; \"${productName}\"`
+        };
+    
+        try {
+          const res = await fetch("/notificationProxy/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+    
+          if (!res.ok) throw new Error("Failed to send notification");
+    
+          console.log("Notification sent successfully");
+          window.open(downloadUrl, "_blank")
+
+        } catch (err) {
+          console.error("Error sending Notification:", err);
+        }
+    };
+
     useEffect(() => {
         fetchRatings();
     }, [productId, isAuthenticated, user]);
@@ -146,7 +171,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
                 ) : downloadUrl && price <= 0 ? (
                 <button
                     className="font-fancy text-2xl cursor-pointer px-20 py-1 bg-white border border-black text-black rounded-lg hover:bg-bright-purple transition-colors duration-300"
-                    onClick={() => window.open(downloadUrl, "_blank")}
+                    onClick={handleDownload}
                 >
                     Download
                 </button>
