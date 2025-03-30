@@ -23,6 +23,7 @@ const DashboardPage: React.FC = () => {
         <DiscourseComp />
         <MarketplaceComp />
       </main>
+
     </div>
   );
 };

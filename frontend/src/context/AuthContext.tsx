@@ -8,6 +8,7 @@ interface User {
   email: string;
   phoneNumber: string;
   userBio: string | null;
+  profilePictureUrl: string | null;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   updateUser: (updatedFields: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  updateProfilePicture: (url: string) => Promise<void>;
 }
 
 // Create the context with an empty default value
@@ -108,8 +110,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateProfilePicture = async (url: string) => {
+    if (!user) {
+      console.error("No user found in context");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/profiles/pfp/${user.username}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profilePictureUrl: url }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update profile picture");
+      }
+  
+      // Update local user state with new profilePictureUrl
+      const updatedUser = { ...user, profilePictureUrl: url };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+  
+      alert("Profile picture updated!");
+
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      alert("Failed to update profile picture.");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser, updateProfilePicture, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

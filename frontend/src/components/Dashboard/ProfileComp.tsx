@@ -5,7 +5,6 @@ import BioPopup from "./BioPopup";
 
 
 const ProfileComp: React.FC = () => {
-  const authContext = useContext(AuthContext);
   const [bio, setBio] = useState<string>("Loading bio...");
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState<string>("");
@@ -13,10 +12,8 @@ const ProfileComp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (!authContext) {
-    return <p>Loading profile...</p>;
-  }
-  const { user } = authContext;
+  const { updateProfilePicture, user } = useContext(AuthContext)!;
+
 
   // Fetch profile when user is available
   const fetchProfile = async () => {
@@ -115,6 +112,43 @@ const ProfileComp: React.FC = () => {
     }
   };
 
+  const handleUpdatePfp = async (file: File) => {  
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+  
+      const res = await fetch("http://localhost:8080/profiles/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      if (!res.ok) throw new Error("Failed to upload profile picture");
+  
+      const data = await res.text(); // or .json() if your API returns JSON
+      const imageUrl = data.trim(); // sanitize just in case
+  
+      await updateProfilePicture(imageUrl);
+      console.log(imageUrl);
+    } catch (err) {
+      console.error("Error updating profile picture:", err);
+      alert("Failed to upload or update your profile picture.");
+    }
+  };
+
+  function formatGoogleDriveUrl(url: string | null | undefined): string {
+    if (!url) return "/profile.svg";
+  
+    // Extract ID whether it's /uc?export=view&id=... or /file/d/.../view
+    const idMatch = url.match(/(?:id=|\/d\/)([\w-]{25,})/);
+    const fileId = idMatch ? idMatch[1] : null;
+  
+    return fileId
+      ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+      : "/profile.svg";
+  }
+
+  console.log(user?.profilePictureUrl)
+
   return (
     <main className="flex flex-col items-center bg-grey-50 border b-black rounded-lg w-full">
       <div className="bg-grey rounded-t-lg border-b b-black text-center font-fancy py-1 text-xl w-full">
@@ -127,11 +161,29 @@ const ProfileComp: React.FC = () => {
         <div className="border b-black rounded-lg bg-offwhite p-3 w-[40%] text-center flex flex-col items-center">
           <div className="text-2xl">{user?.username}</div>
           <div>
-            <img src={Profile} className="h-60" />
+          <img
+               src={user?.profilePictureUrl ? formatGoogleDriveUrl(user.profilePictureUrl) : "/profile.svg"}
+              alt="Profile"
+              className="h-60 w-60 object-cover rounded-full border border-black"
+            />
           </div>
-          <button className="mt-2 w-[80%] py-1 rounded-lg border b-black cursor-pointer text-sm bg-white hover:bg-purple transition-colors duration-300">
-            Change profile picture
-          </button>
+          <label
+              htmlFor="pfp-upload"
+              className="mt-2 w-[80%] py-1 rounded-lg border b-black cursor-pointer text-sm bg-white hover:bg-purple transition-colors duration-300 text-center"
+            >
+              Change profile picture
+              <input
+                id="pfp-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpdatePfp(file);
+                }}
+              />
+            </label>
+            <p className="text-xs pt-1">10MB Max file size</p>
         </div>
 
         {/* Right section */}
@@ -208,6 +260,7 @@ const ProfileComp: React.FC = () => {
 
         </div>
       </div>
+
     </main>
   );
 };

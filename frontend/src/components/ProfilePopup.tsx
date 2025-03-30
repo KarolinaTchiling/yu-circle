@@ -50,7 +50,7 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
               lastname: profileData.lastname,
               bio: profileData.bio,
               tags,
-              pfp: "", // or load a default, or fetch if available elsewhere
+              pfp: profileData.profilePictureUrl, // or load a default, or fetch if available elsewhere
             };
       
             setProfile(combinedProfile);
@@ -63,6 +63,18 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
           fetchProfileWithTags();
         }
     }, [isOpen, username]);
+
+    function formatGoogleDriveUrl(url: string | null | undefined): string {
+      if (!url) return "/profile.svg";
+    
+      // Extract ID whether it's /uc?export=view&id=... or /file/d/.../view
+      const idMatch = url.match(/(?:id=|\/d\/)([\w-]{25,})/);
+      const fileId = idMatch ? idMatch[1] : null;
+    
+      return fileId
+        ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+        : "/profile.svg";
+    }
 
 
     return (
@@ -89,9 +101,9 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
               </div>
 
               <img
-                src={profile?.pfp || Profile}
-                alt={`${username}'s profile`}
-                className="h-35 w-35 rounded-full object-cover border border-black"
+                src={profile?.pfp? formatGoogleDriveUrl(profile.pfp) : Profile}
+                alt="Profile"
+                className="h-65 w-65 rounded-full object-cover border border-black"
               />
 
               <p className="text-xl pt-3">{profile?.firstname} {profile?.lastname}</p>
