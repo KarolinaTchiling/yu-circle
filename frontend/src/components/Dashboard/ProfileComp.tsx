@@ -147,7 +147,21 @@ const ProfileComp: React.FC = () => {
       : "/profile.svg";
   }
 
+  // function formatGoogleDriveUrl(url: string | null | undefined): string {
+  //   if (!url) return "/profile.svg";
+  
+  //   const idMatch = url.match(/(?:id=|\/d\/)([\w-]{25,})/);
+  //   const fileId = idMatch ? idMatch[1] : null;
+  
+  //   return fileId
+  //     ? `https://drive.google.com/uc?export=view&id=${fileId}`
+  //     : "/profile.svg";
+  // }
+
+  console.log(user?.username)
   console.log(user?.profilePictureUrl)
+  console.log("formated: " + formatGoogleDriveUrl(user?.profilePictureUrl))
+
 
   return (
     <main className="flex flex-col items-center bg-grey-50 border b-black rounded-lg w-full">
@@ -166,6 +180,7 @@ const ProfileComp: React.FC = () => {
               alt="Profile"
               className="h-60 w-60 object-cover rounded-full border border-black"
             />
+
           </div>
           <label
               htmlFor="pfp-upload"
