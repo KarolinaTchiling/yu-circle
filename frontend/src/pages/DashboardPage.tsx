@@ -7,8 +7,7 @@ import MarketplaceComp from "../components/Dashboard/MarketplaceComp";
 import { AuthContext } from "../context/AuthContext";
 
 const DashboardPage: React.FC = () => {
-  const { isLoading, isAuthenticated } = useContext(AuthContext)!; // Assuming you have a user context
-
+  const { isLoading, isAuthenticated } = useContext(AuthContext)!; 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       window.location.href = "/signup";
