@@ -24,7 +24,7 @@ public class CommentService {
     public List<Comment> getCommentsByPost(Long postId) {
         return commentRepository.findByPostId(postId);
     }
-    
+
     public Optional<Comment> getCommentsById(Long commentId) {
         return commentRepository.findByCommentId(commentId);
     }
@@ -32,7 +32,7 @@ public class CommentService {
     public List<Comment> getCommentsByUsername(String username) {
         return commentRepository.findAllByUsername(username);
     }
-    
+
     public List<Comment> getTopLevelCommentsForPost(Long postId) {
         Post post = new Post();
         post.setId(postId);
@@ -66,7 +66,7 @@ public class CommentService {
             commentRepository.save(comment);
         });
     }
-    
+
     public Comment updateComment(Long commentId, Map<String, Object> request) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Parent comment not found"));
@@ -74,33 +74,34 @@ public class CommentService {
 
         return commentRepository.save(comment);
     }
-    
+
     ///
     /// Likes
     ///
-    
+
     // Liking post
-	public CommentLike likeComment(Map<String, Object> like) {
+    public CommentLike likeComment(Map<String, Object> like) {
         CommentLike commentLike = new CommentLike();
         commentLike.setUsername((String) like.get("username"));
-        commentLike.setCommentId(	(	(Integer) like.get("commentId")	).longValue()	);
+        commentLike.setCommentId(((Integer) like.get("commentId")).longValue());
         commentLike.setTimestamp(LocalDateTime.now());
 
         return commentLikeRepository.save(commentLike);
-	}
-	
-	// Unlike post
-    public void unlikeComment(Map<String, Object> like) {
-    	commentLikeRepository.deleteByCommentIdAndUsername(((Integer)like.get("commentId")).longValue(), (String) like.get("username"));
     }
-    
+
+    // Unlike post
+    public void unlikeComment(Map<String, Object> like) {
+        commentLikeRepository.deleteByCommentIdAndUsername(((Integer) like.get("commentId")).longValue(),
+                (String) like.get("username"));
+    }
+
     // Get likes by postId
-	public List<CommentLike> getAllLikesByPostId(Long commentId) {
-		return commentLikeRepository.findAllByCommentId(commentId);
-	}
-	
-	// Get likes by username
-	public List<CommentLike> getAllLikesByUsername(String username) {
+    public List<CommentLike> getAllLikesByPostId(Long commentId) {
+        return commentLikeRepository.findAllByCommentId(commentId);
+    }
+
+    // Get likes by username
+    public List<CommentLike> getAllLikesByUsername(String username) {
         return commentLikeRepository.findAllByUsername(username);
-	}
+    }
 }

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.yucircle.discourceapp.YuCircleDiscourseServiceApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.611 s -- in com.yucircle.discourceapp.YuCircleDiscourseServiceApplicationTests
