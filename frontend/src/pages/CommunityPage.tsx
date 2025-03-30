@@ -192,7 +192,6 @@ const CommunityPage: React.FC = () => {
               key={index}
               username={user.username}
               tags={user.tags}
-              profileImg="/profile.svg"
             />
         ))}
       </div>

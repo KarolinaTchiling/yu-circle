@@ -45,6 +45,6 @@ public class GoogleDriveService {
         permission.setRole("reader");
         driveService.permissions().create(uploadedFile.getId(), permission).execute();
 
-        return "https://drive.google.com/file/d/" + uploadedFile.getId() + "/view";
+        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();
     }
 }

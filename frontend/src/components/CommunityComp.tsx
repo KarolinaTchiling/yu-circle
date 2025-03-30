@@ -5,41 +5,49 @@ import ContactButton from "./ContactButton"
 interface CommunityProps {
   username: string;
   tags: string[];
-  profileImg: string;
 }
 
 const CommunityComp: React.FC<CommunityProps> = ({
   username,
   tags,
-  profileImg,
 }) => {
   const { isAuthenticated } = useContext(AuthContext)!;
   const [bio, setBio] = useState<string>("Loading bio...");
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>("");
 
 
 useEffect(() => {
-  const fetchBio = async () => {
-    try {
-      const res = await fetch(`http://localhost:8080/profiles/bio/${username}`);
-
-      // If bio is missing (404), just silently set default
-      if (res.status === 404) {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/profiles/${username}`);
+  
+        if (!res.ok) throw new Error("Failed to fetch profile");
+  
+        const data = await res.json();
+  
+        setBio(data.bio || "No bio available.");
+        setProfilePictureUrl(data.profilePictureUrl || ""); // <- add this if using local state
+      } catch (err) {
+        console.warn(`No profile for ${username}. Skipping.`, err);
         setBio("No bio available.");
-        return;
+        setProfilePictureUrl(""); // fallback
       }
+    };
+  
+    fetchProfile();
+  }, [username]);
 
-      if (!res.ok) throw new Error("Failed to fetch bio");
+  function formatGoogleDriveUrl(url: string | null | undefined): string {
+    if (!url) return "/profile.svg";
 
-      const text = await res.text();
-      setBio(text || "No bio available.");
-    } catch (err) {
-      console.warn(`No bio for ${username}. Skipping.`);
-      setBio("No bio available.");
-    }
-  };
+    // Extract ID whether it's /uc?export=view&id=... or /file/d/.../view
+    const idMatch = url.match(/(?:id=|\/d\/)([\w-]{25,})/);
+    const fileId = idMatch ? idMatch[1] : null;
 
-  fetchBio();
-}, [username]);
+    return fileId
+      ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+      : "/profile.svg";
+  }
 
   return (
     <div className="flex flex-col h-full w-full bg-light-green border border-black rounded-lg p-4 justify-between">
@@ -48,13 +56,13 @@ useEffect(() => {
       <div>
         {/* Header */}
         <div className="flex flex-col items-center justify-between">
-          <div className="text-3xl pb-5 font-semibold">{username}</div>
-          
+          <div className="text-3xl pb-2 font-semibold">{username}</div>
           <img
-            src={profileImg}
-            alt={`${username}'s profile`}
-            className="h-26 w-26 rounded-full object-cover border border-black"
-          />
+               src={profilePictureUrl ? formatGoogleDriveUrl(profilePictureUrl) : "/profile.svg"}
+              alt="Profile"
+              className="h-36 w-36 rounded-full object-cover border border-black"
+            />
+
         </div>
 
         {bio && (
