@@ -26,101 +26,107 @@ type Comment = {
   };
 
 const DiscoursePage: React.FC = () => {
-  const [posts, setPost] = useState<Post[]>([]);
-  const [postIds, setPostIds] = useState<number[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<{ [type: string]: boolean }>({});
-  const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
-//   const [isFree, setIsFree] = useState(false);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [sortOption, setSortOption] = useState("highestRated");
+    const [posts, setPost] = useState<Post[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<{ [type: string]: boolean }>({});
+    const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortOption, setSortOption] = useState("MostRecent");
 
 
-  const buildQuery = (
-    programs: { [type: string]: boolean },
-    types: { [type: string]: boolean },
-    isFree: boolean
-  ) => {
-    const selectedPrograms = Object.keys(programs).filter((key) => programs[key]);
-    const selectedTypes = Object.keys(types).filter((key) => types[key]);
-  
-    const params = new URLSearchParams();
-  
-    if (selectedPrograms.length > 0) {
-      params.append("program", selectedPrograms.join(","));
-    }
-  
-    if (selectedTypes.length > 0) {
-      params.append("contentType", selectedTypes.join(","));
-    }
+    const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
+        setSelectedTypes(updatedTypes);
+    };
 
-    if (isFree) {
-      params.append("priceType", "free");
-    }
-  
-    return params.toString();
-  };
-
-  const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
-    setSelectedTypes(updatedTypes);
+    const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
+        setSelectedPrograms(updatedPrograms);
+    };
 
 
-  };
-
-  const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
-    setSelectedPrograms(updatedPrograms);
-
-
-
-  };
-
-//   const handleIsFreeChange = (free: boolean) => {
-//     setIsFree(free);
-
-//   };
-
-
-  const handleClearFilters = () => {
-    const clearedTypes = Object.fromEntries(
-      Object.keys(selectedTypes).map((key) => [key, false])
-    );
-  
-    const clearedPrograms = Object.fromEntries(
-      Object.keys(selectedPrograms).map((key) => [key, false])
-    );
-  
-    setSelectedTypes(clearedTypes);
-    setSelectedPrograms(clearedPrograms);
-    // setIsFree(false);
-  
-    // // Fetch unfiltered products
-    // fetch("http://localhost:8083/marketplace/products")
-    //   .then((res) => res.json())
-    //   .then((data) => setProducts(data));
-  };
+    const handleClearFilters = () => {
+        const clearedTypes = Object.fromEntries(
+        Object.keys(selectedTypes).map((key) => [key, false])
+        );
+    
+        const clearedPrograms = Object.fromEntries(
+        Object.keys(selectedPrograms).map((key) => [key, false])
+        );
+    
+        setSelectedTypes(clearedTypes);
+        setSelectedPrograms(clearedPrograms);
+    };
 
 
+    const fetchPosts = async () => {
+        try {
+          const res = await fetch("http://localhost:8081/posts");
+          if (!res.ok) throw new Error("Failed to fetch posts");
+          const data: Post[] = await res.json();
+      
+          // For each post, fetch the like count
+          const enrichedPosts = await Promise.all(
+            data.map(async (post) => {
+              try {
+                const likesRes = await fetch(`http://localhost:8081/posts/like/postid/${post.id}`);
+                const likesData = likesRes.ok ? await likesRes.json() : [];
+                return { ...post, likes: likesData.length };
+              } catch {
+                return { ...post, likes: 0 }; // fallback if API fails
+              }
+            })
+          );
+      
+          setPost(enrichedPosts);
+        } catch (err) {
+          console.error("Error fetching posts:", err);
+        }
+      };
 
-  const fetchPostIds = async () => {
-    try {
-      const res = await fetch("http://localhost:8081/posts");
-      if (!res.ok) throw new Error("Failed to fetch posts");
-  
-      const data = await res.json();
-      const ids = data.map((post: any) => post.id);
-  
-      setPostIds(ids); // ✅ ACTUALLY update state
-      console.log("Post IDs:", ids);
-    } catch (err) {
-      console.error("Error fetching post IDs:", err);
-    }
-  };
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    const selectedTypeLabels = Object.keys(selectedTypes).filter((type) => selectedTypes[type]);
+    const selectedProgramLabels = Object.keys(selectedPrograms).filter((program) => selectedPrograms[program]);
 
 
-  useEffect(() => {
-    fetchPostIds();
-  }, []);
+    const filteredPosts = posts.filter((post) => {
+        const hashtags = (post.title + " " + post.content).match(/#\w[\w-]*/g) || [];
+        const normalizedTags = hashtags.map((tag) =>
+          tag.toLowerCase().replace(/[^a-z0-9-]/g, "")
+        );
+      
+        const matchesType = selectedTypeLabels.length === 0 || selectedTypeLabels.some((type) =>
+          normalizedTags.includes(`#${type.toLowerCase().replace(/\s+/g, "-")}`.replace(/[^a-z0-9-]/g, ""))
+        );
+      
+        const matchesProgram = selectedProgramLabels.length === 0 || selectedProgramLabels.some((program) =>
+          normalizedTags.includes(`#${program.toLowerCase().replace(/\s+/g, "-")}`.replace(/[^a-z0-9-]/g, ""))
+        );
+      
+        const lowerSearch = searchTerm.toLowerCase();
+        const matchesSearch =
+          post.title.toLowerCase().includes(lowerSearch) ||
+          post.content.toLowerCase().includes(lowerSearch) ||
+          post.username.toLowerCase().includes(lowerSearch);
+      
+        return matchesType && matchesProgram && matchesSearch;
+      });
 
-  console.log(postIds)
+      console.log("Likes:", posts.map(p => ({ id: p.id, likes: p.likes })));
+    
+    const sortedPosts = [...filteredPosts].sort((a, b) => {
+        if (sortOption === "MostRecent") {
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        }
+      
+        if (sortOption === "highestRated") {
+          return (b.likes ?? 0) - (a.likes ?? 0);
+        }
+      
+        return 0;
+      });
+      
 
 
   return (
@@ -134,10 +140,8 @@ const DiscoursePage: React.FC = () => {
             onTypeChange={handleTypeChange}
             selectedPrograms={selectedPrograms}
             onProgramChange={handleProgramChange}
-                   
-  
-            // onClearFilters={handleClearFilters}
-            // onSearchChange={setSearchTerm}
+            onClearFilters={handleClearFilters}
+            onSearchChange={setSearchTerm}
          />
       </div>
 
@@ -148,8 +152,8 @@ const DiscoursePage: React.FC = () => {
           <label htmlFor="sort" className="text-sm font-medium">Sort by:</label>
           <select
             id="sort"
-            // value={sortOption}
-            // onChange={(e) => setSortOption(e.target.value)}
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
             className="px-3 py-1 border border-black rounded-md bg-white"
           >
             <option value="recent">Most Recent</option>
@@ -159,13 +163,12 @@ const DiscoursePage: React.FC = () => {
 
 
         <div className="space-y-6">
-            {postIds.map((id) => (
-                <PostComp key={id} postId={id} />
+        {sortedPosts.map((post) => (
+            <PostComp key={post.id} postId={post.id} />
             ))}
         </div>
 
       </div>
-
 
     </main>
     </>

@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useContext, useState } from "react";
+import CreatePostModal from "../Discourse/CreatePostModal";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 
 interface SidebarProps {
@@ -6,6 +9,8 @@ interface SidebarProps {
     onTypeChange: (updatedTypes: { [type: string]: boolean }) => void;
     selectedPrograms: { [program: string]: boolean };
     onProgramChange: (updatedPrograms: { [type: string]: boolean }) => void;
+    onClearFilters: () => void;
+    onSearchChange: (term: string) => void;
   }
 
 const DiscourseSidebar: React.FC<SidebarProps> = ({
@@ -13,31 +18,57 @@ const DiscourseSidebar: React.FC<SidebarProps> = ({
         onTypeChange,
         selectedPrograms,
         onProgramChange,
+        onClearFilters,
+        onSearchChange
     }) => {
 
-    const postType = ["Study Partners", "Mentor-Mentee", "Advice", "Course Questions", "Meet-ups"];
-    const postProgram = ["Engineering", "Science", "Business", "Liberal Arts", "Education", "Economics", "Health"];
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const postType = ["#StudyPartners", "#Mentor-Mentee", "#Advice", "#CourseQuestions", "#Meetups"];
+    const postProgram = ["#Engineering", "#Science", "#Business", "#LiberalArts", "#Education", "#Economics", "#Health"];
 
+    const navigate = useNavigate();
+
+    const { isAuthenticated } = useContext(AuthContext)!;
+    
     return (
         <div className="flex flex-col items-center h-full w-full  bg-grey-50 border b-black rounded-lg pb-4">
 
-            {/* Add content */}
-            <div className="flex flex-row items-center gap-4 p-6 w-full">
-                <button
-                    className="font-bold text-3xl cursor-pointer h-12 w-12 bg-white border border-black text-black rounded-full hover:bg-minter transition-colors duration-300"
-                >
-                    +
-                </button>
-                <h1 className="text-2xl">Create a Post </h1>
-            </div>
+            {/* Header + Add Button */}
+                {isAuthenticated ? (
+                    <div className="flex flex-row items-center gap-4 p-6 w-full">
+                        <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="font-bold text-3xl cursor-pointer h-12 w-12 bg-white border border-black text-black rounded-full hover:bg-mint transition-colors duration-300"
+                        >
+                        +
+                        </button>
+                        <h1 className="text-2xl">Add Content</h1>
+                        
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center p-6 gap-2 w-full">
+                        <h1 className="text-xl text-center">Join the Discourse!</h1>
+                        <button
+                            className="text-md cursor-pointer w-[95%] py-1 bg-white border border-black text-black rounded-md hover:bg-minter transition-colors duration-300"
+                            onClick={() => navigate('/signup')}
+                        >
+                            Create an Account
+                        </button>
+                        <button
+                            className="text-md cursor-pointer w-[95%] py-1 bg-white border border-black text-black rounded-md hover:bg-bright-purple transition-colors duration-300"
+                            onClick={() => navigate('/login')}
+                        >
+                            Log In
+                        </button>
+                    </div>
+                )}
 
             <hr className="w-[80%]  border-t border-black" />
 
             <div className="py-4 w-[80%]">
                 <input
                     type="text"
-                    // value={new}
-                    // onChange={(e) => setNewTag(e.target.value)}
+                    onChange={(e) => onSearchChange(e.target.value)}
                     placeholder="Search"
                     className="border border-black w-full bg-white rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-mint"
                 />
@@ -51,7 +82,7 @@ const DiscourseSidebar: React.FC<SidebarProps> = ({
                         Filter Feed
                     </p>
                     <button
-                            // onClick={() => handleDeleteTag(tag)}
+                            onClick={onClearFilters}
                             className="font-bold text-xs cursor-pointer h-6 w-6 bg-offwhite border border-black text-black rounded-full hover:bg-red/50 transition-colors duration-300"
                         >
                             ✖
@@ -107,6 +138,11 @@ const DiscourseSidebar: React.FC<SidebarProps> = ({
                     ))}
                 </div>
             </div>
+
+            <CreatePostModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
 
             
         </div>

@@ -42,6 +42,9 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
   const [replyContent, setReplyContent] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+
 
   const { user } = useContext(AuthContext)!;
 
@@ -94,6 +97,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
         likedByUser,
         comments: enrichedComments,
       });
+      setEditContent(postData.content);
     } catch (err) {
       console.error("Error fetching post:", err);
     } finally {
@@ -120,10 +124,49 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
         likes: liked ? (post.likes ?? 1) - 1 : (post.likes ?? 0) + 1,
         likedByUser: !liked,
       });
+      
     } catch (err) {
       console.error("Error toggling like:", err);
     }
   };
+
+  const handleEditSubmit = async () => {
+    if (!post || !editContent.trim()) return;
+  
+    try {
+      const res = await fetch(`http://localhost:8081/posts/update/${post.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editContent }),
+      });
+  
+      if (!res.ok) throw new Error("Failed to update post");
+  
+      await fetchPost();
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error editing post:", err);
+    }
+  };
+  
+  const handleDeletePost = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this post?");
+    if (!confirmed || !post) return;
+  
+    try {
+      const res = await fetch(`http://localhost:8081/posts/delete/${post.id}`, {
+        method: "DELETE",
+      });
+  
+      if (!res.ok) throw new Error("Failed to delete post");
+  
+      // Redirect or reset UI after deletion
+      setPost(null);  // or navigate away
+    } catch (err) {
+      console.error("Error deleting post:", err);
+    }
+  };
+  
 
   const handleCancelReply = () => {
     setActiveReplyId(null);
@@ -167,7 +210,50 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
         <>
           <h2 className="text-2xl font-bold break-words whitespace-pre-wrap">{post.title}</h2> 
           {/* <p>{post.id}</p> */}
-          <p className="text-sm mt-2 break-words whitespace-pre-wrap">{post.content}</p>
+          {isEditing ? (
+              <>
+                <textarea
+                  className="w-full border border-black rounded p-2 text-sm mt-2"
+                  rows={4}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-1 text-sm border border-black rounded bg-gray-200 hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditSubmit}
+                    className="px-3 py-1 text-sm border border-black rounded bg-mint hover:bg-minter"
+                  >
+                    Save
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm mt-2 break-words whitespace-pre-wrap">{post.content}</p>
+                {user?.username === post.username && (
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-xs py-1 px-2 bg-yellow-300 border border-black rounded hover:bg-yellow-400 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDeletePost}
+                      className="text-xs py-1 px-2 bg-light-red border border-black rounded hover:bg-red/50 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
 
           <div className="flex justify-between mt-3 text-sm font-semibold text-gray-700">
             <div className="flex items-center gap-2">
@@ -175,13 +261,22 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
               <span>{dayjs(post.timestamp).fromNow()}</span>
               <div className="pl-3 flex items-center gap-1">
                 <span>{post.likes ?? 0}</span>
-                <button onClick={toggleLike} className="focus:outline-none">
+                {user ? (
+                  <button onClick={toggleLike} className="focus:outline-none">
+                    <img
+                      src={post.likedByUser ? ThumbFill : Thumb}
+                      className="h-5 w-5 object-contain cursor-pointer"
+                      alt="Like"
+                    />
+                  </button>
+                ) : (
                   <img
-                    src={post.likedByUser ? ThumbFill : Thumb}
-                    className="h-5 w-5 object-contain cursor-pointer"
-                    alt="Like"
+                    src={Thumb}
+                    className="h-5 w-5 object-contain opacity-60"
+                    alt="Like (login to interact)"
+                    title="Login to like this post"
                   />
-                </button>
+                )}
               </div>
             </div>
 

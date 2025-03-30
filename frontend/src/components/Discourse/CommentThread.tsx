@@ -158,22 +158,34 @@ const CommentThread: React.FC<Props> = ({
 
                 <div className="flex flex-row">
 
-                    <button
+                    {user && (
+                      <button
                         onClick={() => onReply(comment.commentId)}
-                        className="text-xs py-1 px-2 bg-purple text-black border border-black rounded hover:bg-bright-purple transition"
-                        >
+                        className="text-xs mr-4 py-1 px-2 bg-purple text-black border border-black rounded hover:bg-bright-purple transition"
+                      >
                         Reply
-                    </button>
+                      </button>
+                    )}
 
-                    <div className="ml-4 flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                         <span className="text-sm font-semibold">{likes}</span>
-                        <button onClick={toggleCommentLike} className="focus:outline-none">
+                        {user ? (
+                            <button onClick={toggleCommentLike} className="focus:outline-none">
+                              <img
+                                src={likedByUser ? ThumbFill : Thumb}
+                                className="h-5 w-5 object-contain cursor-pointer"
+                                alt="Like"
+                              />
+                            </button>
+                          ) : (
                             <img
-                            src={likedByUser ? ThumbFill : Thumb}
-                            className="h-5 w-5 object-contain cursor-pointer"
-                            alt="Like"
+                              src={Thumb}
+                              className="h-5 w-5 object-contain opacity-60"
+                              alt="Like (login to interact)"
+                              title="Login to like this comment"
                             />
-                        </button>
+                          )}
+
                     </div>
                 </div>
     
