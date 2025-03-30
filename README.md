@@ -333,6 +333,24 @@ curl -X PUT "http://localhost:8080/profiles/bio/test" \
          }'
 ```
 
+Upload profile picture(returns url of pfp):
+This return a url.
+```
+curl -X POST "http://localhost:8080/profiles/upload" \
+   -H "Content-Type: multipart/form-data" \
+   -F "file=@/Users/nick/Downloads/README.md"
+```
+
+Update profile picture url:
+The username of the user is in the url, here it is jdoe.
+```
+curl -X PUT http://localhost:8080/profiles/pfp/jdoe\
+     -H "Content-Type: application/json" \
+     -d '{
+           "profilePictureUrl": "https://drive.google.com/file/d/1Sc74X5-WY9wNelPdujm8-k82UJgkkGMH/view"
+         }'
+```
+
 Delete a user (the username is in the url, in this example it is "test"):
 
 ```

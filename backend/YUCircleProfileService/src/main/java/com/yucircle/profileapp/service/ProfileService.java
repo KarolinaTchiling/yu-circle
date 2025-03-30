@@ -104,4 +104,17 @@ public class ProfileService {
         
         return false;
     }
+
+	public boolean updateProfilePictureUrl(String username, String profilePictureUrl) {
+		Optional<Profile> optionalProfile = profileRepository.findById(username);
+        
+        if (optionalProfile.isPresent()) {
+            Profile profile = optionalProfile.get();
+            profile.setProfilePictureUrl(profilePictureUrl);
+            profileRepository.save(profile);
+            return true;
+        }
+        
+        return false;
+	}
 }

@@ -41,6 +41,7 @@ public class Profile {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    private String profilePictureUrl;
     
     // Getter methods
     //
@@ -80,6 +81,10 @@ public class Profile {
     
     public String getBio() {
     	return this.bio;
+    }
+    
+    public String getProfilePictureUrl() {
+    	return this.profilePictureUrl;
     }
 
     
@@ -123,4 +128,8 @@ public class Profile {
 		// TODO Auto-generated method stub
 		this.bio = bio;
 	}
+	
+    public void setProfilePictureUrl(String profilePictureUrl) {
+    	this.profilePictureUrl = profilePictureUrl;
+    }
 }

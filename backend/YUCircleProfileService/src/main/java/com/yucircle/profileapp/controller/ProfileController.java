@@ -77,6 +77,19 @@ public class ProfileController {
         }
     }
     
+    // @PutMapping handles PUT requests.
+    @PutMapping("/pfp/{username}")
+    public ResponseEntity<String> updateProfilePicture(@PathVariable String username, @RequestBody Map<String, String> request) {
+    	String profilePictureUrl = request.get("profilePictureUrl");
+        boolean updated = profileService.updateProfilePictureUrl(username, profilePictureUrl);
+        
+        if (updated) {
+            return ResponseEntity.ok("Profile Picture URL updated successfully.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
     @PutMapping("/changepass/{username}")
     public ResponseEntity<String> changePassword(@PathVariable String username, @RequestBody Map<String, String> request) {
     	String newPassword = request.get("password");
