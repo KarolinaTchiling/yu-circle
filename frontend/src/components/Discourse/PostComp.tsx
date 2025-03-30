@@ -205,7 +205,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
   };
 
   return (
-    <div className="bg-light-green rounded-lg border border-black p-6 w-full max-w-6xl">
+    <div className="bg-light-green rounded-lg border border-black p-6 w-full max-w-7xl">
       {loading ? (
         <p className="text-center text-sm italic">Loading post...</p>
       ) : post ? (
