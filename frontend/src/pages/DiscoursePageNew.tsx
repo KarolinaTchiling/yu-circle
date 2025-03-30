@@ -30,7 +30,8 @@ const DiscoursePage: React.FC = () => {
     const [selectedTypes, setSelectedTypes] = useState<{ [type: string]: boolean }>({});
     const [selectedPrograms, setSelectedPrograms] = useState<{ [type: string]: boolean }>({});
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortOption, setSortOption] = useState("MostRecent");
+    const [sortOption, setSortOption] = useState("recent");
+
 
 
     const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
@@ -113,10 +114,9 @@ const DiscoursePage: React.FC = () => {
         return matchesType && matchesProgram && matchesSearch;
       });
 
-      console.log("Likes:", posts.map(p => ({ id: p.id, likes: p.likes })));
     
     const sortedPosts = [...filteredPosts].sort((a, b) => {
-        if (sortOption === "MostRecent") {
+        if (sortOption === "recent") {
           return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         }
       
@@ -157,14 +157,14 @@ const DiscoursePage: React.FC = () => {
             className="px-3 py-1 border border-black rounded-md bg-white"
           >
             <option value="recent">Most Recent</option>
-            <option value="highestRated">Highest Rated</option>
+            <option value="highestRated">Most Liked</option>
           </select>
         </div>
 
 
         <div className="space-y-6">
         {sortedPosts.map((post) => (
-            <PostComp key={post.id} postId={post.id} />
+            <PostComp key={post.id} postId={post.id} onRefetch={fetchPosts} />
             ))}
         </div>
 

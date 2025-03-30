@@ -33,9 +33,10 @@ type Post = {
 interface PostViewProps {
   postId: number;
   highlightCommentId?: number | null;
+  onRefetch: () => void;
 }
 
-const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
+const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefetch }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
@@ -144,6 +145,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
   
       await fetchPost();
       setIsEditing(false);
+      onRefetch();
     } catch (err) {
       console.error("Error editing post:", err);
     }
@@ -160,8 +162,8 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId }) => {
   
       if (!res.ok) throw new Error("Failed to delete post");
   
-      // Redirect or reset UI after deletion
-      setPost(null);  // or navigate away
+      await fetchPost();
+      onRefetch();
     } catch (err) {
       console.error("Error deleting post:", err);
     }
