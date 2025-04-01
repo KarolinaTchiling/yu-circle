@@ -24,6 +24,16 @@ const MarketplacePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("highestRated");
 
+  const mergeProductsWithRatings = (
+    productsData: Product[],
+    ratingsData: Record<number, number>
+  ): Product[] => {
+    return productsData.map((product) => ({
+      ...product,
+      averageRating: ratingsData[product.productId] || 0,
+    }));
+  };
+
   const filteredProducts = products.filter((product) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -62,43 +72,32 @@ const MarketplacePage: React.FC = () => {
     return params.toString();
   };
 
-  const handleTypeChange = (updatedTypes: { [type: string]: boolean }) => {
+
+  const handleTypeChange = async (updatedTypes: { [type: string]: boolean }) => {
     setSelectedTypes(updatedTypes);
-
     const query = buildQuery(selectedPrograms, updatedTypes, isFree);
-    fetch(`http://localhost:8083/marketplace/search?${query}`)
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Error fetching filtered products:", err));
-
+    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    setProducts(merged);
   };
 
-  const handleProgramChange = (updatedPrograms: { [type: string]: boolean }) => {
+  const handleProgramChange = async (updatedPrograms: { [type: string]: boolean }) => {
     setSelectedPrograms(updatedPrograms);
-
     const query = buildQuery(updatedPrograms, selectedTypes, isFree);
-    fetch(`http://localhost:8083/marketplace/search?${query}`)
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Error fetching filtered products:", err));
-
+    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    setProducts(merged);
   };
 
-  const handleIsFreeChange = (free: boolean) => {
+  const handleIsFreeChange = async (free: boolean) => {
     setIsFree(free);
     const query = buildQuery(selectedPrograms, selectedTypes, free);
-    fetch(`http://localhost:8083/marketplace/search?${query}`)
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Error fetching filtered products:", err));
+    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    setProducts(merged);
   };
 
-
-  const handleClearFilters = () => {
+  const handleClearFilters = async () => {
     const clearedTypes = Object.fromEntries(
       Object.keys(selectedTypes).map((key) => [key, false])
     );
-  
     const clearedPrograms = Object.fromEntries(
       Object.keys(selectedPrograms).map((key) => [key, false])
     );
@@ -107,39 +106,35 @@ const MarketplacePage: React.FC = () => {
     setSelectedPrograms(clearedPrograms);
     setIsFree(false);
   
-    // Fetch unfiltered products
-    fetch("http://localhost:8083/marketplace/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
+    const merged = await fetchProductsWithRatings("http://localhost:8083/marketplace/products");
+    setProducts(merged);
   };
 
-  const fetchProductsAndRatings = async () => {
+  const fetchProductsWithRatings = async (endpoint: string) => {
     try {
       const [productRes, ratingsRes] = await Promise.all([
-        fetch("http://localhost:8083/marketplace/products"),
+        fetch(endpoint),
         fetch("http://localhost:8083/marketplace/rating/average/all"),
       ]);
-
+  
       const productsData: Product[] = await productRes.json();
-      const ratingsData: Record<number, number> = await ratingsRes.json(); // productId => rating
-
-      // Merge rating into each product
-      const productsWithRatings = productsData.map((product) => ({
-        ...product,
-        averageRating: ratingsData[product.productId] || 0,
-      }));
-
-      setProducts(productsWithRatings);
+      const ratingsData: Record<number, number> = await ratingsRes.json();
+  
+      return mergeProductsWithRatings(productsData, ratingsData);
     } catch (err) {
-      console.error("Error fetching products or ratings:", err);
+      console.error("Error fetching products with ratings:", err);
+      return [];
     }
   };
 
+  const fetchInitialProducts = async () => {
+    const merged = await fetchProductsWithRatings("http://localhost:8083/marketplace/products");
+    setProducts(merged);
+  };
 
   useEffect(() => {
-    fetchProductsAndRatings();
+    fetchInitialProducts();
   }, []);
-
 
   return (
     <>
@@ -187,7 +182,7 @@ const MarketplacePage: React.FC = () => {
             program={product.program}
             contentType={product.contentType}
             averageRating={product.averageRating || 0}
-            onRatingUpdate={fetchProductsAndRatings} 
+            onRatingUpdate={fetchInitialProducts} 
           />
         ))}
 
