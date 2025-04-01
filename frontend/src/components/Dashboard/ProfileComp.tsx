@@ -3,6 +3,7 @@ import { AuthContext } from "../../context/AuthContext";
 import Profile from "/profile.svg";
 import BioPopup from "./BioPopup";
 
+const communityURL = import.meta.env.VITE_COMMUNITY_URL;
 
 const ProfileComp: React.FC = () => {
   const [bio, setBio] = useState<string>("Loading bio...");
@@ -20,14 +21,14 @@ const ProfileComp: React.FC = () => {
     if (!user || !user.username) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/profiles/${user.username}`);
+      const response = await fetch(`/profiles/${user.username}`);
       if (!response.ok) throw new Error("Failed to fetch profile.");
 
       const data = await response.json();
       setBio(data.bio || "No bio available.");
 
       // get profile tags
-      const tagsResponse = await fetch("http://localhost:8082/community/get-profile-tags", {
+      const tagsResponse = await fetch(`${communityURL}/community/get-profile-tags`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +64,7 @@ const ProfileComp: React.FC = () => {
     if (!newTag.trim() || !user?.username) return;
   
     try {
-      const response = await fetch("http://localhost:8082/community/add-profile-tag", {
+      const response = await fetch(`${communityURL}/community/add-profile-tag`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +91,7 @@ const ProfileComp: React.FC = () => {
     if (!user?.username) return;
   
     try {
-      const response = await fetch("http://localhost:8082/community/remove-profile-tag", {
+      const response = await fetch(`${communityURL}/community/remove-profile-tag`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ const ProfileComp: React.FC = () => {
       const formData = new FormData();
       formData.append("file", file);
   
-      const res = await fetch("http://localhost:8080/profiles/upload", {
+      const res = await fetch("/profiles/upload", {
         method: "POST",
         body: formData,
       });

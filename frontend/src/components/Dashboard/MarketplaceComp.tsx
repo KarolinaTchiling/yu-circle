@@ -2,6 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import EditMarketplaceModal from "./EditMarketplaceModal";
 
+const marketplaceURL = import.meta.env.VITE_MARKETPLACE_URL;
+
 type Product = {
   productId: number;
   productName: string;
@@ -27,8 +29,8 @@ const MarketplaceComp: React.FC = () => {
 
     try {
       const [productRes, ratingsRes] = await Promise.all([
-        fetch(`http://localhost:8083/marketplace/products/user/${user.username}`),
-        fetch("http://localhost:8083/marketplace/rating/average/all"),
+        fetch(`${marketplaceURL}/products/user/${user.username}`),
+        fetch(`${marketplaceURL}/marketplace/rating/average/all`),
       ]);
 
       if (!productRes.ok || !ratingsRes.ok) {
@@ -59,7 +61,7 @@ const MarketplaceComp: React.FC = () => {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`http://localhost:8083/marketplace/products/${productId}`, {
+      const res = await fetch(`${marketplaceURL}/marketplace/products/${productId}`, {
         method: "DELETE",
       });
 

@@ -5,6 +5,8 @@ import Rating from '@mui/material/Rating';
 import ProfilePopup from './ProfilePopup'; 
 import ContactButton from "./ContactButton"
 
+const marketplaceURL = import.meta.env.VITE_MARKETPLACE_URL;
+
 interface MarketplaceProps {
     productId: number,
     productName: string | "";
@@ -41,7 +43,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
     const fetchRatings = async () => {
         try {
           if (isAuthenticated && user?.username) {
-            const userRes = await fetch(`http://localhost:8083/marketplace/rating/user/${user.username}`);
+            const userRes = await fetch(`${marketplaceURL}/marketplace/rating/user/${user.username}`);
             if (!userRes.ok) throw new Error("Failed to fetch user ratings");
       
             const userData = await userRes.json(); // array of ratings
@@ -67,7 +69,7 @@ const MarketplaceComp: React.FC<MarketplaceProps> = ({
         };
     
         try {
-          const res = await fetch("http://localhost:8083/marketplace/rating/add", {
+          const res = await fetch(`${marketplaceURL}/marketplace/rating/add`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
+const marketplaceURL = import.meta.env.VITE_MARKETPLACE_URL;
+
 type Product = {
   productId: number;
   productName: string;
@@ -45,7 +47,7 @@ const EditMarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, product})
 
     setIsUploading(true); 
     try {
-      const res = await fetch("http://localhost:8083/marketplace/upload", {
+      const res = await fetch(`${marketplaceURL}/marketplace/upload`, {
         method: "POST",
         body: formData,
       });
@@ -79,7 +81,7 @@ const EditMarketplaceModal: React.FC<ModalProps> = ({ isOpen, onClose, product})
     };
   
     try {
-      const res = await fetch(`http://localhost:8083/marketplace/update/${product.productId}`, {
+      const res = await fetch(`${marketplaceURL}/marketplace/update/${product.productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

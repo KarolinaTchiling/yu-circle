@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
+
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,7 +21,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose}) => 
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8081/posts", {
+      const res = await fetch(`${discourseURL}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

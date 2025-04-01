@@ -4,6 +4,8 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebars/CommunitySidebar";
 import CommunityComp from "../components/CommunityComp";
 
+const communityURL = import.meta.env.VITE_COMMUNITY_URL;
+
 type User = {
   username: string,
   tags: string[]
@@ -62,7 +64,7 @@ const CommunityPage: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:8082/community/filter?${query}`);
+      const res = await fetch(`${communityURL}/community/filter?${query}`);
       if (!res.ok) throw new Error("Failed to fetch filtered users");
 
       const data = await res.json();
@@ -80,7 +82,7 @@ const CommunityPage: React.FC = () => {
 
   const fetchAllUsers = async () => {
     try {
-      const res = await fetch("http://localhost:8082/community/get-default-profiles");
+      const res = await fetch(`${communityURL}/community/get-default-profiles`);
       if (!res.ok) throw new Error("Failed to fetch community users");
 
       const data = await res.json();
@@ -98,7 +100,7 @@ const CommunityPage: React.FC = () => {
 
   const fetchRecUsers = async () => {
     try {
-      const res = await fetch("http://localhost:8082/community/get-recommended-profiles", {
+      const res = await fetch(`${communityURL}/community/get-recommended-profiles`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

@@ -1,46 +1,46 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 
-// https://vite.dev/config/
+const env = loadEnv('', process.cwd()); // mode is left as an empty string
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
     proxy: {
-      // proxies any api requests to database, prevents direct code exposure (and makes it easier to point elsewhere)
       '/profiles': {
-        target: 'http://localhost:8080',
+        target: env.VITE_PROFILES_URL,
         changeOrigin: true,
         secure: false,
       },
       '/messages': {
-        target: 'http://localhost:8084',
+        target: env.VITE_MESSAGES_URL,
         changeOrigin: true,
         secure: false,
       },
       '/messages/send': {
-        target: 'http://localhost:8084',
+        target: env.VITE_MESSAGES_URL,
         changeOrigin: true,
         secure: false,
       },
       '/messages/get': {
-        target: 'http://localhost:8084',
+        target: env.VITE_MESSAGES_URL,
         changeOrigin: true,
         secure: false,
       },
       '/messages/delete': {
-        target: 'http://localhost:8084',
+        target: env.VITE_MESSAGES_URL,
         changeOrigin: true,
         secure: false,
       },
-      
-         '/notificationProxy': {
-          target: 'http://localhost:8085',
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/notificationProxy/, '/notification')
-        },
+      '/notificationProxy': {
+        target: env.VITE_NOTIFICATIONS_URL,
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) =>
+          path.replace(/^\/notificationProxy/, '/notification'),
+      },
     },
   },
 });

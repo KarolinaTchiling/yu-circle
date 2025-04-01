@@ -3,6 +3,8 @@ import Profile from "/profile.svg";
 import { AuthContext } from "../context/AuthContext";
 import ContactButton from "./ContactButton"
 
+const communityURL = import.meta.env.VITE_COMMUNITY_URL;
+
 interface ModalProps {
     username: string;
     isOpen: boolean;
@@ -28,12 +30,12 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
         const fetchProfileWithTags = async () => {
           try {
             // Fetch profile
-            const profileRes = await fetch(`http://localhost:8080/profiles/${username}`);
+            const profileRes = await fetch(`/profiles/${username}`);
             if (!profileRes.ok) throw new Error("Failed to fetch profile");
             const profileData = await profileRes.json();
       
             // Fetch tags
-            const tagsRes = await fetch("http://localhost:8082/community/get-profile-tags", {
+            const tagsRes = await fetch(`${communityURL}/community/get-profile-tags`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

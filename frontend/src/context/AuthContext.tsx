@@ -127,7 +127,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error("Failed to update profile picture");
       }
   
-      // Update local user state with new profilePictureUrl
       const updatedUser = { ...user, profilePictureUrl: url };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));

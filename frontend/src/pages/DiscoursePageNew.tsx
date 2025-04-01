@@ -3,6 +3,8 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebars/DiscourseSidebar";
 import PostComp from "../components/Discourse/PostComp";
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
+
 type Comment = {
     commentId: number;
     content: string;
@@ -59,7 +61,7 @@ const DiscoursePage: React.FC = () => {
 
     const fetchPosts = async () => {
         try {
-          const res = await fetch("http://localhost:8081/posts");
+          const res = await fetch(`${discourseURL}/posts`);
           if (!res.ok) throw new Error("Failed to fetch posts");
           const data: Post[] = await res.json();
       
@@ -67,7 +69,7 @@ const DiscoursePage: React.FC = () => {
           const enrichedPosts = await Promise.all(
             data.map(async (post) => {
               try {
-                const likesRes = await fetch(`http://localhost:8081/posts/like/postid/${post.id}`);
+                const likesRes = await fetch(`${discourseURL}/posts/like/postid/${post.id}`);
                 const likesData = likesRes.ok ? await likesRes.json() : [];
                 return { ...post, likes: likesData.length };
               } catch {
