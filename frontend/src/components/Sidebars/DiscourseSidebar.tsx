@@ -42,7 +42,7 @@ const DiscourseSidebar: React.FC<SidebarProps> = ({
                         >
                         +
                         </button>
-                        <h1 className="text-2xl">Add Content</h1>
+                        <h1 className="text-2xl">Add Post</h1>
                         
                     </div>
                 ) : (
