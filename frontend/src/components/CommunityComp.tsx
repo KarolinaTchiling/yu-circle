@@ -22,7 +22,7 @@ const CommunityComp: React.FC<CommunityProps> = ({
 useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`/profiles/${username}`);
+        const res = await fetch(`${profilesURL}/profiles/${username}`);
   
         if (!res.ok) throw new Error("Failed to fetch profile");
   

@@ -1,5 +1,7 @@
 import { createContext, useState, useEffect, ReactNode } from "react";
 
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
+
 interface User {
   username: string;
   firstname: string;
@@ -40,7 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch(`/profiles/login`, {
+      const response = await fetch(`${profilesURL}/profiles/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -52,7 +54,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(loginResponse || "Invalid credentials");
       }
 
-      const response2 = await fetch(`/profiles/${username}`, { method: "GET" });
+      const response2 = await fetch(`${profilesURL}/profiles/${username}`, { method: "GET" });
       const allUserInfo: User = await response2.json();
 
       localStorage.setItem("user", JSON.stringify(allUserInfo)); 
@@ -87,7 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       console.log("Sending update request:", updatedUser);
 
-      const response = await fetch(`/profiles/${user.username}`, {
+      const response = await fetch(`${profilesURL}/profiles/${user.username}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedUser),
@@ -117,7 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   
     try {
-      const response = await fetch(`/profiles/pfp/${user.username}`, {
+      const response = await fetch(`${profilesURL}/profiles/pfp/${user.username}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profilePictureUrl: url }),

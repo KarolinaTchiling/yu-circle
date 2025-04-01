@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import ContactButton from "./ContactButton"
 
 const communityURL = import.meta.env.VITE_COMMUNITY_URL;
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
 
 interface ModalProps {
     username: string;
@@ -30,7 +31,7 @@ const ProfilePopup: React.FC<ModalProps> = ({ isOpen, onClose, username}) => {
         const fetchProfileWithTags = async () => {
           try {
             // Fetch profile
-            const profileRes = await fetch(`/profiles/${username}`);
+            const profileRes = await fetch(`${profilesURL}/profiles/${username}`);
             if (!profileRes.ok) throw new Error("Failed to fetch profile");
             const profileData = await profileRes.json();
       
