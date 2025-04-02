@@ -5,7 +5,7 @@ import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import CommunityPage from './pages/CommunityPage'; 
 import MarketplacePage from './pages/MarketplacePage'; 
-import DiscoursePage from './pages/DiscoursePageNew'; 
+import DiscoursePage from './pages/DiscoursePage'; 
 import ChatPage from './pages/ChatPage';
 
 

@@ -29,7 +29,7 @@ const MarketplaceComp: React.FC = () => {
 
     try {
       const [productRes, ratingsRes] = await Promise.all([
-        fetch(`${marketplaceURL}/products/user/${user.username}`),
+        fetch(`${marketplaceURL}/marketplace/products/user/${user.username}`),
         fetch(`${marketplaceURL}/marketplace/rating/average/all`),
       ]);
 

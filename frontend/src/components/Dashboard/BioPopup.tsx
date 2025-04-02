@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
+
 interface BioModalProps {
   username: string;
   onClose: () => void;
@@ -11,8 +13,7 @@ const BioPopup: React.FC<BioModalProps> = ({ username, onClose }) => {
   // Handle bio update
   const handleUpdateBio = async () => {
     try {
-      const response = await fetch(
-        `profiles/bio/${username}`,
+      const response = await fetch(`${profilesURL}profiles/bio/${username}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

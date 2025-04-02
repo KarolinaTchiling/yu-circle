@@ -4,6 +4,7 @@ import Profile from "/profile.svg";
 import BioPopup from "./BioPopup";
 
 const communityURL = import.meta.env.VITE_COMMUNITY_URL;
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
 
 const ProfileComp: React.FC = () => {
   const [bio, setBio] = useState<string>("Loading bio...");
@@ -21,7 +22,7 @@ const ProfileComp: React.FC = () => {
     if (!user || !user.username) return;
 
     try {
-      const response = await fetch(`/profiles/${user.username}`);
+      const response = await fetch(`${profilesURL}/profiles/${user.username}`);
       if (!response.ok) throw new Error("Failed to fetch profile.");
 
       const data = await response.json();
@@ -118,7 +119,7 @@ const ProfileComp: React.FC = () => {
       const formData = new FormData();
       formData.append("file", file);
   
-      const res = await fetch("/profiles/upload", {
+      const res = await fetch(`${profilesURL}/profiles/upload`, {
         method: "POST",
         body: formData,
       });

@@ -1,6 +1,8 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
+const messagesURL = import.meta.env.VITE_MESSAGES_URL;
+
 interface ContactButtonProps {
   receiver: string;
   className?: string;
@@ -22,7 +24,7 @@ const ContactButton: React.FC<ContactButtonProps> = ({ receiver, className }) =>
     };
 
     try {
-      const res = await fetch("/messages/send", {
+      const res = await fetch(`${messagesURL}/messages/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

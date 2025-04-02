@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
+
 interface ResetPasswordModalProps {
   username: string;
   onClose: () => void;
@@ -11,8 +13,7 @@ const ResetPasswordPopup: React.FC<ResetPasswordModalProps> = ({ username, onClo
   // Handle password reset
   const handleResetPassword = async () => {
     try {
-      const response = await fetch(
-        `profiles/changepass/${username}`,
+      const response = await fetch(`${profilesURL}profiles/changepass/${username}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
