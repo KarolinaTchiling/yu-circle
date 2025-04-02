@@ -1,5 +1,4 @@
-package com.yucircle.community_service.config;
-
+package com.yucircle.discourceapp.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -12,10 +11,10 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                registry.addMapping("/**") // Allow all paths
+                        .allowedOrigins("*") // Allow frontend origin
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow these methods
+                        .allowedHeaders("*"); // Allow all headers
             }
         };
     }
