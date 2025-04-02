@@ -1,7 +1,7 @@
 services:
   - type: web
     name: YuCircle-services
-    env: java
+    runtime: java
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java -jar target/*.jar
     envVars:
