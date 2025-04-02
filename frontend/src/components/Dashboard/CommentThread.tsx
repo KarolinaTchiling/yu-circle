@@ -5,6 +5,8 @@ import Thumb from "/thumb.svg";
 import ThumbFill from "/thumb-fill.svg";
 import ProfilePopup from '../ProfilePopup'; 
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
+
 type Comment = {
   commentId: number;
   content: string;
@@ -50,7 +52,7 @@ const CommentThread: React.FC<Props> = ({
 
     const handleEditSubmit = async () => {
         try {
-          const res = await fetch(`http://localhost:8081/comments/update/${comment.commentId}`, {
+          const res = await fetch(`${discourseURL}/comments/update/${comment.commentId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ content: editContent }),
@@ -70,7 +72,7 @@ const CommentThread: React.FC<Props> = ({
         if (!confirmed) return;
       
         try {
-          const res = await fetch(`http://localhost:8081/comments/delete/${comment.commentId}`, {
+          const res = await fetch(`${discourseURL}/comments/delete/${comment.commentId}`, {
             method: "DELETE",
           });
       
@@ -86,8 +88,8 @@ const CommentThread: React.FC<Props> = ({
         if (!user?.username) return;
     
         const url = likedByUser
-          ? "http://localhost:8081/comments/unlike"
-          : "http://localhost:8081/comments/like";
+          ? `${discourseURL}/comments/unlike`
+          : `${discourseURL}/comments/like`;
     
         try {
           const res = await fetch(url, {

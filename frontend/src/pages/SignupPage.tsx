@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header/Header";
 
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
+
 const SignupPage: React.FC = () => {
 
   // declare valid form fields
@@ -54,7 +56,7 @@ const SignupPage: React.FC = () => {
 
     // send data to database
     try {
-      const response = await fetch("/profiles", {
+      const response = await fetch(`${profilesURL}/profiles`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import CommentThread from "./CommentThread";
 import ProfilePopup from '../ProfilePopup'; 
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
 
 type Comment = {
   commentId: number;
@@ -52,17 +53,17 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
 
   const fetchPost = async () => {
     try {
-      const res = await fetch(`http://localhost:8081/posts/${postId}`);
+      const res = await fetch(`${discourseURL}/posts/${postId}`);
       if (!res.ok) throw new Error("Failed to fetch post");
       const postData: Post = await res.json();
   
       // Fetch user's liked comments
-      const likedCommentsRes = await fetch(`http://localhost:8081/comments/like/username/${user?.username}`);
+      const likedCommentsRes = await fetch(`${discourseURL}/comments/like/username/${user?.username}`);
       const likedComments: { commentId: number }[] = likedCommentsRes.ok ? await likedCommentsRes.json() : [];
       const likedCommentIds = likedComments.map((entry) => entry.commentId);
   
       // Fetch all likes for this post
-      const postLikesRes = await fetch(`http://localhost:8081/posts/like/postid/${postData.id}`);
+      const postLikesRes = await fetch(`${discourseURL}/posts/like/postid/${postData.id}`);
       const postLikes = postLikesRes.ok ? await postLikesRes.json() : [];
       const postLikesCount = postLikes.length;
       const likedByUser = user ? postLikes.some((like: any) => like.username === user.username) : false;
@@ -72,7 +73,7 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
         return Promise.all(
           comments.map(async (comment) => {
             try {
-              const likeRes = await fetch(`http://localhost:8081/comments/like/commentid/${comment.commentId}`);
+              const likeRes = await fetch(`${discourseURL}/comments/like/commentid/${comment.commentId}`);
               const allLikes = likeRes.ok ? await likeRes.json() : [];
               const likes = allLikes.length;
               const likedByUser = likedCommentIds.includes(comment.commentId);
@@ -110,7 +111,7 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
     if (!user || !post) return;
 
     const liked = post.likedByUser;
-    const url = liked ? "http://localhost:8081/posts/unlike" : "http://localhost:8081/posts/like";
+    const url = liked ? `${discourseURL}/posts/unlike` : `${discourseURL}/posts/like`;
 
     try {
       const res = await fetch(url, {
@@ -151,7 +152,7 @@ const PostPopup: React.FC<PostModalProps> = ({ postId, onClose, highlightComment
     }
   
     try {
-      const res = await fetch("http://localhost:8081/comments", {
+      const res = await fetch(`${discourseURL}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

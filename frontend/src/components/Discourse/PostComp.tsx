@@ -8,6 +8,8 @@ import dayjs from "dayjs";
 import CommentThread from "./CommentThread";
 import ProfilePopup from '../ProfilePopup'; 
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
+
 type Comment = {
   commentId: number;
   content: string;
@@ -55,15 +57,15 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
 
   const fetchPost = async () => {
     try {
-      const res = await fetch(`http://localhost:8081/posts/${postId}`);
+      const res = await fetch(`${discourseURL}/posts/${postId}`);
       if (!res.ok) throw new Error("Failed to fetch post");
       const postData: Post = await res.json();
 
-      const likedCommentsRes = await fetch(`http://localhost:8081/comments/like/username/${user?.username}`);
+      const likedCommentsRes = await fetch(`${discourseURL}/comments/like/username/${user?.username}`);
       const likedComments: { commentId: number }[] = likedCommentsRes.ok ? await likedCommentsRes.json() : [];
       const likedCommentIds = likedComments.map((entry) => entry.commentId);
 
-      const postLikesRes = await fetch(`http://localhost:8081/posts/like/postid/${postData.id}`);
+      const postLikesRes = await fetch(`${discourseURL}/posts/like/postid/${postData.id}`);
       const postLikes = postLikesRes.ok ? await postLikesRes.json() : [];
       const postLikesCount = postLikes.length;
       const likedByUser = user ? postLikes.some((like: any) => like.username === user.username) : false;
@@ -72,7 +74,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
         return Promise.all(
           comments.map(async (comment) => {
             try {
-              const likeRes = await fetch(`http://localhost:8081/comments/like/commentid/${comment.commentId}`);
+              const likeRes = await fetch(`${discourseURL}/comments/like/commentid/${comment.commentId}`);
               const allLikes = likeRes.ok ? await likeRes.json() : [];
               const likes = allLikes.length;
               const likedByUser = likedCommentIds.includes(comment.commentId);
@@ -105,11 +107,12 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
       setLoading(false);
     }
   };
+  
 
   const toggleLike = async () => {
     if (!user || !post) return;
     const liked = post.likedByUser;
-    const url = liked ? "http://localhost:8081/posts/unlike" : "http://localhost:8081/posts/like";
+    const url = liked ? `${discourseURL}/posts/unlike` : `${discourseURL}/posts/like`;
 
     try {
       const res = await fetch(url, {
@@ -135,7 +138,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
     if (!post || !editContent.trim()) return;
   
     try {
-      const res = await fetch(`http://localhost:8081/posts/update/${post.id}`, {
+      const res = await fetch(`${discourseURL}/posts/update/${post.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editContent }),
@@ -156,7 +159,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
     if (!confirmed || !post) return;
   
     try {
-      const res = await fetch(`http://localhost:8081/posts/delete/${post.id}`, {
+      const res = await fetch(`${discourseURL}/posts/delete/${post.id}`, {
         method: "DELETE",
       });
   
@@ -189,7 +192,7 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
     }
 
     try {
-      const res = await fetch("http://localhost:8081/comments", {
+      const res = await fetch(`${discourseURL}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

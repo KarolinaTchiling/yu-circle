@@ -3,6 +3,8 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebars/MarketplaceSidebar";
 import MarketplaceComp from "../components/MarketplaceComp";
 
+const marketplaceURL = import.meta.env.VITE_MARKETPLACE_URL;
+
 type Product = {
   productId: number;
   productName: string;
@@ -76,21 +78,21 @@ const MarketplacePage: React.FC = () => {
   const handleTypeChange = async (updatedTypes: { [type: string]: boolean }) => {
     setSelectedTypes(updatedTypes);
     const query = buildQuery(selectedPrograms, updatedTypes, isFree);
-    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    const merged = await fetchProductsWithRatings(`${marketplaceURL}/marketplace/search?${query}`);
     setProducts(merged);
   };
 
   const handleProgramChange = async (updatedPrograms: { [type: string]: boolean }) => {
     setSelectedPrograms(updatedPrograms);
     const query = buildQuery(updatedPrograms, selectedTypes, isFree);
-    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    const merged = await fetchProductsWithRatings(`${marketplaceURL}/marketplace/search?${query}`);
     setProducts(merged);
   };
 
   const handleIsFreeChange = async (free: boolean) => {
     setIsFree(free);
     const query = buildQuery(selectedPrograms, selectedTypes, free);
-    const merged = await fetchProductsWithRatings(`http://localhost:8083/marketplace/search?${query}`);
+    const merged = await fetchProductsWithRatings(`${marketplaceURL}/marketplace/search?${query}`);
     setProducts(merged);
   };
 
@@ -106,7 +108,7 @@ const MarketplacePage: React.FC = () => {
     setSelectedPrograms(clearedPrograms);
     setIsFree(false);
   
-    const merged = await fetchProductsWithRatings("http://localhost:8083/marketplace/products");
+    const merged = await fetchProductsWithRatings(`${marketplaceURL}/marketplace/products`);
     setProducts(merged);
   };
 
@@ -114,7 +116,7 @@ const MarketplacePage: React.FC = () => {
     try {
       const [productRes, ratingsRes] = await Promise.all([
         fetch(endpoint),
-        fetch("http://localhost:8083/marketplace/rating/average/all"),
+        fetch(`${marketplaceURL}/marketplace/rating/average/all`),
       ]);
   
       const productsData: Product[] = await productRes.json();
@@ -128,7 +130,7 @@ const MarketplacePage: React.FC = () => {
   };
 
   const fetchInitialProducts = async () => {
-    const merged = await fetchProductsWithRatings("http://localhost:8083/marketplace/products");
+    const merged = await fetchProductsWithRatings(`${marketplaceURL}/marketplace/products`);
     setProducts(merged);
   };
 

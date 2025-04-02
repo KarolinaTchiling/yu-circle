@@ -2,6 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ContactButton from "./ContactButton"
 
+const profilesURL = import.meta.env.VITE_PROFILES_URL;
+
+
 interface CommunityProps {
   username: string;
   tags: string[];
@@ -19,14 +22,14 @@ const CommunityComp: React.FC<CommunityProps> = ({
 useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/profiles/${username}`);
+        const res = await fetch(`${profilesURL}/profiles/${username}`);
   
         if (!res.ok) throw new Error("Failed to fetch profile");
   
         const data = await res.json();
   
         setBio(data.bio || "No bio available.");
-        setProfilePictureUrl(data.profilePictureUrl || ""); // <- add this if using local state
+        setProfilePictureUrl(data.profilePictureUrl || ""); 
       } catch (err) {
         console.warn(`No profile for ${username}. Skipping.`, err);
         setBio("No bio available.");

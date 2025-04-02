@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import Header from "../components/Header/Header";
 import { AuthContext } from "../context/AuthContext";
 
+const messagesURL = import.meta.env.VITE_MESSAGES_URL;
+
 interface Message {
   id: number;
   sender: string;
@@ -28,8 +30,8 @@ const ChatPage: React.FC = () => {
     if (!user) return;
 
     try {
-      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
-      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+      const sentResponse = await fetch(`${messagesURL}/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`${messagesURL}/messages/received?receiver=${user.username}`);
 
       if (!sentResponse.ok || !receivedResponse.ok) {
         throw new Error("Failed to fetch messages");
@@ -71,8 +73,8 @@ const ChatPage: React.FC = () => {
     if (!user) return;
 
     try {
-      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
-      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+      const sentResponse = await fetch(`${messagesURL}/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`${messagesURL}/messages/received?receiver=${user.username}`);
 
       if (!sentResponse.ok || !receivedResponse.ok) {
         throw new Error("Failed to fetch conversation");
@@ -125,7 +127,7 @@ const ChatPage: React.FC = () => {
 
     if (input.trim()) {
       try {
-        const response = await fetch("/messages/send", {
+        const response = await fetch(`${messagesURL}/messages/send`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -175,8 +177,8 @@ const ChatPage: React.FC = () => {
 
     try {
       // Fetch all messages for the chat
-      const sentResponse = await fetch(`/messages/sent?sender=${user.username}`);
-      const receivedResponse = await fetch(`/messages/received?receiver=${user.username}`);
+      const sentResponse = await fetch(`${messagesURL}/messages/sent?sender=${user.username}`);
+      const receivedResponse = await fetch(`${messagesURL}/messages/received?receiver=${user.username}`);
 
       if (!sentResponse.ok || !receivedResponse.ok) {
         throw new Error("Failed to fetch messages");
@@ -192,7 +194,7 @@ const ChatPage: React.FC = () => {
 
       // Delete each message
       for (const msg of chatMessages) {
-        const deleteResponse = await fetch(`/messages/delete/${msg.id}`, {
+        const deleteResponse = await fetch(`${messagesURL}/messages/delete/${msg.id}`, {
           method: "DELETE",
         });
         if (!deleteResponse.ok) {

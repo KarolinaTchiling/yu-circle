@@ -53,7 +53,12 @@ const ProfileMenu: React.FC = () => {
                             // Logged-in dropdown
                             <>
                                 <li
-                                    className="rounded-t-lg border-b border-black hover:font-medium hover:bg-purple transition-colors duration-300"
+                                    className="rounded-t-lg border-b border-black bg-purple"
+                                >
+                                    <span className="block w-full h-full px-3 py-1">Hi, {user?.username}!</span>
+                                </li>
+                                <li
+                                    className="border-b border-black hover:font-medium hover:bg-purple transition-colors duration-300"
                                     onClick={() => handleNavigate('/dashboard')}
                                 >
                                     <span className="block w-full h-full px-3 py-1 cursor-pointer">Account Dashboard</span>

@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
+const notificationURL = import.meta.env.VITE_NOTIFICATIONS_URL;
+
 const NotificationIcon = `${import.meta.env.BASE_URL}notification.svg`;
 const NotificationIconActive = `${import.meta.env.BASE_URL}notification.png`;
 
@@ -40,7 +42,7 @@ const NotificationMenu: React.FC = () => {
   // Connects to the delete mapping in the backend to remove a notification.
   const handleDismiss = (notificationId: number) => {
     axios
-      .delete(`/notificationProxy/${notificationId}`)
+      .delete(`${notificationURL}/notification/${notificationId}`)
       .then(() => {
         setNotifications((prev) =>
           prev.map((notification) =>
@@ -67,7 +69,7 @@ const NotificationMenu: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user?.username) {
       axios
-        .get(`/notificationProxy/get-notifications/${user.username}`)
+        .get(`${notificationURL}/notification/get-notifications/${user.username}`)
         .then((res) => {
           const data = Array.isArray(res.data) ? res.data : [];
           setNotifications(data);

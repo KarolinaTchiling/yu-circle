@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import PostPopup from "./PostPopup";
 
+const discourseURL = import.meta.env.VITE_DISCOURSE_URL;
 
 dayjs.extend(relativeTime);
 
@@ -52,18 +53,18 @@ const DiscourseComp: React.FC = () => {
     if (!user?.username) return;
 
     try {
-      const res = await fetch(`http://localhost:8081/posts/user/${user.username}`);
+      const res = await fetch(`${discourseURL}/posts/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch posts");
       const posts = await res.json();
 
-      const likedPostsRes = await fetch(`http://localhost:8081/posts/like/username/${user.username}`);
+      const likedPostsRes = await fetch(`${discourseURL}/posts/like/username/${user.username}`);
       const likedPosts: { postId: number }[] = likedPostsRes.ok ? await likedPostsRes.json() : [];
       const likedPostIds = likedPosts.map((entry) => entry.postId);
 
       const postsWithLikes = await Promise.all(
         posts.map(async (post: Post) => {
           try {
-            const likeRes = await fetch(`http://localhost:8081/posts/like/postid/${post.id}`);
+            const likeRes = await fetch(`${discourseURL}/posts/like/postid/${post.id}`);
             if (!likeRes.ok) throw new Error("Failed to fetch likes");
             const allLikes: { postId: number }[] = await likeRes.json();
             const likes = allLikes.filter((like) => like.postId === post.id).length;
@@ -85,18 +86,18 @@ const DiscourseComp: React.FC = () => {
     if (!user?.username) return;
 
     try {
-      const res = await fetch(`http://localhost:8081/comments/user/${user.username}`);
+      const res = await fetch(`${discourseURL}/comments/user/${user.username}`);
       if (!res.ok) throw new Error("Failed to fetch comments");
       const comments = await res.json();
 
-      const likedCommentsRes = await fetch(`http://localhost:8081/comments/like/username/${user.username}`);
+      const likedCommentsRes = await fetch(`${discourseURL}/comments/like/username/${user.username}`);
       const likedComments: { commentId: number }[] = likedCommentsRes.ok ? await likedCommentsRes.json() : [];
       const likedCommentIds = likedComments.map((entry) => entry.commentId);
 
       const commentsWithLikes = await Promise.all(
         comments.map(async (comment: Comment) => {
           try {
-            const likeRes = await fetch(`http://localhost:8081/comments/like/commentid/${comment.commentId}`);
+            const likeRes = await fetch(`${discourseURL}/comments/like/commentid/${comment.commentId}`);
             const allLikes: { commentId: number }[] = likeRes.ok ? await likeRes.json() : [];
             const likes = allLikes.filter((like) => like.commentId === comment.commentId).length;
             const likedByUser = likedCommentIds.includes(comment.commentId);
@@ -123,7 +124,7 @@ const DiscourseComp: React.FC = () => {
     if (!confirmDelete) return;
   
     try {
-      const res = await fetch(`http://localhost:8081/posts/delete/${postId}`, {
+      const res = await fetch(`${discourseURL}/posts/delete/${postId}`, {
         method: "DELETE",
       });
   
@@ -142,7 +143,7 @@ const DiscourseComp: React.FC = () => {
     if (!user?.username) return;
 
     const liked = post.likedByUser;
-    const url = liked ? "http://localhost:8081/posts/unlike" : "http://localhost:8081/posts/like";
+    const url = liked ? `${discourseURL}/posts/unlike` : `${discourseURL}/posts/like`;
 
     try {
       const res = await fetch(url, {
@@ -175,8 +176,8 @@ const DiscourseComp: React.FC = () => {
 
     const liked = comment.likedByUser;
     const url = liked
-      ? "http://localhost:8081/comments/unlike"
-      : "http://localhost:8081/comments/like";
+      ? `${discourseURL}/comments/unlike`
+      : `${discourseURL}/comments/like`;
 
     try {
       const res = await fetch(url, {
@@ -207,7 +208,7 @@ const DiscourseComp: React.FC = () => {
 
   const handleEditPost = async (postId: number, newTitle: string, newContent: string) => {
     try {
-      const res = await fetch(`http://localhost:8081/posts/update/${postId}`, {
+      const res = await fetch(`${discourseURL}/posts/update/${postId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -232,7 +233,7 @@ const DiscourseComp: React.FC = () => {
     if (!confirmDelete) return;
   
     try {
-      const res = await fetch(`http://localhost:8081/comments/delete/${commentId}`, {
+      const res = await fetch(`${discourseURL}/comments/delete/${commentId}`, {
         method: "DELETE",
       });
   
@@ -246,7 +247,7 @@ const DiscourseComp: React.FC = () => {
 
   const handleEditComment = async (commentId: number, newComment: string) => {
     try {
-      const res = await fetch(`http://localhost:8081/comments/update/${commentId}`, {
+      const res = await fetch(`${discourseURL}/comments/update/${commentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -267,11 +268,11 @@ const DiscourseComp: React.FC = () => {
 
   const handleSeeThread = async (commentId: number) => {
     try {
-      const res = await fetch(`http://localhost:8081/comments/${commentId}/post`);
+      const res = await fetch(`${discourseURL}/comments/${commentId}/post`);
       if (!res.ok) throw new Error("Failed to fetch postId");
       const postId = await res.json();
       setSelectedPostId(postId);
-      setSelectedCommentId(commentId); // optional, if you want to scroll/highlight
+      setSelectedCommentId(commentId); 
     } catch (err) {
       console.error("Error fetching postId:", err);
     }
