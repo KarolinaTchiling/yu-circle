@@ -9,7 +9,11 @@ import com.yucircle.discourceapp.utils.EnvLoader;
 public class YuCircleDiscourseServiceApplication {
 
 	public static void main(String[] args) {
-		EnvLoader.load(".env");
+
+		if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            //  local dev → load .env manually
+            EnvLoader.load(".env");
+        }
 		SpringApplication.run(YuCircleDiscourseServiceApplication.class, args);
 	}
 
