@@ -22,7 +22,7 @@ public class GoogleDriveService {
 
     public GoogleDriveService() throws IOException {
         
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("credentials.json"))
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/etc/secrets/credentials.json"))
                 .createScoped(Collections.singletonList(DriveScopes.DRIVE_FILE));
         
         driveService = new Drive.Builder(new com.google.api.client.http.javanet.NetHttpTransport(), 
