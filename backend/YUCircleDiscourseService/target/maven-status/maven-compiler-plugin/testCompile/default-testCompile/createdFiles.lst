@@ -1,1 +1,3 @@
-com/yucircle/discourceapp/YuCircleDiscourseServiceApplicationTests.class
+com\yucircle\discourceapp\CommentControllerTest.class
+com\yucircle\discourceapp\YuCircleDiscourseServiceApplicationTests.class
+com\yucircle\discourceapp\PostControllerTest.class
