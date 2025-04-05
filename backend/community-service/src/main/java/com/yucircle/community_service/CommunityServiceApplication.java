@@ -9,7 +9,11 @@ import com.yucircle.community_service.utils.EnvLoader;
 public class CommunityServiceApplication {
 	
 	public static void main(String[] args) {
-		EnvLoader.load(".env");
+
+		if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            //  local dev → load .env manually
+            EnvLoader.load(".env");
+        }
 		SpringApplication.run(CommunityServiceApplication.class, args);
 	}
 }
