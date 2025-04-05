@@ -23,7 +23,8 @@ import com.yucircle.community_service.service.CommunityService;
 import com.yucircle.community_service.service.NotificationProducerService;
 import com.yucircle.community_service.service.ProfileTaggingService;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = { "https://yu-circle.vercel.app", "http://localhost:3000" })
+
 @RestController
 @RequestMapping("community")
 public class CommunityProfileController {
