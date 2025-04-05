@@ -8,6 +8,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.yucircle.profileapp.utils.EnvLoader;
 
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,23 @@ public class GoogleDriveService {
     private final Drive driveService;
 
     public GoogleDriveService() throws IOException {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("src/main/resources/credentials.json"))
-                .createScoped(Collections.singletonList(DriveScopes.DRIVE_FILE));
+
+        String filepath;
+
+        if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            filepath = "credentials.json";
+        } else {
+            filepath = "/etc/secrets/credentials.json";
+        }
+        
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(filepath))
+            .createScoped(Collections.singletonList(DriveScopes.DRIVE_FILE));
+
         
         driveService = new Drive.Builder(new com.google.api.client.http.javanet.NetHttpTransport(), 
                                          GsonFactory.getDefaultInstance(), 
                                          new HttpCredentialsAdapter(credentials))
-                     .setApplicationName("MarketplaceApp")
+                     .setApplicationName("ProfileApp")
                      .build();
     }
 

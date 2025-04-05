@@ -9,7 +9,10 @@ import com.yucircle.notification_service.utils.EnvLoader;
 public class NotificationServiceApplication {
 
 	public static void main(String[] args) {
-		EnvLoader.load(".env");
+		if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            //  local dev → load .env manually
+            EnvLoader.load(".env");
+        }
 		SpringApplication.run(NotificationServiceApplication.class, args);
 	}
 

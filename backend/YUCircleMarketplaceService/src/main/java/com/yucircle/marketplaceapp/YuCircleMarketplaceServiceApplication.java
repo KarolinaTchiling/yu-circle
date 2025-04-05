@@ -9,7 +9,11 @@ import com.yucircle.marketplaceapp.utils.EnvLoader;
 public class YuCircleMarketplaceServiceApplication {
 
 	public static void main(String[] args) {
-		EnvLoader.load(".env");
+		
+		if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            //  local dev → load .env manually
+            EnvLoader.load(".env");
+        }
 		SpringApplication.run(YuCircleMarketplaceServiceApplication.class, args);
 	}
 

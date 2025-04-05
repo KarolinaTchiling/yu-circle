@@ -21,7 +21,16 @@ public class GoogleDriveService {
     private final Drive driveService;
 
     public GoogleDriveService() throws IOException {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("src/main/resources/credentials.json"))
+
+        String filepath;
+
+        if (!"true".equalsIgnoreCase(System.getenv("RENDER"))) {
+            filepath = "credentials.json";
+        } else {
+            filepath = "/etc/secrets/credentials.json";
+        }
+
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(filepath))
                 .createScoped(Collections.singletonList(DriveScopes.DRIVE_FILE));
         
         driveService = new Drive.Builder(new com.google.api.client.http.javanet.NetHttpTransport(), 
