@@ -13,13 +13,15 @@ const BioPopup: React.FC<BioModalProps> = ({ username, onClose }) => {
   // Handle bio update
   const handleUpdateBio = async () => {
     try {
-      const response = await fetch(`${profilesURL}profiles/bio/${username}`,
+      const response = await fetch(`${profilesURL}/profiles/bio/${username}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bio: newBio }),
         }
       );
+
+      console.log(response);
 
       if (!response.ok) {
         throw new Error("Failed to update Bio.");

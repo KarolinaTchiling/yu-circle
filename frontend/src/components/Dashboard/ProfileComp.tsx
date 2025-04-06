@@ -54,7 +54,6 @@ const ProfileComp: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-
   // Function to refresh bio when modal closes
   const handleBioUpdate = () => {
     fetchProfile(); // Re-fetch bio after modal closes
@@ -209,7 +208,7 @@ const ProfileComp: React.FC = () => {
           <div className="bg-offwhite border b-black rounded-lg p-2">
             <h1>Bio</h1>
             <p className="text-sm">
-              {loading ? "Loading bio..." : error ? error : bio}
+              {bio}
             </p>
 
             <button 

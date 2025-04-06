@@ -9,7 +9,7 @@ interface User {
   yorkId: string;
   email: string;
   phoneNumber: string;
-  userBio: string | null;
+  bio: string | null;
   profilePictureUrl: string | null;
 }
 
