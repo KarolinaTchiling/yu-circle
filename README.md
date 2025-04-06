@@ -1,10 +1,35 @@
-# To Run on Local Machine:
+# YU Circle 
+
+YuCircle aims to enhance student networking and academic collaboration by providing a centralized platform where students can easily connect with study partners, mentors, and peers who share similar academic and career goals. Through intelligent matching, structured discourse, and resource-sharing capabilities, YuCircle fosters a more engaged and productive learning environment.
+
+#### Demo and Presentation 
+https://www.youtube.com/watch?v=oAPbCzxsw5k
+
+#### Live Demo: [yu-circle.vercel.app](https://yu-circle.vercel.app/) 
+_Services deployed in free tier - Please be patient as backend services must spin up and and are slow_
+
+#### Technologies
+###### Backend
+- PostgreSQL DB hosted on Azure 
+- Google Cloud for file storage
+- Spring Boot framework for services
+###### Frontend
+- React + Typescript + Vite
+- Tailwind CSS
+- ShadCN Components
+###### Deployment
+- Backend services deployed on Render using Docker 
+- Frontend deployed on Vercel 
+
+## To Run on Local Machine:
+
+Note: This is only an example as application with not run without .env and credential files. 
 
 ```
 git clone https://github.com/KarolinaTchiling/yu-circle.git
 ```
 
-# Frontend: React + TypeScript + Vite + TailwindCSS v.4
+## Frontend: React + TypeScript + Vite + TailwindCSS v.4
 
 <details>
 
@@ -24,13 +49,24 @@ bun install
 bun run dev
 ```
 
-Tailwind Documentation (v.4): https://tailwindcss.com/docs/styling-with-utility-classes
 
 </details>
 
-# Backend: Spring Boot + Postgres
+## Backend: Spring Boot + Postgres
 
 <details>
+
+Assuming you are using eclipse, follow these steps:
+
+1. Open eclipse, and go to the top menu to select Help > Eclipse Marketplace.
+
+2. Search for 'Spring Boot'.
+
+3. Install Spring Tools 4.28.
+
+4. Restart eclipse and import the project into your workspace.
+
+5. Back in eclipse, right click on the project folder and select Run As > Spring Boot App.
 
 ## MessageService
 
@@ -250,19 +286,6 @@ http://localhost:8080/marketplace/rating/user/{username}
 ## ProfileService:
 
 <details>
-Assuming you are using eclipse, follow these steps:
-
-1. Open eclipse, and go to the top menu to select Help > Eclipse Marketplace.
-
-2. Search for 'Spring Boot'.
-
-3. Install Spring Tools 4.28.
-
-4. Restart eclipse and import the project into your workspace.
-
-5. Open the Azure website, find the yucircle database, and start it.
-
-6. Back in eclipse, right click on the project folder and select Run As > Spring Boot App.
 
 Get all users:
 
