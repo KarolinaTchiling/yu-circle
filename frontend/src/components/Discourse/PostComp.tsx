@@ -287,12 +287,17 @@ const PostComp: React.FC<PostViewProps> = ({ postId, highlightCommentId, onRefet
 
             <div>
               <span>Posted by </span>
-              <button
-                onClick={() => setIsPopupOpen(true)}
-                className="text-dark-teal underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
-              >
-                {post.username}
-              </button>
+
+              {post.username === "Deleted" ? (
+                <span className="text-gray-500">{post.username}</span>
+              ) : (
+                <button
+                  onClick={() => setIsPopupOpen(true)}
+                  className="text-dark-teal underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
+                >
+                  {post.username}
+                </button>
+              )}
              
               <div className="font-normal">
               {isPopupOpen && (

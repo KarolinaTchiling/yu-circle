@@ -119,12 +119,17 @@ const CommentThread: React.FC<Props> = ({
             } ${isHighlighted ? "ring-2 ring-purple-500 bg-yellow-100" : ""}`}
             >
               {/* <p>{comment.commentId}</p> */}
-            <button
+
+            {comment.username === "Deleted" ? (
+              <span className="text-gray-500">{comment.username}</span>
+            ) : (
+              <button
                 onClick={() => setIsPopupOpen(true)}
                 className="text-dark-teal text-sm underline cursor-pointer hover:text-teal-700 transition-colors duration-200"
-                >
+              >
                 {comment.username}
-            </button>
+              </button>
+            )}
     
           {isEditing ? (
             <>
