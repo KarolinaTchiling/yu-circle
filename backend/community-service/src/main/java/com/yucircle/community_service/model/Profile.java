@@ -5,6 +5,7 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 
+
 @Entity
 @Table(name = "profiles")
 public class Profile {
