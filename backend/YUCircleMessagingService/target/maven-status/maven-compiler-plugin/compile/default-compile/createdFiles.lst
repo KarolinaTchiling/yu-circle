@@ -1,0 +1,7 @@
+com/yucircle/messagingapp/config/WebConfig$1.class
+com/yucircle/messagingapp/YuCircleMessagingServiceApplication.class
+com/yucircle/messagingapp/repository/MessageRepository.class
+com/yucircle/messagingapp/model/Message.class
+com/yucircle/messagingapp/config/WebConfig.class
+com/yucircle/messagingapp/controller/MessageController.class
+com/yucircle/messagingapp/service/MessageService.class
